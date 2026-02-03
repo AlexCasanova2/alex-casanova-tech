@@ -188,7 +188,7 @@ const submitForm = () => {
     </section>
 
     <footer>
-      <p>&copy; {{ new Date().getFullYear() }} {{ userData.name }}. Creado con carácter.</p>
+      <p>&copy; {{ new Date().getFullYear() }} {{ userData.name }}. v1.0.1</p>
       <div class="social-links">
         <a :href="userData.linkedin" target="_blank" class="social-btn">in</a>
         <a :href="userData.github" target="_blank" class="social-btn">gh</a>
@@ -438,7 +438,7 @@ footer {
 }
 
 @media (max-width: 600px) {
-  .container { padding: 24px; border-radius: 30px; }
+  .container { padding: 20px; border-radius: 24px; width: 100%; margin: 0 auto; }
   .hero-content h1 { font-size: 2.8rem; }
   .hero-actions { flex-direction: column; width: 100%; }
   .btn { width: 100%; justify-content: center; }
