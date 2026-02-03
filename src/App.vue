@@ -87,7 +87,7 @@ const router = useRouter()
   padding: 24px 20px;
   box-shadow: 0 30px 60px -12px rgba(0,0,0,0.5);
   animation: fadeIn 1s ease-out;
-  margin: 0 auto;
+  margin: 70px auto 20px; /* Espacio para el nav fijo en mobile */
   overflow: hidden;
 }
 
@@ -95,13 +95,14 @@ const router = useRouter()
   .container {
     padding: 40px;
     border-radius: 40px;
+    margin-top: 80px;
   }
 }
 
 @media (min-width: 1024px) {
   .container {
     padding: 60px;
-    box-shadow: 0 50px 100px -20px rgba(0,0,0,0.5);
+    margin-top: 100px;
   }
 }
 
@@ -118,7 +119,6 @@ const router = useRouter()
   margin-bottom: 40px;
   gap: 20px;
   text-align: center;
-  padding-top: 60px;
 }
 
 @media (min-width: 850px) {
@@ -127,7 +127,6 @@ const router = useRouter()
     justify-content: space-between;
     margin-bottom: 60px;
     text-align: left;
-    padding-top: 20px;
   }
 }
 
@@ -160,20 +159,21 @@ const router = useRouter()
 .logo-info h2 { font-size: 1.25rem; font-weight: 700; letter-spacing: -0.02em; }
 .logo-info p { font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.1em; }
 
+/* Navegación Fija */
 .nav-fixed {
   display: flex;
-  gap: 12px;
-  background: rgba(15, 15, 20, 0.7);
+  gap: 8px;
+  background: rgba(15, 15, 20, 0.75);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
-  padding: 6px 16px;
+  padding: 6px 12px;
   border-radius: 100px;
   border: 1px solid var(--border);
   width: fit-content;
-  min-width: 280px;
+  max-width: calc(100% - 40px); /* Margen lateral en mobile */
   justify-content: center;
   position: fixed;
-  top: 20px;
+  top: 16px;
   left: 50%;
   transform: translateX(-50%);
   z-index: 1000;
@@ -186,7 +186,7 @@ const router = useRouter()
     gap: 24px;
     padding: 10px 32px;
     top: 30px;
-    min-width: unset;
+    max-width: none;
   }
 }
 
@@ -213,23 +213,9 @@ const router = useRouter()
 
 .nav-fixed a:hover { color: var(--text-main); }
 
-.icon-svg {
-  width: 18px;
-  height: 18px;
-  display: block;
-}
-
-.icon-svg-btn {
-  width: 20px;
-  height: 20px;
-  display: block;
-}
-
-.icon-link {
-  display: flex !important;
-  align-items: center;
-  justify-content: center;
-}
+.icon-svg { width: 18px; height: 18px; display: block; }
+.icon-svg-btn { width: 20px; height: 20px; display: block; }
+.icon-link { display: flex !important; align-items: center; justify-content: center; }
 
 .nav-fixed a::after {
   content: '';

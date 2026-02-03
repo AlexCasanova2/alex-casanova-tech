@@ -41,8 +41,8 @@ const filteredProjects = computed(() => {
 </template>
 
 <style scoped>
-.page-full {
-  margin-top: 40px;
+.projects-page {
+  margin-top: 0;
   min-height: 80vh;
 }
 

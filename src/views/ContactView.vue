@@ -70,7 +70,7 @@ const submitForm = () => {
 
 <style scoped>
 .contact-page {
-  margin-top: 40px;
+  margin-top: 0;
   min-height: 80vh;
 }
 
