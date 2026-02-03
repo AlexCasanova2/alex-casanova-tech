@@ -17,7 +17,7 @@ const submitForm = () => {
 
 <template>
   <div class="contact-page page-full">
-    <div class="section-header">
+    <div class="section-header reveal">
       <div class="header-text">
         <router-link to="/" class="back-link">← Volver a inicio</router-link>
         <h1>Hablemos de tu próximo proyecto</h1>
@@ -26,7 +26,7 @@ const submitForm = () => {
 
     <section class="contact-section no-border">
       <div class="contact-grid">
-        <div class="contact-info">
+        <div class="contact-info reveal-side delay-1">
           <h2>¿Tienes una idea?<br><span>Hagámosla realidad.</span></h2>
           <p>Actualmente aceptando proyectos de alto impacto y colaboraciones estratégicas.</p>
           <div class="contact-links">
@@ -46,7 +46,7 @@ const submitForm = () => {
           </div>
         </div>
 
-        <form @submit.prevent="submitForm" class="contact-form">
+        <form @submit.prevent="submitForm" class="contact-form reveal-scale delay-2">
           <div class="input-group">
             <label>Nombre</label>
             <input v-model="form.name" type="text" placeholder="Tu nombre" required>

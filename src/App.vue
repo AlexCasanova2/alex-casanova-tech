@@ -1,16 +1,13 @@
 <script setup>
 import { useRouter } from 'vue-router'
 import { userData } from './config/userData'
+import AnimatedBackground from './components/AnimatedBackground.vue'
 
 const router = useRouter()
 </script>
 
 <template>
-  <div class="bg-blobs">
-    <div class="blob"></div>
-    <div class="blob blob-2"></div>
-    <div class="blob blob-3"></div>
-  </div>
+  <AnimatedBackground />
 
   <nav class="nav-fixed">
     <router-link to="/">Inicio</router-link>
@@ -293,30 +290,4 @@ footer {
 }
 
 .social-btn:hover { background: var(--text-main); color: var(--bg); transform: translateY(-4px); }
-
-.bg-blobs { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1; overflow: hidden; filter: blur(60px); opacity: 0.4; }
-
-@media (min-width: 768px) {
-  .bg-blobs { filter: blur(100px); opacity: 0.5; }
-}
-
-.blob { position: absolute; width: 60vw; height: 60vw; border-radius: 50%; background: var(--accent); animation: move 20s infinite alternate; }
-
-@media (min-width: 768px) {
-  .blob { width: 40vw; height: 40vw; }
-}
-
-.blob-2 { background: var(--accent-2); width: 50vw; height: 50vw; right: -20%; top: -10%; animation-delay: -5s; }
-
-@media (min-width: 768px) {
-  .blob-2 { width: 30vw; height: 30vw; right: -10%; }
-}
-
-.blob-3 { background: #ec4899; width: 40vw; height: 40vw; bottom: -10%; left: 10%; animation-delay: -10s; }
-
-@media (min-width: 768px) {
-  .blob-3 { width: 25vw; height: 25vw; left: 20%; }
-}
-
-@keyframes move { from { transform: translate(0, 0) rotate(0deg); } to { transform: translate(10vw, 10vw) rotate(90deg); } }
 </style>

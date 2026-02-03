@@ -15,7 +15,7 @@ const filteredProjects = computed(() => {
 
 <template>
   <div class="projects-page page-full">
-    <div class="section-header">
+    <div class="section-header reveal">
       <div class="header-text">
         <router-link to="/" class="back-link">← Volver a inicio</router-link>
         <h1>Todos los Proyectos</h1>
@@ -32,9 +32,10 @@ const filteredProjects = computed(() => {
 
     <div class="projects-grid">
       <ProjectCard 
-        v-for="project in filteredProjects" 
+        v-for="(project, index) in filteredProjects" 
         :key="project.id" 
-        :project="project" 
+        :project="project"
+        :class="'reveal delay-' + ((index % 5) + 1)"
       />
     </div>
   </div>

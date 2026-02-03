@@ -11,7 +11,7 @@ const featuredProjects = ref(projectsData.slice(0, 3))
 <template>
   <div class="home-wrapper">
     <main>
-      <section class="hero-content">
+      <section class="hero-content reveal-side delay-1">
         <h1>
           <span>Esculpiendo</span><br>
           el futuro digital.
@@ -33,7 +33,7 @@ const featuredProjects = ref(projectsData.slice(0, 3))
         </div>
       </section>
 
-      <aside class="profile-card">
+      <aside class="profile-card reveal-scale delay-2">
         <div class="avatar-area">
           <div class="avatar-main">ÀC</div>
           <div>
@@ -74,15 +74,16 @@ const featuredProjects = ref(projectsData.slice(0, 3))
 
       <div class="projects-grid">
         <ProjectCard 
-          v-for="project in featuredProjects" 
+          v-for="(project, index) in featuredProjects" 
           :key="project.id" 
-          :project="project" 
+          :project="project"
+          :class="'reveal delay-' + (index + 3)"
         />
       </div>
     </section>
 
     <!-- Call to Action Final -->
-    <section class="final-cta">
+    <section class="final-cta reveal delay-5">
       <h3>¿Listo para empezar algo grande?</h3>
       <router-link to="/contact" class="btn btn-primary">Empezar conversación</router-link>
     </section>
