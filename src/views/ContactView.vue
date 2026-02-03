@@ -1,17 +1,43 @@
 <script setup>
 import { ref } from 'vue'
+import emailjs from '@emailjs/browser'
 import { userData } from '../config/userData'
 
 const form = ref({ name: '', email: '', message: '' })
 const isSending = ref(false)
 
 const submitForm = () => {
+  if (userData.emailjs.serviceId === 'YOUR_SERVICE_ID') {
+    alert('Por favor, configura tus credenciales de EmailJS en src/config/userData.js')
+    return
+  }
+
   isSending.value = true
-  setTimeout(() => {
-    alert('¡Mensaje enviado con éxito!')
-    form.value = { name: '', email: '', message: '' }
-    isSending.value = false
-  }, 1000)
+  
+  const templateParams = {
+    from_name: form.value.name,
+    from_email: form.value.email,
+    message: form.value.message,
+    to_name: userData.name
+  }
+
+  emailjs.send(
+    userData.emailjs.serviceId,
+    userData.emailjs.templateId,
+    templateParams,
+    userData.emailjs.publicKey
+  )
+    .then(() => {
+      alert('¡Mensaje enviado con éxito!')
+      form.value = { name: '', email: '', message: '' }
+    })
+    .catch((error) => {
+      console.error('Error al enviar el correo:', error)
+      alert('Hubo un error al enviar el mensaje. Por favor, inténtalo de nuevo más tarde.')
+    })
+    .finally(() => {
+      isSending.value = false
+    })
 }
 </script>
 
