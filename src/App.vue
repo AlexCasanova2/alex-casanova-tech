@@ -1,4 +1,5 @@
 <script setup>
+// Deployment trigger: Correct remote sync
 import { ref, computed } from 'vue'
 import projectsData from './projects.json'
 
