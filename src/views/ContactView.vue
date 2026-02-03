@@ -18,7 +18,8 @@ const submitForm = () => {
     from_name: form.value.name,
     from_email: form.value.email,
     message: form.value.message,
-    to_name: userData.name
+    to_name: userData.name,
+    to_email: userData.email // Añadimos esto por si tu plantilla usa {{to_email}}
   }
 
   emailjs.send(
