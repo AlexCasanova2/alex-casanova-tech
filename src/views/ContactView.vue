@@ -5,21 +5,24 @@ import { userData } from '../config/userData'
 
 const form = ref({ name: '', email: '', message: '' })
 const isSending = ref(false)
+const showSuccess = ref(false)
+const errorMessage = ref('')
 
 const submitForm = () => {
   if (userData.emailjs.serviceId === 'YOUR_SERVICE_ID') {
-    alert('Por favor, configura tus credenciales de EmailJS en src/config/userData.js')
+    errorMessage.value = 'Por favor, configura tus credenciales de EmailJS en src/config/userData.js'
     return
   }
 
   isSending.value = true
+  errorMessage.value = ''
   
   const templateParams = {
     from_name: form.value.name,
     from_email: form.value.email,
     message: form.value.message,
     to_name: userData.name,
-    to_email: userData.email // Añadimos esto por si tu plantilla usa {{to_email}}
+    to_email: userData.email
   }
 
   emailjs.send(
@@ -29,17 +32,23 @@ const submitForm = () => {
     userData.emailjs.publicKey
   )
     .then(() => {
-      alert('¡Mensaje enviado con éxito!')
+      showSuccess.value = true
       form.value = { name: '', email: '', message: '' }
     })
     .catch((error) => {
       console.error('Error al enviar el correo:', error)
-      alert('Hubo un error al enviar el mensaje. Por favor, inténtalo de nuevo más tarde.')
+      errorMessage.value = 'Hubo un error al enviar el mensaje. Por favor, inténtalo de nuevo más tarde.'
     })
     .finally(() => {
       isSending.value = false
     })
 }
+
+const resetForm = () => {
+  showSuccess.value = false
+  errorMessage.value = ''
+}
+
 </script>
 
 <template>
@@ -73,23 +82,44 @@ const submitForm = () => {
           </div>
         </div>
 
-        <form @submit.prevent="submitForm" class="contact-form reveal-scale delay-2">
-          <div class="input-group">
-            <label>Nombre</label>
-            <input v-model="form.name" type="text" placeholder="Tu nombre" required>
-          </div>
-          <div class="input-group">
-            <label>Email</label>
-            <input v-model="form.email" type="email" placeholder="hola@ejemplo.com" required>
-          </div>
-          <div class="input-group">
-            <label>Mensaje</label>
-            <textarea v-model="form.message" rows="6" placeholder="Cuéntame sobre tu proyecto..." required></textarea>
-          </div>
-          <button type="submit" class="btn btn-primary" :disabled="isSending">
-            {{ isSending ? 'Enviando...' : 'Enviar mensaje' }}
-          </button>
-        </form>
+        <div class="form-container reveal-scale delay-2">
+          <Transition name="fade-slide" mode="out-in">
+            <div v-if="showSuccess" class="success-state" key="success">
+              <div class="success-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" stroke-linecap="round" stroke-linejoin="round"/>
+                  <path d="M22 4L12 14.01l-3-3" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              </div>
+              <h3>¡Mensaje enviado!</h3>
+              <p>Gracias por contactar. Te responderé lo antes posible.</p>
+              <button @click="resetForm" class="btn btn-outline">Enviar otro mensaje</button>
+            </div>
+
+            <form v-else @submit.prevent="submitForm" class="contact-form" key="form">
+              <div v-if="errorMessage" class="error-banner">
+                {{ errorMessage }}
+              </div>
+              <div class="input-group">
+                <label>Nombre</label>
+                <input v-model="form.name" type="text" placeholder="Tu nombre" required>
+              </div>
+              <div class="input-group">
+                <label>Email</label>
+                <input v-model="form.email" type="email" placeholder="hola@ejemplo.com" required>
+              </div>
+              <div class="input-group">
+                <label>Mensaje</label>
+                <textarea v-model="form.message" rows="6" placeholder="Cuéntame sobre tu proyecto..." required></textarea>
+              </div>
+              <button type="submit" class="btn btn-primary" :disabled="isSending">
+                <span v-if="isSending" class="loader"></span>
+                <span>{{ isSending ? 'Enviando...' : 'Enviar mensaje' }}</span>
+              </button>
+            </form>
+          </Transition>
+        </div>
+
       </div>
     </section>
   </div>
@@ -150,9 +180,108 @@ const submitForm = () => {
   border-color: var(--accent);
 }
 
+.form-container {
+  position: relative;
+  min-height: 400px;
+}
+
+.success-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 40px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 24px;
+  height: 100%;
+}
+
+.success-icon {
+  width: 80px;
+  height: 80px;
+  color: var(--accent);
+  margin-bottom: 24px;
+  animation: scaleIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.success-state h3 {
+  font-size: 1.8rem;
+  margin-bottom: 12px;
+  color: var(--text-main);
+}
+
+.success-state p {
+  color: var(--text-muted);
+  margin-bottom: 32px;
+}
+
+.error-banner {
+  background: rgba(255, 68, 68, 0.1);
+  border: 1px solid rgba(255, 68, 68, 0.2);
+  color: #ff4444;
+  padding: 12px 16px;
+  border-radius: 12px;
+  margin-bottom: 20px;
+  font-size: 0.9rem;
+}
+
+.btn-outline {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--text-main);
+  padding: 12px 24px;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.btn-outline:hover {
+  border-color: var(--accent);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+/* Animations */
+.fade-slide-enter-active,
+.fade-slide-leave-active {
+  transition: all 0.4s ease;
+}
+
+.fade-slide-enter-from {
+  opacity: 0;
+  transform: translateY(20px);
+}
+
+.fade-slide-leave-to {
+  opacity: 0;
+  transform: translateY(-20px);
+}
+
+@keyframes scaleIn {
+  from { transform: scale(0); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+
+.loader {
+  width: 18px;
+  height: 18px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-radius: 50%;
+  border-top-color: #fff;
+  animation: spin 0.8s linear infinite;
+  margin-right: 10px;
+  display: inline-block;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
 @media (min-width: 850px) {
   .contact-page {
     margin-top: 60px;
   }
 }
+
 </style>
