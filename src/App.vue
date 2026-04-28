@@ -127,17 +127,31 @@ onMounted(() => {
   left: 0;
   width: 100%;
   z-index: 100;
-  padding: 24px 0;
+  padding: 16px 0;
   background: var(--nav-bg);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   border-bottom: 1px solid rgba(255,255,255,0.05);
 }
 
+@media (min-width: 768px) {
+  .navbar {
+    padding: 24px 0;
+  }
+}
+
 .nav-content {
   display: flex;
-  justify-content: space-between;
+  flex-direction: column;
+  gap: 16px;
   align-items: center;
+}
+
+@media (min-width: 768px) {
+  .nav-content {
+    flex-direction: row;
+    justify-content: space-between;
+  }
 }
 
 .logo {
@@ -148,7 +162,16 @@ onMounted(() => {
 
 .nav-links {
   display: flex;
-  gap: 32px;
+  gap: 16px;
+  align-items: center;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+@media (min-width: 768px) {
+  .nav-links {
+    gap: 32px;
+  }
 }
 
 .nav-links a {
@@ -165,9 +188,14 @@ onMounted(() => {
   display: flex;
   align-items: center;
   gap: 8px;
-  border-left: 1px solid var(--border-color);
-  padding-left: 20px;
-  margin-left: 8px;
+}
+
+@media (min-width: 768px) {
+  .nav-actions {
+    border-left: 1px solid var(--border-color);
+    padding-left: 20px;
+    margin-left: 8px;
+  }
 }
 
 .theme-toggle {

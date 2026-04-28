@@ -13,22 +13,42 @@ const form = ref({
 
 const isSubmitting = ref(false)
 const isSuccess = ref(false)
+const errorMessage = ref('')
 
 const submitForm = async () => {
   isSubmitting.value = true
-  // Mock API call delay
-  await new Promise(r => setTimeout(r, 1500))
+  errorMessage.value = ''
   
-  isSubmitting.value = false
-  isSuccess.value = true
-  
-  // Reset form
-  form.value = { name: '', email: '', message: '' }
-  
-  // Hide success message after 4 seconds
-  setTimeout(() => {
-    isSuccess.value = false
-  }, 4000)
+  try {
+    // Usamos FormSubmit.co para enviar el email de forma gratuita y sin backend
+    const response = await fetch("https://formsubmit.co/ajax/hola@alexcasanova.tech", {
+      method: "POST",
+      headers: { 
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+      },
+      body: JSON.stringify({
+        Nombre: form.value.name,
+        Email: form.value.email,
+        Mensaje: form.value.message,
+        _subject: "✨ Nuevo mensaje desde el Portfolio"
+      })
+    })
+
+    if (!response.ok) throw new Error('Error de red')
+
+    isSuccess.value = true
+    form.value = { name: '', email: '', message: '' }
+    
+    setTimeout(() => {
+      isSuccess.value = false
+    }, 5000)
+    
+  } catch (err) {
+    errorMessage.value = t('contact.error')
+  } finally {
+    isSubmitting.value = false
+  }
 }
 </script>
 
@@ -76,6 +96,12 @@ const submitForm = async () => {
           <transition name="fade">
             <div v-if="isSuccess" class="success-msg">
               {{ t('contact.success') }}
+            </div>
+          </transition>
+          
+          <transition name="fade">
+            <div v-if="errorMessage" class="error-msg" style="margin-top: 16px;">
+              {{ errorMessage }}
             </div>
           </transition>
         </form>
@@ -205,6 +231,16 @@ const submitForm = async () => {
   background: rgba(16, 185, 129, 0.1);
   color: #10b981;
   border: 1px solid rgba(16, 185, 129, 0.2);
+  border-radius: var(--radius-sm);
+  font-size: 0.95rem;
+  text-align: center;
+}
+
+.error-msg {
+  padding: 16px;
+  background: rgba(239, 68, 68, 0.1);
+  color: #ef4444;
+  border: 1px solid rgba(239, 68, 68, 0.2);
   border-radius: var(--radius-sm);
   font-size: 0.95rem;
   text-align: center;
