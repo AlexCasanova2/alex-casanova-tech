@@ -1,129 +1,219 @@
 <script setup>
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 import { userData } from '../config/userData'
-import projectsData from '../projects.json'
-import ProjectCard from '../components/ProjectCard.vue'
+import { supabase } from '../config/supabase'
 
-// Mostrar solo los 3 primeros proyectos en la home
-const featuredProjects = ref(projectsData.slice(0, 3))
+const featuredProjects = ref([])
+const loading = ref(true)
+
+onMounted(async () => {
+  const { data, error } = await supabase
+    .from('projects')
+    .select('*')
+    .order('created_at', { ascending: false })
+    .limit(3)
+    
+  if (!error && data) {
+    featuredProjects.value = data
+  }
+  loading.value = false
+})
 </script>
 
 <template>
-  <div class="home-wrapper">
-    <main>
-      <section class="hero-content reveal-side delay-1">
-        <h1>
-          <span>Esculpiendo</span><br>
-          el futuro digital.
-        </h1>
-        <p class="lead">
-          Con <strong>{{ userData.experienceYears }} años de experiencia</strong> y más de <strong>{{ userData.projectsCount }} proyectos</strong>, diseño y desarrollo interfaces que no solo se ven increíbles, sino que funcionan a la perfección.
-        </p>
-        
-        <div class="hero-actions">
-          <router-link to="/contact" class="btn btn-primary">Hablemos de tu proyecto</router-link>
-          <router-link to="/projects" class="btn btn-secondary">Ver todos los trabajos</router-link>
-        </div>
+  <main class="page-wrapper container">
+    <section class="hero fade-in">
+      <div class="availability">
+        <span class="dot"></span>
+        Available for new opportunities
+      </div>
+      <h1>Product Designer <br><span class="text-muted">& Developer</span></h1>
+      <p class="hero-desc">
+        I'm {{ userData.name }}, blending {{ userData.experienceYears }} years of experience in design and engineering to build premium digital experiences.
+      </p>
+      <div class="hero-actions">
+        <router-link to="/contact" class="btn btn-primary">Get in touch</router-link>
+        <a :href="userData.github" target="_blank" class="btn btn-outline">View GitHub</a>
+      </div>
+    </section>
 
-        <div class="stack-mini">
-          <span class="stack-tag">Vue / Nuxt</span>
-          <span class="stack-tag">Node.js</span>
-          <span class="stack-tag">Tailwind</span>
-          <span class="stack-tag">TypeScript</span>
-        </div>
-      </section>
+    <section class="featured-work fade-in delay-2">
+      <div class="section-header">
+        <h2>Selected Work</h2>
+        <router-link to="/projects" class="view-all">View Archive →</router-link>
+      </div>
 
-      <aside class="profile-card reveal-scale delay-2">
-        <div class="avatar-area">
-          <div class="avatar-main">ÀC</div>
-          <div>
-            <h3>{{ userData.name }}</h3>
-            <p style="color: var(--text-muted); font-size: 0.85rem;">@alexcasanova</p>
-          </div>
-        </div>
-
-        <div class="stats-grid">
-          <div class="stat-box">
-            <h3>+{{ userData.projectsCount }}</h3>
-            <p>Proyectos</p>
-          </div>
-          <div class="stat-box">
-            <h3>+{{ userData.experienceYears }}y</h3>
-            <p>Experiencia</p>
-          </div>
-        </div>
-
-        <div class="project-preview">
-          <span class="project-label">Proyecto Actual</span>
-          <div class="project-info">
-            <h4>Evolucionando Dashboards</h4>
-            <div class="progress-bar">
-              <div class="progress-fill"></div>
+      <div v-if="loading" style="color: var(--text-secondary); margin-top: 24px;">Loading projects...</div>
+      <div v-else class="grid projects-grid">
+        <router-link :to="`/project/${project.id}`" v-for="project in featuredProjects" :key="project.id" class="project-card">
+          <div class="project-image">
+            <img :src="project.image" :alt="project.title" />
+            <div class="overlay">
+               <span class="view-btn">View Project</span>
             </div>
           </div>
-        </div>
-      </aside>
-    </main>
-
-    <!-- Sección de Proyectos Destacados -->
-    <section id="work" class="work-section">
-      <div class="section-header">
-        <h2>Proyectos Seleccionados</h2>
-        <router-link to="/projects" class="view-all-link">Ver todo →</router-link>
-      </div>
-
-      <div class="projects-grid">
-        <ProjectCard 
-          v-for="(project, index) in featuredProjects" 
-          :key="project.id" 
-          :project="project"
-          :class="'reveal delay-' + (index + 3)"
-        />
+          <div class="project-info">
+            <div class="project-meta">
+              <span class="category">{{ project.category }}</span>
+            </div>
+            <h3>{{ project.title }}</h3>
+          </div>
+        </router-link>
       </div>
     </section>
-
-    <!-- Call to Action Final -->
-    <section class="final-cta reveal delay-5">
-      <h3>¿Listo para empezar algo grande?</h3>
-      <router-link to="/contact" class="btn btn-primary">Empezar conversación</router-link>
-    </section>
-  </div>
+  </main>
 </template>
 
 <style scoped>
-.view-all-link {
-  color: var(--accent);
-  text-decoration: none;
-  font-weight: 600;
-  transition: var(--transition);
-}
-.view-all-link:hover {
-  color: var(--text-main);
-  transform: translateX(5px);
+.hero {
+  padding: 80px 0;
+  max-width: 800px;
 }
 
-.final-cta {
-  margin-top: 80px;
-  padding: 60px 40px;
-  background: linear-gradient(135deg, rgba(var(--accent-rgb), 0.1), transparent);
-  border: 1px solid var(--border);
-  border-radius: 32px;
-  text-align: center;
+.availability {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--border-color);
+  border-radius: 100px;
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  margin-bottom: 32px;
+}
+
+.dot {
+  width: 8px;
+  height: 8px;
+  background-color: #10B981;
+  border-radius: 50%;
+  box-shadow: 0 0 12px rgba(16, 185, 129, 0.5);
+}
+
+.text-muted {
+  color: var(--text-secondary);
+}
+
+.hero-desc {
+  margin: 32px 0 40px;
+  font-size: clamp(1.125rem, 2vw, 1.5rem);
+  max-width: 600px;
+  line-height: 1.6;
+}
+
+.hero-actions {
+  display: flex;
+  gap: 16px;
+}
+
+/* Featured Work */
+.featured-work {
+  margin-top: 40px;
+}
+
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  margin-bottom: 40px;
+  border-bottom: 1px solid var(--border-color);
+  padding-bottom: 24px;
+}
+
+.view-all {
+  color: var(--text-secondary);
+  font-size: 1rem;
+}
+
+.view-all:hover {
+  color: var(--text-primary);
+}
+
+.projects-grid {
+  grid-template-columns: 1fr;
+}
+
+@media (min-width: 768px) {
+  .projects-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.project-card {
   display: flex;
   flex-direction: column;
+  gap: 20px;
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.project-image {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 4/3;
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  background: var(--bg-secondary);
+}
+
+.project-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.project-card:hover .project-image img {
+  transform: scale(1.05);
+}
+
+.overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0,0,0,0.4);
+  display: flex;
   align-items: center;
-  gap: 24px;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity var(--transition-smooth);
 }
 
-.final-cta h3 {
-  font-size: clamp(1.5rem, 4vw, 2.5rem);
-  letter-spacing: -0.02em;
+.project-card:hover .overlay {
+  opacity: 1;
 }
 
-@media (min-width: 1024px) {
-  .final-cta {
-    margin-top: 120px;
-    padding: 100px;
-  }
+.view-btn {
+  background: rgba(255,255,255,0.1);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255,255,255,0.2);
+  color: white;
+  padding: 12px 24px;
+  border-radius: 100px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  transform: translateY(10px);
+  transition: all var(--transition-smooth);
+}
+
+.project-card:hover .view-btn {
+  transform: translateY(0);
+}
+
+.project-info {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.project-meta {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+}
+
+.project-card h3 {
+  font-size: 1.5rem;
 }
 </style>
