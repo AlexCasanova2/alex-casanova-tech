@@ -1,8 +1,10 @@
 <script setup>
 import { ref, onMounted } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { userData } from '../config/userData'
 import { supabase } from '../config/supabase'
 
+const { t } = useI18n()
 const featuredProjects = ref([])
 const loading = ref(true)
 
@@ -25,31 +27,31 @@ onMounted(async () => {
     <section class="hero fade-in">
       <div class="availability">
         <span class="dot"></span>
-        Available for new opportunities
+        {{ t('home.availability') }}
       </div>
-      <h1>Product Designer <br><span class="text-muted">& Developer</span></h1>
+      <h1>{{ userData.name }}</h1>
       <p class="hero-desc">
-        I'm {{ userData.name }}, blending {{ userData.experienceYears }} years of experience in design and engineering to build premium digital experiences.
+        {{ t('home.desc', { name: userData.name, years: userData.experienceYears }) }}
       </p>
       <div class="hero-actions">
-        <router-link to="/contact" class="btn btn-primary">Get in touch</router-link>
-        <a :href="userData.github" target="_blank" class="btn btn-outline">View GitHub</a>
+        <router-link to="/contact" class="btn btn-primary">{{ t('home.getInTouch') }}</router-link>
+        <a :href="userData.github" target="_blank" class="btn btn-outline">{{ t('home.viewGithub') }}</a>
       </div>
     </section>
 
     <section class="featured-work fade-in delay-2">
       <div class="section-header">
-        <h2>Selected Work</h2>
-        <router-link to="/projects" class="view-all">View Archive →</router-link>
+        <h2>{{ t('home.selectedWork') }}</h2>
+        <router-link to="/projects" class="view-all">{{ t('home.viewAll') }} →</router-link>
       </div>
 
-      <div v-if="loading" style="color: var(--text-secondary); margin-top: 24px;">Loading projects...</div>
+      <div v-if="loading" style="color: var(--text-secondary); margin-top: 24px;">{{ t('home.loading') }}</div>
       <div v-else class="grid projects-grid">
         <router-link :to="`/project/${project.id}`" v-for="project in featuredProjects" :key="project.id" class="project-card">
           <div class="project-image">
             <img :src="project.image" :alt="project.title" />
             <div class="overlay">
-               <span class="view-btn">View Project</span>
+               <span class="view-btn">{{ t('home.viewProject') }}</span>
             </div>
           </div>
           <div class="project-info">

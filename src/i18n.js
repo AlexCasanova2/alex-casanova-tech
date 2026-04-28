@@ -1,0 +1,265 @@
+import { createI18n } from 'vue-i18n'
+
+const messages = {
+  es: {
+    nav: {
+      work: 'Trabajos',
+      archive: 'Archivo',
+      contact: 'Contacto',
+      admin: 'Panel de Control',
+      logout: 'Cerrar Sesión',
+      viewWeb: 'Ver Web'
+    },
+    home: {
+      role: 'Diseñador de Producto & Desarrollador',
+      selectedWork: 'Trabajos Destacados',
+      viewAll: 'Ver todos los proyectos',
+      availability: 'Disponible para nuevas oportunidades',
+      desc: 'Soy {name}, combinando {years} años de experiencia en diseño e ingeniería para crear experiencias digitales premium.',
+      getInTouch: 'Hablemos',
+      viewGithub: 'Ver GitHub',
+      loading: 'Cargando proyectos...',
+      viewProject: 'Ver Proyecto'
+    },
+    archive: {
+      title: 'Archivo de Proyectos',
+      subtitle: 'Una colección de todos mis trabajos y experimentos.',
+      all: 'Todos',
+      empty: 'No se encontraron proyectos.'
+    },
+    contact: {
+      title: 'Hagamos algo <br>increíble.',
+      subtitle: 'Actualmente aceptando nuevos proyectos y colaboraciones estratégicas.',
+      emailLabel: 'Email',
+      socialsLabel: 'Redes Sociales',
+      name: 'Nombre',
+      email: 'Email',
+      message: 'Mensaje',
+      send: 'Enviar Mensaje',
+      sending: 'Enviando...',
+      success: '¡Mensaje enviado correctamente!',
+      error: 'Hubo un error. Inténtalo de nuevo.'
+    },
+    admin: {
+      access: 'Acceso Administrador',
+      loginDesc: 'Inicia sesión para gestionar tu portafolio.',
+      email: 'Email',
+      password: 'Contraseña',
+      loginBtn: 'Iniciar sesión',
+      authenticating: 'Autenticando...',
+      workspace: 'Espacio de trabajo',
+      workspaceDesc: 'Crea y gestiona tus casos de estudio.',
+      addProject: '✨ Añadir',
+      editProject: '✏️ Editar',
+      manageProjects: '🗂️ Gestionar',
+      projectDetails: 'Detalles del Proyecto',
+      cancelEdit: 'Cancelar Edición',
+      title: 'Título',
+      shortDesc: 'Descripción Corta',
+      displaysOnGrid: '(Se muestra en la cuadrícula)',
+      content: 'Contenido (Markdown)',
+      publishing: 'Publicación',
+      publishNew: 'El proyecto se publicará al instante.',
+      publishEdit: 'Actualizar el proyecto en vivo.',
+      btnSave: 'Guardando...',
+      btnPublish: 'Publicar Proyecto',
+      btnUpdate: 'Actualizar Proyecto',
+      cover: 'Imagen de Portada',
+      uploadCover: 'Subir portada',
+      metadata: 'Metadatos',
+      category: 'Categoría',
+      tags: 'Etiquetas',
+      commaSeparated: 'Separadas por comas',
+      externalUrl: 'URL Externa',
+      noProjects: 'No hay proyectos. ¡Añade el primero!',
+      edit: 'Editar',
+      delete: 'Borrar',
+      confirmDelete: '¿Estás seguro de que quieres borrar este proyecto?'
+    },
+    project: {
+      live: 'Ver Proyecto ↗',
+      back: '← Volver a trabajos',
+      loading: 'Cargando detalles del proyecto...',
+      notFound: 'Proyecto no encontrado.',
+      backArchive: 'Volver al archivo'
+    }
+  },
+  en: {
+    nav: {
+      work: 'Work',
+      archive: 'Archive',
+      contact: 'Contact',
+      admin: 'Dashboard',
+      logout: 'Sign Out',
+      viewWeb: 'View Website'
+    },
+    home: {
+      role: 'Product Designer & Developer',
+      selectedWork: 'Selected Work',
+      viewAll: 'View all projects',
+      availability: 'Available for new opportunities',
+      desc: "I'm {name}, blending {years} years of experience in design and engineering to build premium digital experiences.",
+      getInTouch: 'Get in touch',
+      viewGithub: 'View GitHub',
+      loading: 'Loading projects...',
+      viewProject: 'View Project'
+    },
+    archive: {
+      title: 'Project Archive',
+      subtitle: 'A collection of all my work and experiments.',
+      all: 'All',
+      empty: 'No projects found.'
+    },
+    contact: {
+      title: "Let's build <br>something great.",
+      subtitle: 'Currently accepting new projects and strategic collaborations.',
+      emailLabel: 'Email',
+      socialsLabel: 'Socials',
+      name: 'Name',
+      email: 'Email',
+      message: 'Message',
+      send: 'Send Message',
+      sending: 'Sending...',
+      success: 'Message sent successfully!',
+      error: 'There was an error. Please try again.'
+    },
+    admin: {
+      access: 'Admin Access',
+      loginDesc: 'Please log in to manage your portfolio.',
+      email: 'Email',
+      password: 'Password',
+      loginBtn: 'Login securely',
+      authenticating: 'Authenticating...',
+      workspace: 'Workspace',
+      workspaceDesc: 'Create and manage your case studies.',
+      addProject: '✨ Add New',
+      editProject: '✏️ Edit Project',
+      manageProjects: '🗂️ Manage Projects',
+      projectDetails: 'Project Details',
+      cancelEdit: 'Cancel Edit',
+      title: 'Title',
+      shortDesc: 'Short Description',
+      displaysOnGrid: '(Displays on grid)',
+      content: 'Case Study Content',
+      publishing: 'Publishing',
+      publishNew: 'The project will be live instantly.',
+      publishEdit: 'Update the live project.',
+      btnSave: 'Saving...',
+      btnPublish: 'Publish Project',
+      btnUpdate: 'Update Project',
+      cover: 'Cover Image',
+      uploadCover: 'Click to upload cover',
+      metadata: 'Metadata',
+      category: 'Category',
+      tags: 'Tags',
+      commaSeparated: 'Separate with commas',
+      externalUrl: 'External URL',
+      noProjects: 'No projects found. Add your first one!',
+      edit: 'Edit',
+      delete: 'Delete',
+      confirmDelete: 'Are you sure you want to delete this project? This action cannot be undone.'
+    },
+    project: {
+      live: 'Live Project ↗',
+      back: '← Back to work',
+      loading: 'Loading project details...',
+      notFound: 'Project not found.',
+      backArchive: 'Back to archive'
+    }
+  },
+  ca: {
+    nav: {
+      work: 'Treballs',
+      archive: 'Arxiu',
+      contact: 'Contacte',
+      admin: 'Tauler de Control',
+      logout: 'Tancar Sessió',
+      viewWeb: 'Veure Web'
+    },
+    home: {
+      role: 'Dissenyador de Producte & Desenvolupador',
+      selectedWork: 'Treballs Destacats',
+      viewAll: 'Veure tots els projectes',
+      availability: 'Disponible per a noves oportunitats',
+      desc: 'Sóc l\'{name}, combinant {years} anys d\'experiència en disseny i enginyeria per crear experiències digitals premium.',
+      getInTouch: 'Parlem',
+      viewGithub: 'Veure GitHub',
+      loading: 'Carregant projectes...',
+      viewProject: 'Veure Projecte'
+    },
+    archive: {
+      title: 'Arxiu de Projectes',
+      subtitle: 'Una col·lecció de tots els meus treballs i experiments.',
+      all: 'Tots',
+      empty: 'No s\'han trobat projectes.'
+    },
+    contact: {
+      title: 'Fem alguna cosa <br>increïble.',
+      subtitle: 'Actualment acceptant nous projectes i col·laboracions estratègiques.',
+      emailLabel: 'Correu',
+      socialsLabel: 'Xarxes Socials',
+      name: 'Nom',
+      email: 'Correu',
+      message: 'Missatge',
+      send: 'Enviar Missatge',
+      sending: 'Enviant...',
+      success: 'Missatge enviat correctament!',
+      error: 'Hi ha hagut un error. Torna-ho a provar.'
+    },
+    admin: {
+      access: 'Accés Administrador',
+      loginDesc: 'Inicia sessió per gestionar el teu portafoli.',
+      email: 'Correu',
+      password: 'Contrasenya',
+      loginBtn: 'Iniciar sessió',
+      authenticating: 'Autenticant...',
+      workspace: 'Espai de treball',
+      workspaceDesc: 'Crea i gestiona els teus casos d\'estudi.',
+      addProject: '✨ Afegir',
+      editProject: '✏️ Editar',
+      manageProjects: '🗂️ Gestionar',
+      projectDetails: 'Detalls del Projecte',
+      cancelEdit: 'Cancel·lar Edició',
+      title: 'Títol',
+      shortDesc: 'Descripció Curta',
+      displaysOnGrid: '(Es mostra a la quadrícula)',
+      content: 'Contingut (Markdown)',
+      publishing: 'Publicació',
+      publishNew: 'El projecte es publicarà a l\'instant.',
+      publishEdit: 'Actualitzar el projecte publicat.',
+      btnSave: 'Desant...',
+      btnPublish: 'Publicar Projecte',
+      btnUpdate: 'Actualitzar Projecte',
+      cover: 'Imatge de Portada',
+      uploadCover: 'Pujar portada',
+      metadata: 'Metadades',
+      category: 'Categoria',
+      tags: 'Etiquetes',
+      commaSeparated: 'Separades per comes',
+      externalUrl: 'URL Externa',
+      noProjects: 'No hi ha projectes. Afegeix el primer!',
+      edit: 'Editar',
+      delete: 'Esborrar',
+      confirmDelete: 'Estàs segur que vols esborrar aquest projecte?'
+    },
+    project: {
+      live: 'Veure Projecte ↗',
+      back: '← Tornar a treballs',
+      loading: 'Carregant detalls del projecte...',
+      notFound: 'Projecte no trobat.',
+      backArchive: 'Tornar a l\'arxiu'
+    }
+  }
+}
+
+// Check local storage for language, default to es
+const savedLocale = localStorage.getItem('locale')
+const browserLang = navigator.language.split('-')[0]
+const defaultLocale = savedLocale || (['es', 'en', 'ca'].includes(browserLang) ? browserLang : 'es')
+
+export const i18n = createI18n({
+  legacy: false, // Set to false to use Composition API
+  locale: defaultLocale,
+  fallbackLocale: 'es',
+  messages,
+})

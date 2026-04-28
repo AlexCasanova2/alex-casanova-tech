@@ -1,9 +1,11 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import { supabase } from '../config/supabase'
 import { marked } from 'marked'
 
+const { t } = useI18n()
 const route = useRoute()
 const projectId = route.params.id
 
@@ -26,12 +28,12 @@ onMounted(async () => {
 
 <template>
   <main v-if="loading" class="page-wrapper container fade-in">
-    <h1 style="color: var(--text-secondary);">Loading project...</h1>
+    <h1 style="color: var(--text-secondary);">{{ t('project.loading') }}</h1>
   </main>
   
   <main class="page-wrapper container fade-in" v-else-if="project">
     <div class="project-header">
-      <router-link to="/projects" class="back-link">← Back to Archive</router-link>
+      <router-link to="/projects" class="back-link">{{ t('project.back') }}</router-link>
       <div class="meta">
         <span>{{ project.category }}</span>
       </div>
@@ -43,7 +45,7 @@ onMounted(async () => {
       </div>
 
       <div class="project-actions" v-if="project.url" style="margin-top: 32px;">
-        <a :href="project.url" target="_blank" rel="noopener noreferrer" class="btn btn-primary">Visit Live Project ↗</a>
+        <a :href="project.url" target="_blank" rel="noopener noreferrer" class="btn btn-primary">{{ t('project.live') }}</a>
       </div>
     </div>
 
@@ -62,8 +64,8 @@ onMounted(async () => {
   </main>
   
   <main class="page-wrapper container fade-in" v-else>
-    <h1>Project not found.</h1>
-    <router-link to="/projects" class="btn btn-primary" style="margin-top: 24px;">Return to Archive</router-link>
+    <h1>{{ t('project.notFound') }}</h1>
+    <router-link to="/projects" class="btn btn-primary" style="margin-top: 24px;">{{ t('project.backArchive') }}</router-link>
   </main>
 </template>
 

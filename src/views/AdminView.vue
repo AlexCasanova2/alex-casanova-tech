@@ -1,6 +1,9 @@
 <script setup>
 import { ref, onMounted } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { supabase } from '../config/supabase'
+
+const { t } = useI18n()
 
 const user = ref(null)
 const email = ref('')
@@ -157,7 +160,7 @@ const cancelEdit = () => {
 }
 
 const deleteProject = async (id) => {
-  if (!confirm('Are you sure you want to delete this project? This action cannot be undone.')) return
+  if (!confirm(t('admin.confirmDelete'))) return
   
   const { error } = await supabase.from('projects').delete().eq('id', id)
   if (error) {
@@ -219,23 +222,23 @@ const submitProject = async () => {
 <template>
   <main class="page-wrapper container fade-in">
     <div v-if="!user" class="admin-login">
-      <h1>Admin Access</h1>
-      <p>Please log in to manage your portfolio.</p>
+      <h1>{{ t('admin.access') }}</h1>
+      <p>{{ t('admin.loginDesc') }}</p>
       
       <form @submit.prevent="handleLogin" class="form login-form">
         <div v-if="errorMessage" class="error-msg">{{ errorMessage }}</div>
         
         <div class="input-group">
-          <label>Email</label>
+          <label>{{ t('admin.email') }}</label>
           <input type="email" v-model="email" required />
         </div>
         <div class="input-group">
-          <label>Password</label>
+          <label>{{ t('admin.password') }}</label>
           <input type="password" v-model="password" required />
         </div>
         
         <button type="submit" class="btn btn-primary" style="margin-top: 16px;" :disabled="isLoggingIn">
-          {{ isLoggingIn ? 'Authenticating...' : 'Login securely' }}
+          {{ isLoggingIn ? t('admin.authenticating') : t('admin.loginBtn') }}
         </button>
       </form>
     </div>
@@ -243,17 +246,17 @@ const submitProject = async () => {
     <div v-else class="admin-dashboard">
       <div class="dashboard-header">
         <div>
-          <h1>Workspace</h1>
-          <p class="subtitle">Create and manage your case studies.</p>
+          <h1>{{ t('admin.workspace') }}</h1>
+          <p class="subtitle">{{ t('admin.workspaceDesc') }}</p>
         </div>
       </div>
       
       <div class="tabs">
         <button :class="['tab-btn', { active: activeTab === 'add' }]" @click="activeTab = 'add'">
-          {{ isEditing ? '✏️ Edit Project' : '✨ Add New Project' }}
+          {{ isEditing ? t('admin.editProject') : t('admin.addProject') }}
         </button>
         <button :class="['tab-btn', { active: activeTab === 'manage' }]" @click="activeTab = 'manage'">
-          🗂️ Manage Projects
+          {{ t('admin.manageProjects') }}
         </button>
       </div>
 
@@ -265,23 +268,23 @@ const submitProject = async () => {
         <div class="form-main">
           <div class="card">
             <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); padding-bottom: 16px; margin-bottom: 24px;">
-              <h2 class="card-title" style="border: none; padding: 0; margin: 0;">Project Details</h2>
-              <button v-if="isEditing" type="button" @click="cancelEdit" class="btn-small">Cancel Edit</button>
+              <h2 class="card-title" style="border: none; padding: 0; margin: 0;">{{ t('admin.projectDetails') }}</h2>
+              <button v-if="isEditing" type="button" @click="cancelEdit" class="btn-small">{{ t('admin.cancelEdit') }}</button>
             </div>
             
             <div class="input-group">
-              <label>Title</label>
+              <label>{{ t('admin.title') }}</label>
               <input type="text" v-model="newProject.title" placeholder="e.g. Next-Gen Analytics Dashboard" required class="title-input" />
             </div>
 
             <div class="input-group mt-24">
-              <label>Short Description <span class="help-text">(Displays on grid)</span></label>
+              <label>{{ t('admin.shortDesc') }} <span class="help-text">{{ t('admin.displaysOnGrid') }}</span></label>
               <textarea v-model="newProject.description" rows="2" placeholder="Brief summary of the project..." required></textarea>
             </div>
 
             <div class="input-group mt-24">
               <div class="content-label-row">
-                <label>Case Study Content</label>
+                <label>{{ t('admin.content') }}</label>
                 <div class="content-toolbar">
                   <button type="button" @click="insertFormat('**', '**')" class="toolbar-btn" title="Bold">B</button>
                   <button type="button" @click="insertFormat('_', '_')" class="toolbar-btn italic" title="Italic">I</button>
@@ -304,42 +307,42 @@ const submitProject = async () => {
 
         <div class="form-sidebar">
           <div class="card publish-card">
-            <h3 class="card-title">Publishing</h3>
-            <p class="help-text mb-16">{{ isEditing ? 'Update the live project.' : 'The project will be live instantly.' }}</p>
+            <h3 class="card-title">{{ t('admin.publishing') }}</h3>
+            <p class="help-text mb-16">{{ isEditing ? t('admin.publishEdit') : t('admin.publishNew') }}</p>
             <button type="submit" class="btn btn-primary w-full" :disabled="isSaving">
-              {{ isSaving ? 'Saving...' : (isEditing ? 'Update Project' : 'Publish Project') }}
+              {{ isSaving ? t('admin.btnSave') : (isEditing ? t('admin.btnUpdate') : t('admin.btnPublish')) }}
             </button>
           </div>
 
           <div class="card">
-            <h3 class="card-title">Cover Image</h3>
+            <h3 class="card-title">{{ t('admin.cover') }}</h3>
             <div class="input-group">
               <input type="file" @change="handleCoverChange" accept="image/*" :required="!isEditing" id="cover-upload" hidden />
               <label for="cover-upload" class="upload-area" :class="{ 'has-image': coverImagePreview }">
                 <img v-if="coverImagePreview" :src="coverImagePreview" class="cover-preview" />
                 <div v-else class="upload-placeholder">
                   <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-                  <span>Click to upload cover</span>
+                  <span>{{ t('admin.uploadCover') }}</span>
                 </div>
               </label>
             </div>
           </div>
 
           <div class="card">
-            <h3 class="card-title">Metadata</h3>
+            <h3 class="card-title">{{ t('admin.metadata') }}</h3>
             <div class="input-group">
-              <label>Category</label>
+              <label>{{ t('admin.category') }}</label>
               <input type="text" v-model="newProject.category" placeholder="SaaS, Design, Web..." required />
             </div>
             
             <div class="input-group mt-20">
-              <label>Tags</label>
+              <label>{{ t('admin.tags') }}</label>
               <input type="text" v-model="newProject.tags" placeholder="Vue, Figma, Node" />
-              <span class="help-text">Separate with commas</span>
+              <span class="help-text">{{ t('admin.commaSeparated') }}</span>
             </div>
 
             <div class="input-group mt-20">
-              <label>External URL</label>
+              <label>{{ t('admin.externalUrl') }}</label>
               <input type="url" v-model="newProject.url" placeholder="https://" />
             </div>
           </div>
@@ -350,7 +353,7 @@ const submitProject = async () => {
       <div v-if="activeTab === 'manage'" class="manage-section fade-in">
         <div class="card">
           <div v-if="projectsList.length === 0" style="padding: 32px; text-align: center; color: var(--text-secondary);">
-            No projects found. Add your first one!
+            {{ t('admin.noProjects') }}
           </div>
           
           <div class="project-list">
@@ -361,8 +364,8 @@ const submitProject = async () => {
                 <span>{{ p.category }} • {{ new Date(p.created_at).toLocaleDateString() }}</span>
               </div>
               <div class="list-actions">
-                <button @click="loadForEdit(p)" class="btn-small">Edit</button>
-                <button @click="deleteProject(p.id)" class="btn-small danger">Delete</button>
+                <button @click="loadForEdit(p)" class="btn-small">{{ t('admin.edit') }}</button>
+                <button @click="deleteProject(p.id)" class="btn-small danger">{{ t('admin.delete') }}</button>
               </div>
             </div>
           </div>

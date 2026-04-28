@@ -1,10 +1,12 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import { userData } from './config/userData'
 import { supabase } from './config/supabase'
 
 const route = useRoute()
+const { t, locale } = useI18n()
 
 const isDarkMode = ref(true)
 const userSession = ref(null)
@@ -14,6 +16,12 @@ const toggleTheme = () => {
   const theme = isDarkMode.value ? 'dark' : 'light'
   document.documentElement.setAttribute('data-theme', theme)
   localStorage.setItem('theme', theme)
+}
+
+const switchLanguage = (lang) => {
+  locale.value = lang
+  localStorage.setItem('locale', lang)
+  document.documentElement.lang = lang
 }
 
 const handleLogout = async () => {
@@ -27,7 +35,10 @@ onMounted(() => {
     isDarkMode.value = savedTheme === 'dark'
     document.documentElement.setAttribute('data-theme', savedTheme)
   } else {
-    // Check system preference
+    // Set initial html lang attribute
+  document.documentElement.lang = locale.value
+
+  // Check system preference
     const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches
     isDarkMode.value = prefersDark
     document.documentElement.setAttribute('data-theme', prefersDark ? 'dark' : 'light')
@@ -49,22 +60,29 @@ onMounted(() => {
       <div class="container nav-content">
         <router-link to="/" class="logo">{{ userData.name }}</router-link>
         <div class="nav-links">
-          <router-link to="/">Work</router-link>
-          <router-link to="/projects">Archive</router-link>
-          <router-link to="/contact">Contact</router-link>
+          <router-link to="/">{{ t('nav.work') }}</router-link>
+          <router-link to="/projects">{{ t('nav.archive') }}</router-link>
+          <router-link to="/contact">{{ t('nav.contact') }}</router-link>
           
           <div class="nav-actions">
+            <!-- Language Switcher -->
+            <div class="lang-switcher">
+              <button :class="{ active: locale === 'es' }" @click="switchLanguage('es')">ES</button>
+              <button :class="{ active: locale === 'ca' }" @click="switchLanguage('ca')">CA</button>
+              <button :class="{ active: locale === 'en' }" @click="switchLanguage('en')">EN</button>
+            </div>
+
             <!-- Admin / Web Toggle -->
-            <router-link v-if="userSession && route.path !== '/admin'" to="/admin" class="theme-toggle" title="Go to Dashboard">
+            <router-link v-if="userSession && route.path !== '/admin'" to="/admin" class="theme-toggle" :title="t('nav.admin')">
               <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
             </router-link>
 
-            <router-link v-if="userSession && route.path === '/admin'" to="/" class="theme-toggle" title="View Website">
+            <router-link v-if="userSession && route.path === '/admin'" to="/" class="theme-toggle" :title="t('nav.viewWeb')">
               <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
             </router-link>
 
             <!-- Logout Shortcut -->
-            <button v-if="userSession" @click="handleLogout" class="theme-toggle" title="Sign Out" style="color: #ef4444;">
+            <button v-if="userSession" @click="handleLogout" class="theme-toggle" :title="t('nav.logout')" style="color: #ef4444;">
               <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
             </button>
 
@@ -167,6 +185,38 @@ onMounted(() => {
 
 .theme-toggle:hover {
   color: var(--text-primary);
+}
+
+.lang-switcher {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: var(--bg-color);
+  padding: 4px;
+  border-radius: 100px;
+  border: 1px solid var(--border-color);
+  margin-right: 8px;
+}
+
+.lang-switcher button {
+  background: transparent;
+  border: none;
+  font-size: 0.7rem;
+  font-weight: 600;
+  padding: 4px 8px;
+  border-radius: 100px;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.lang-switcher button:hover {
+  color: var(--text-primary);
+}
+
+.lang-switcher button.active {
+  background: var(--text-primary);
+  color: var(--bg-color);
 }
 
 .footer {

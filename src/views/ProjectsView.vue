@@ -1,6 +1,9 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { supabase } from '../config/supabase'
+
+const { t } = useI18n()
 
 const categories = ref(['All'])
 const activeCategory = ref('All')
@@ -31,8 +34,8 @@ const filteredProjects = computed(() => {
 <template>
   <main class="page-wrapper container fade-in">
     <div class="page-header">
-      <h1>Archive</h1>
-      <p>A collection of selected works and experiments.</p>
+      <h1>{{ t('archive.title') }}</h1>
+      <p>{{ t('archive.subtitle') }}</p>
     </div>
 
     <div class="filters">
@@ -42,17 +45,17 @@ const filteredProjects = computed(() => {
         @click="activeCategory = cat"
         :class="['filter-btn', { active: activeCategory === cat }]"
       >
-        {{ cat }}
+        {{ cat === 'All' ? t('archive.all') : cat }}
       </button>
     </div>
 
-    <div v-if="loading" style="color: var(--text-secondary); margin-top: 24px;">Loading projects...</div>
+    <div v-if="loading" style="color: var(--text-secondary); margin-top: 24px;">{{ t('home.loading') }}</div>
     <div v-else class="grid projects-grid">
       <router-link :to="`/project/${project.id}`" v-for="project in filteredProjects" :key="project.id" class="project-card">
         <div class="project-image">
           <img :src="project.image" :alt="project.title" loading="lazy" />
           <div class="overlay">
-             <span class="view-btn">View Project</span>
+             <span class="view-btn">{{ t('home.viewProject') }}</span>
           </div>
         </div>
         <div class="project-info">
