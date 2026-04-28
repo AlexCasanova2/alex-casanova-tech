@@ -2,6 +2,7 @@
 import { ref, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import { supabase } from '../config/supabase'
+import { marked } from 'marked'
 
 const route = useRoute()
 const projectId = route.params.id
@@ -33,13 +34,16 @@ onMounted(async () => {
       <router-link to="/projects" class="back-link">← Back to Archive</router-link>
       <div class="meta">
         <span>{{ project.category }}</span>
-        <span>2024</span>
       </div>
       <h1>{{ project.title }}</h1>
       <p class="description">{{ project.description }}</p>
       
       <div class="tags">
         <span v-for="tag in project.tags" :key="tag" class="tag">{{ tag }}</span>
+      </div>
+
+      <div class="project-actions" v-if="project.url" style="margin-top: 32px;">
+        <a :href="project.url" target="_blank" rel="noopener noreferrer" class="btn btn-primary">Visit Live Project ↗</a>
       </div>
     </div>
 
@@ -48,12 +52,11 @@ onMounted(async () => {
         <img :src="project.image" :alt="project.title" />
       </div>
       
-      <div class="article">
+      <div v-if="project.content" class="article markdown-body" v-html="marked.parse(project.content)"></div>
+      
+      <div v-else class="article">
         <h2>Overview</h2>
-        <p>This is a simulated case study for <strong>{{ project.title }}</strong>. In a real-world scenario, this section would detail the problem statement, the approach taken, and the final results achieved. It would showcase the design process, technical architecture, and key learnings.</p>
-        
-        <h2>Challenges</h2>
-        <p>Building high-performance interfaces requires a deep understanding of both aesthetics and engineering. The main challenge was to deliver a smooth, accessible, and fast experience without compromising the premium look and feel.</p>
+        <p>No detailed case study available for this project.</p>
       </div>
     </div>
   </main>
@@ -144,5 +147,65 @@ onMounted(async () => {
   font-size: 1.125rem;
   line-height: 1.7;
   color: var(--text-secondary);
+}
+
+/* Markdown Specific Overrides */
+.markdown-body :deep(img) {
+  max-width: 100%;
+  height: auto;
+  border-radius: var(--radius-md);
+  margin: 40px 0;
+  display: block;
+}
+
+.markdown-body :deep(h2) {
+  margin: 48px 0 24px;
+  font-size: 2.5rem;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+
+.markdown-body :deep(h3) {
+  margin: 32px 0 16px;
+  font-size: 1.5rem;
+  font-weight: 500;
+}
+
+.markdown-body :deep(p) {
+  margin-bottom: 24px;
+  font-size: 1.125rem;
+  line-height: 1.8;
+  color: var(--text-secondary);
+}
+
+.markdown-body :deep(ul), .markdown-body :deep(ol) {
+  margin-bottom: 24px;
+  padding-left: 24px;
+  color: var(--text-secondary);
+  font-size: 1.125rem;
+  line-height: 1.8;
+}
+
+.markdown-body :deep(li) {
+  margin-bottom: 8px;
+}
+
+.markdown-body :deep(strong) {
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+.markdown-body :deep(blockquote) {
+  border-left: 4px solid var(--border-color);
+  padding-left: 20px;
+  margin: 32px 0;
+  font-style: italic;
+  color: var(--text-primary);
+}
+
+.markdown-body :deep(a) {
+  color: var(--text-primary);
+  text-decoration: underline;
+  text-underline-offset: 4px;
 }
 </style>

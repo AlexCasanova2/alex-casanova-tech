@@ -1,14 +1,24 @@
 <script setup>
 import { ref, onMounted } from 'vue'
+import { useRoute } from 'vue-router'
 import { userData } from './config/userData'
+import { supabase } from './config/supabase'
+
+const route = useRoute()
 
 const isDarkMode = ref(true)
+const userSession = ref(null)
 
 const toggleTheme = () => {
   isDarkMode.value = !isDarkMode.value
   const theme = isDarkMode.value ? 'dark' : 'light'
   document.documentElement.setAttribute('data-theme', theme)
   localStorage.setItem('theme', theme)
+}
+
+const handleLogout = async () => {
+  await supabase.auth.signOut()
+  userSession.value = null
 }
 
 onMounted(() => {
@@ -22,6 +32,14 @@ onMounted(() => {
     isDarkMode.value = prefersDark
     document.documentElement.setAttribute('data-theme', prefersDark ? 'dark' : 'light')
   }
+
+  // Auth State Listener
+  supabase.auth.getSession().then(({ data }) => {
+    userSession.value = data.session
+  })
+  supabase.auth.onAuthStateChange((_, session) => {
+    userSession.value = session
+  })
 })
 </script>
 
@@ -34,10 +52,28 @@ onMounted(() => {
           <router-link to="/">Work</router-link>
           <router-link to="/projects">Archive</router-link>
           <router-link to="/contact">Contact</router-link>
-          <button @click="toggleTheme" class="theme-toggle" :aria-label="isDarkMode ? 'Switch to light mode' : 'Switch to dark mode'">
-            <svg v-if="isDarkMode" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.2 4.2l1.4 1.4M18.4 18.4l1.4 1.4M1 12h2M21 12h2M4.2 19.8l1.4-1.4M18.4 5.6l1.4-1.4"/></svg>
-            <svg v-else xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
-          </button>
+          
+          <div class="nav-actions">
+            <!-- Admin / Web Toggle -->
+            <router-link v-if="userSession && route.path !== '/admin'" to="/admin" class="theme-toggle" title="Go to Dashboard">
+              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
+            </router-link>
+
+            <router-link v-if="userSession && route.path === '/admin'" to="/" class="theme-toggle" title="View Website">
+              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+            </router-link>
+
+            <!-- Logout Shortcut -->
+            <button v-if="userSession" @click="handleLogout" class="theme-toggle" title="Sign Out" style="color: #ef4444;">
+              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+            </button>
+
+            <!-- Theme Toggle -->
+            <button @click="toggleTheme" class="theme-toggle" :aria-label="isDarkMode ? 'Switch to light mode' : 'Switch to dark mode'">
+              <svg v-if="isDarkMode" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.2 4.2l1.4 1.4M18.4 18.4l1.4 1.4M1 12h2M21 12h2M4.2 19.8l1.4-1.4M18.4 5.6l1.4-1.4"/></svg>
+              <svg v-else xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+            </button>
+          </div>
         </div>
       </div>
     </nav>
@@ -105,6 +141,15 @@ onMounted(() => {
 .nav-links a:hover,
 .nav-links a.router-link-active {
   color: var(--text-primary);
+}
+
+.nav-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border-left: 1px solid var(--border-color);
+  padding-left: 20px;
+  margin-left: 8px;
 }
 
 .theme-toggle {
