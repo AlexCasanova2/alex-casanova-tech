@@ -90,6 +90,12 @@ const messages = {
       ctaTitle: '¿Te ha gustado lo que ves?',
       ctaDesc: 'Hablemos de cómo puedo ayudar a que tu próximo proyecto sea un éxito.',
       ctaBtn: 'Contactar'
+    },
+    notFound: {
+      title: '404',
+      subtitle: 'Página no encontrada',
+      desc: 'Parece que te has perdido en el vacío digital. La página que buscas no existe o ha sido movida.',
+      btn: 'Volver al inicio'
     }
   },
   en: {
@@ -181,6 +187,12 @@ const messages = {
       ctaTitle: 'Like what you see?',
       ctaDesc: 'Let\'s talk about how I can help make your next project a success.',
       ctaBtn: 'Get in Touch'
+    },
+    notFound: {
+      title: '404',
+      subtitle: 'Page not found',
+      desc: 'It seems you got lost in the digital void. The page you are looking for does not exist or has been moved.',
+      btn: 'Back to home'
     }
   },
   ca: {
@@ -272,6 +284,12 @@ const messages = {
       ctaTitle: 'T\'ha agradat el que veus?',
       ctaDesc: 'Parlem de com puc ajudar a fer que el teu proper projecte sigui un èxit.',
       ctaBtn: 'Contactar'
+    },
+    notFound: {
+      title: '404',
+      subtitle: 'Pàgina no trobada',
+      desc: 'Sembla que t\'has perdut en el buit digital. La pàgina que busques no existeix o ha estat moguda.',
+      btn: 'Tornar a l\'inici'
     }
   }
 }
