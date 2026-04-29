@@ -51,7 +51,7 @@ const filteredProjects = computed(() => {
 
     <div v-if="loading" style="color: var(--text-secondary); margin-top: 24px;">{{ t('home.loading') }}</div>
     <div v-else class="grid projects-grid">
-      <router-link :to="`/project/${project.id}`" v-for="project in filteredProjects" :key="project.id" class="project-card">
+      <router-link :to="`/project/${project.slug || project.id}`" v-for="project in filteredProjects" :key="project.id" class="project-card">
         <div class="project-image">
           <img :src="project.image" :alt="project.title" loading="lazy" />
           <div class="overlay">

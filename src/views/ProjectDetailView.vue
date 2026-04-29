@@ -11,16 +11,38 @@ const projectId = route.params.id
 
 const project = ref(null)
 const loading = ref(true)
+const userSession = ref(null)
 
 onMounted(async () => {
-  const { data, error } = await supabase
-    .from('projects')
-    .select('*')
-    .eq('id', projectId)
-    .single()
+  supabase.auth.getSession().then(({ data }) => {
+    userSession.value = data.session
+  })
+  
+  let query = supabase.from('projects').select('*')
+  
+  if (/^\d+$/.test(projectId)) {
+    query = query.eq('id', projectId)
+  } else {
+    query = query.eq('slug', projectId)
+  }
+  
+  const { data, error } = await query.single()
     
   if (!error && data) {
     project.value = data
+    
+    // SEO Update
+    document.title = data.seo_title 
+      ? `${data.seo_title} | Àlex Casanova` 
+      : `${data.title} | Àlex Casanova`
+      
+    let metaDesc = document.querySelector('meta[name="description"]')
+    if (!metaDesc) {
+      metaDesc = document.createElement('meta')
+      metaDesc.name = 'description'
+      document.head.appendChild(metaDesc)
+    }
+    metaDesc.content = data.seo_description || data.description
   }
   loading.value = false
 })
@@ -33,8 +55,19 @@ onMounted(async () => {
   
   <main class="page-wrapper container fade-in" v-else-if="project">
     <div class="project-header">
-      <router-link to="/projects" class="back-link">{{ t('project.back') }}</router-link>
-      <div class="meta">
+      <div style="display: flex; justify-content: space-between; align-items: center; width: 100%; margin-bottom: 40px;">
+        <router-link to="/projects" class="back-link" style="margin-bottom: 0; display: inline-flex; align-items: center; gap: 8px;">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+          {{ t('project.backArchive') }}
+        </router-link>
+        
+        <router-link v-if="userSession" :to="`/admin?edit=${project.id}`" class="edit-btn">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg>
+          Editar Proyecto
+        </router-link>
+      </div>
+
+      <div class="meta fade-in delay-1">
         <span>{{ project.category }}</span>
       </div>
       <h1>{{ project.title }}</h1>
@@ -61,6 +94,18 @@ onMounted(async () => {
         <p>No detailed case study available for this project.</p>
       </div>
     </div>
+
+    <!-- CTA Section -->
+    <div class="project-cta fade-in delay-2">
+      <div class="cta-content">
+        <h2>{{ t('project.ctaTitle') }}</h2>
+        <p>{{ t('project.ctaDesc') }}</p>
+        <router-link to="/contact" class="btn btn-primary cta-btn">
+          {{ t('project.ctaBtn') }}
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+        </router-link>
+      </div>
+    </div>
   </main>
   
   <main class="page-wrapper container fade-in" v-else>
@@ -72,7 +117,7 @@ onMounted(async () => {
 <style scoped>
 .project-header {
   margin-bottom: 60px;
-  max-width: 800px;
+  max-width: 100%;
 }
 
 .back-link {
@@ -116,8 +161,36 @@ onMounted(async () => {
   padding: 6px 16px;
   border: 1px solid var(--border-color);
   border-radius: 100px;
-  font-size: 0.875rem;
-  color: var(--text-secondary);
+  font-size: 1rem;
+  transition: color var(--transition-fast);
+}
+
+.edit-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  color: var(--text-primary);
+  padding: 8px 16px;
+  border-radius: 100px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  transition: all var(--transition-fast);
+}
+
+.edit-btn:hover {
+  background: var(--text-primary);
+  color: var(--bg-color);
+  border-color: var(--text-primary);
+}
+
+.project-title-wrapper {
+  width: 100%;
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  margin-bottom: 60px;
+  background: var(--bg-secondary);
 }
 
 .hero-image {
@@ -209,5 +282,43 @@ onMounted(async () => {
   color: var(--text-primary);
   text-decoration: underline;
   text-underline-offset: 4px;
+}
+
+/* CTA Section */
+.project-cta {
+  margin-top: 100px;
+  padding: 60px 0 20px;
+  border-top: 1px solid var(--border-color);
+  text-align: center;
+}
+
+.cta-content {
+  max-width: 600px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+}
+
+.cta-content h2 {
+  font-size: 2.5rem;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+
+.cta-content p {
+  font-size: 1.125rem;
+  color: var(--text-secondary);
+  line-height: 1.6;
+}
+
+.cta-btn {
+  margin-top: 12px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 16px 32px;
+  font-size: 1.1rem;
 }
 </style>

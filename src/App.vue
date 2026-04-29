@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { userData } from './config/userData'
@@ -28,6 +28,38 @@ const handleLogout = async () => {
   await supabase.auth.signOut()
   userSession.value = null
 }
+
+const updateGlobalSEO = () => {
+  let title = 'Àlex Casanova · Product Designer & Developer'
+  let desc = 'Portfolio of Àlex Casanova, specializing in creating high-impact, premium digital experiences.'
+  
+  if (route.name === 'home') {
+    title = `Àlex Casanova · Product Designer & Developer`
+    desc = t('home.desc', { name: userData.name, years: userData.experienceYears }).replace(/<[^>]*>?/gm, '')
+  } else if (route.name === 'projects') {
+    title = `${t('nav.archive')} | Àlex Casanova`
+  } else if (route.name === 'contact') {
+    title = `${t('nav.contact')} | Àlex Casanova`
+  } else if (route.name === 'admin') {
+    title = `Admin | Àlex Casanova`
+  }
+  
+  // Project detail handles its own SEO dynamically
+  if (route.name !== 'project-detail') {
+    document.title = title
+    let metaDesc = document.querySelector('meta[name="description"]')
+    if (!metaDesc) {
+      metaDesc = document.createElement('meta')
+      metaDesc.name = 'description'
+      document.head.appendChild(metaDesc)
+    }
+    metaDesc.content = desc
+  }
+}
+
+watch([() => route.path, locale], () => {
+  updateGlobalSEO()
+})
 
 onMounted(() => {
   const savedTheme = localStorage.getItem('theme')

@@ -49,9 +49,9 @@ const messages = {
       authenticating: 'Autenticando...',
       workspace: 'Espacio de trabajo',
       workspaceDesc: 'Crea y gestiona tus casos de estudio.',
-      addProject: '✨ Añadir',
-      editProject: '✏️ Editar',
-      manageProjects: '🗂️ Gestionar',
+      addProject: 'Añadir',
+      editProject: 'Editar',
+      manageProjects: 'Gestionar',
       projectDetails: 'Detalles del Proyecto',
       cancelEdit: 'Cancelar Edición',
       title: 'Título',
@@ -74,14 +74,22 @@ const messages = {
       noProjects: 'No hay proyectos. ¡Añade el primero!',
       edit: 'Editar',
       delete: 'Borrar',
-      confirmDelete: '¿Estás seguro de que quieres borrar este proyecto?'
+      confirmDelete: '¿Estás seguro de que quieres borrar este proyecto?',
+      seoSettings: 'Configuración SEO',
+      seoTitle: 'Título SEO (Opcional)',
+      seoTitlePlaceholder: 'Título personalizado para buscadores',
+      seoDesc: 'Descripción SEO (Opcional)',
+      seoDescPlaceholder: 'Descripción personalizada para buscadores'
     },
     project: {
       live: 'Ver Proyecto ↗',
       back: '← Volver a trabajos',
       loading: 'Cargando detalles del proyecto...',
       notFound: 'Proyecto no encontrado.',
-      backArchive: 'Volver al archivo'
+      backArchive: 'Volver al archivo',
+      ctaTitle: '¿Te ha gustado lo que ves?',
+      ctaDesc: 'Hablemos de cómo puedo ayudar a que tu próximo proyecto sea un éxito.',
+      ctaBtn: 'Contactar'
     }
   },
   en: {
@@ -132,9 +140,9 @@ const messages = {
       authenticating: 'Authenticating...',
       workspace: 'Workspace',
       workspaceDesc: 'Create and manage your case studies.',
-      addProject: '✨ Add New',
-      editProject: '✏️ Edit Project',
-      manageProjects: '🗂️ Manage Projects',
+      addProject: 'Add',
+      editProject: 'Edit',
+      manageProjects: 'Manage Projects',
       projectDetails: 'Project Details',
       cancelEdit: 'Cancel Edit',
       title: 'Title',
@@ -157,14 +165,22 @@ const messages = {
       noProjects: 'No projects found. Add your first one!',
       edit: 'Edit',
       delete: 'Delete',
-      confirmDelete: 'Are you sure you want to delete this project? This action cannot be undone.'
+      confirmDelete: 'Are you sure you want to delete this project? This action cannot be undone.',
+      seoSettings: 'SEO Settings',
+      seoTitle: 'SEO Title (Optional)',
+      seoTitlePlaceholder: 'Custom title for search engines',
+      seoDesc: 'SEO Description (Optional)',
+      seoDescPlaceholder: 'Custom description for search engines'
     },
     project: {
       live: 'Live Project ↗',
       back: '← Back to work',
       loading: 'Loading project details...',
       notFound: 'Project not found.',
-      backArchive: 'Back to archive'
+      backArchive: 'Back to archive',
+      ctaTitle: 'Like what you see?',
+      ctaDesc: 'Let\'s talk about how I can help make your next project a success.',
+      ctaBtn: 'Get in Touch'
     }
   },
   ca: {
@@ -215,9 +231,9 @@ const messages = {
       authenticating: 'Autenticant...',
       workspace: 'Espai de treball',
       workspaceDesc: 'Crea i gestiona els teus casos d\'estudi.',
-      addProject: '✨ Afegir',
-      editProject: '✏️ Editar',
-      manageProjects: '🗂️ Gestionar',
+      addProject: 'Afegir',
+      editProject: 'Editar',
+      manageProjects: 'Gestionar',
       projectDetails: 'Detalls del Projecte',
       cancelEdit: 'Cancel·lar Edició',
       title: 'Títol',
@@ -240,14 +256,22 @@ const messages = {
       noProjects: 'No hi ha projectes. Afegeix el primer!',
       edit: 'Editar',
       delete: 'Esborrar',
-      confirmDelete: 'Estàs segur que vols esborrar aquest projecte?'
+      confirmDelete: 'Estàs segur que vols esborrar aquest projecte?',
+      seoSettings: 'Configuració SEO',
+      seoTitle: 'Títol SEO (Opcional)',
+      seoTitlePlaceholder: 'Títol personalitzat per a cercadors',
+      seoDesc: 'Descripció SEO (Opcional)',
+      seoDescPlaceholder: 'Descripció personalitzada per a cercadors'
     },
     project: {
       live: 'Veure Projecte ↗',
       back: '← Tornar a treballs',
       loading: 'Carregant detalls del projecte...',
       notFound: 'Projecte no trobat.',
-      backArchive: 'Tornar a l\'arxiu'
+      backArchive: 'Tornar a l\'arxiu',
+      ctaTitle: 'T\'ha agradat el que veus?',
+      ctaDesc: 'Parlem de com puc ajudar a fer que el teu proper projecte sigui un èxit.',
+      ctaBtn: 'Contactar'
     }
   }
 }

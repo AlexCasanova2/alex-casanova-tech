@@ -1,9 +1,11 @@
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, watch } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { supabase } from '../config/supabase'
-
 const { t } = useI18n()
+const route = useRoute()
+const router = useRouter()
 
 const user = ref(null)
 const email = ref('')
@@ -18,15 +20,35 @@ const projectsList = ref([])
 // Form state
 const newProject = ref({
   title: '',
+  slug: '',
   description: '',
   content: '',
   category: '',
   tags: '',
-  url: ''
+  url: '',
+  seo_title: '',
+  seo_description: ''
 })
+
+const slugify = (text) => {
+  return text.toString().toLowerCase()
+    .replace(/\s+/g, '-')
+    .replace(/[^\w\-]+/g, '')
+    .replace(/\-\-+/g, '-')
+    .replace(/^-+/, '')
+    .replace(/-+$/, '')
+}
 
 const isEditing = ref(false)
 const editingId = ref(null)
+
+// Auto-fill slug when title changes
+watch(() => newProject.value.title, (newTitle) => {
+  // Only auto-update if we are creating a new project, to prevent breaking existing URLs
+  if (!isEditing.value) {
+    newProject.value.slug = slugify(newTitle)
+  }
+})
 
 const coverImageFile = ref(null)
 const coverImagePreview = ref(null)
@@ -43,7 +65,17 @@ onMounted(async () => {
   const { data: { session } } = await supabase.auth.getSession()
   if (session) {
     user.value = session.user
-    fetchProjects()
+    await fetchProjects()
+    
+    // Check if we need to edit a project directly from the URL
+    if (route.query.edit) {
+      const p = projectsList.value.find(proj => proj.id == route.query.edit)
+      if (p) {
+        loadForEdit(p)
+        // clean up the URL without reloading the page
+        router.replace({ path: '/admin' })
+      }
+    }
   }
 
   supabase.auth.onAuthStateChange((_, session) => {
@@ -137,11 +169,14 @@ const insertFormat = (prefix, suffix = '') => {
 const loadForEdit = (project) => {
   newProject.value = {
     title: project.title,
+    slug: project.slug || '',
     description: project.description,
     content: project.content || '',
     category: project.category,
     tags: project.tags ? project.tags.join(', ') : '',
-    url: project.url || ''
+    url: project.url || '',
+    seo_title: project.seo_title || '',
+    seo_description: project.seo_description || ''
   }
   isEditing.value = true
   editingId.value = project.id
@@ -154,7 +189,7 @@ const loadForEdit = (project) => {
 const cancelEdit = () => {
   isEditing.value = false
   editingId.value = null
-  newProject.value = { title: '', description: '', content: '', category: '', tags: '', url: '' }
+  newProject.value = { title: '', slug: '', description: '', content: '', category: '', tags: '', url: '', seo_title: '', seo_description: '' }
   coverImageFile.value = null
   coverImagePreview.value = null
 }
@@ -189,12 +224,15 @@ const submitProject = async () => {
 
     const payload = { 
       title: newProject.value.title,
+      slug: newProject.value.slug.toLowerCase().replace(/\s+/g, '-').replace(/[^\w-]+/g, ''),
       description: newProject.value.description,
       content: newProject.value.content,
       category: newProject.value.category,
       image: coverUrl,
       tags: tagsArray,
-      url: newProject.value.url || null
+      url: newProject.value.url || null,
+      seo_title: newProject.value.seo_title || null,
+      seo_description: newProject.value.seo_description || null
     }
 
     if (isEditing.value) {
@@ -252,10 +290,16 @@ const submitProject = async () => {
       </div>
       
       <div class="tabs">
-        <button :class="['tab-btn', { active: activeTab === 'add' }]" @click="activeTab = 'add'">
-          {{ isEditing ? t('admin.editProject') : t('admin.addProject') }}
+        <button :class="['tab-btn', { active: activeTab === 'add' && !isEditing }]" @click="cancelEdit(); activeTab = 'add'">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
+          {{ t('admin.addProject') }}
+        </button>
+        <button v-if="isEditing" :class="['tab-btn', { active: activeTab === 'add' && isEditing }]" @click="activeTab = 'add'">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg>
+          {{ t('admin.editProject') }}
         </button>
         <button :class="['tab-btn', { active: activeTab === 'manage' }]" @click="activeTab = 'manage'">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
           {{ t('admin.manageProjects') }}
         </button>
       </div>
@@ -275,6 +319,11 @@ const submitProject = async () => {
             <div class="input-group">
               <label>{{ t('admin.title') }}</label>
               <input type="text" v-model="newProject.title" placeholder="e.g. Next-Gen Analytics Dashboard" required class="title-input" />
+            </div>
+
+            <div class="input-group mt-16">
+              <label>Slug (URL)</label>
+              <input type="text" v-model="newProject.slug" placeholder="e.g. next-gen-dashboard" required />
             </div>
 
             <div class="input-group mt-24">
@@ -301,6 +350,19 @@ const submitProject = async () => {
                 </div>
               </div>
               <textarea ref="contentTextarea" v-model="newProject.content" rows="18" class="editor-textarea" placeholder="Write your case study using Markdown..."></textarea>
+            </div>
+          </div>
+
+          <div class="card">
+            <h3 class="card-title">{{ t('admin.seoSettings') }}</h3>
+            <div class="input-group">
+              <label>{{ t('admin.seoTitle') }}</label>
+              <input type="text" v-model="newProject.seo_title" :placeholder="t('admin.seoTitlePlaceholder')" />
+            </div>
+            
+            <div class="input-group mt-20">
+              <label>{{ t('admin.seoDesc') }}</label>
+              <textarea v-model="newProject.seo_description" rows="3" :placeholder="t('admin.seoDescPlaceholder')"></textarea>
             </div>
           </div>
         </div>
@@ -401,35 +463,44 @@ const submitProject = async () => {
   margin-top: 4px;
 }
 
-/* Tabs */
+/* Premium Segmented Control Tabs */
 .tabs {
-  display: flex;
-  gap: 16px;
+  display: inline-flex;
+  gap: 4px;
   margin-bottom: 40px;
-  border-bottom: 1px solid var(--border-color);
-  padding-bottom: 16px;
+  background: var(--bg-secondary);
+  padding: 6px;
+  border-radius: 100px;
+  border: 1px solid var(--border-color);
 }
 
 .tab-btn {
   background: transparent;
   border: none;
-  font-size: 1rem;
-  font-weight: 500;
+  font-size: 0.95rem;
+  font-weight: 600;
   color: var(--text-secondary);
   cursor: pointer;
-  padding: 8px 16px;
-  border-radius: var(--radius-sm);
-  transition: all var(--transition-fast);
+  padding: 10px 24px;
+  border-radius: 100px;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .tab-btn:hover {
-  background: var(--bg-secondary);
   color: var(--text-primary);
 }
 
 .tab-btn.active {
   background: var(--text-primary);
   color: var(--bg-color);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+:root[data-theme="light"] .tab-btn.active {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
 }
 
 /* Manage List */
