@@ -2,6 +2,10 @@
     "framework": "vite",
     "rewrites": [
         {
+            "source": "/project/:slug",
+            "destination": "/api/project-seo?slug=:slug"
+        },
+        {
             "source": "/(.*)",
             "destination": "/index.html"
         }
