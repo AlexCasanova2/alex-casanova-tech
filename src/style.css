@@ -50,11 +50,17 @@ body {
 }
 
 .page-wrapper {
-  padding-top: 120px;
+  padding-top: 180px;
   padding-bottom: 80px;
   min-height: 100vh;
   display: flex;
   flex-direction: column;
+}
+
+@media (min-width: 768px) {
+  .page-wrapper {
+    padding-top: 120px;
+  }
 }
 
 /* Typography */
