@@ -14,7 +14,7 @@ onMounted(async () => {
     .select('*')
     .eq('show_on_homepage', true)
     .order('sort_order', { ascending: true })
-    .limit(3)
+    .limit(4)
     
   if (!error && data) {
     featuredProjects.value = data
