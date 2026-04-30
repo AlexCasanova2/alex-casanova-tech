@@ -14,7 +14,7 @@ const isLoggingIn = ref(false)
 const errorMessage = ref('')
 
 // Tabs
-const activeTab = ref('add') // 'add' | 'manage'
+const activeTab = ref('manage') // 'add' | 'manage'
 const projectsList = ref([])
 
 // Form state
@@ -323,6 +323,10 @@ const submitProject = async () => {
       </div>
       
       <div class="tabs">
+        <button :class="['tab-btn', { active: activeTab === 'manage' }]" @click="activeTab = 'manage'">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
+          {{ t('admin.manageProjects') }}
+        </button>
         <button :class="['tab-btn', { active: activeTab === 'add' && !isEditing }]" @click="cancelEdit(); activeTab = 'add'">
           <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
           {{ t('admin.addProject') }}
@@ -330,10 +334,6 @@ const submitProject = async () => {
         <button v-if="isEditing" :class="['tab-btn', { active: activeTab === 'add' && isEditing }]" @click="activeTab = 'add'">
           <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg>
           {{ t('admin.editProject') }}
-        </button>
-        <button :class="['tab-btn', { active: activeTab === 'manage' }]" @click="activeTab = 'manage'">
-          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
-          {{ t('admin.manageProjects') }}
         </button>
       </div>
 
