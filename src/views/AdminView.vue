@@ -14,7 +14,7 @@ const isLoggingIn = ref(false)
 const errorMessage = ref('')
 
 // Tabs
-const activeTab = ref('manage') // 'add' | 'manage'
+const activeTab = ref('manage') // 'add' | 'manage' | 'trash'
 const projectsList = ref([])
 
 // Form state
@@ -198,12 +198,48 @@ const cancelEdit = () => {
   coverImagePreview.value = null
 }
 
-const deleteProject = async (id) => {
-  if (!confirm(t('admin.confirmDelete'))) return
+const showDeleteModal = ref(false)
+const projectToDelete = ref(null)
+
+const openDeleteModal = (project) => {
+  projectToDelete.value = project
+  showDeleteModal.value = true
+}
+
+const closeDeleteModal = () => {
+  showDeleteModal.value = false
+  projectToDelete.value = null
+}
+
+const deleteProject = async () => {
+  if (!projectToDelete.value) return
+  
+  // Soft delete: move to trash
+  const { error } = await supabase.from('projects').update({ is_deleted: true }).eq('id', projectToDelete.value.id)
+  
+  if (error) {
+    alert('Error moving to trash: ' + error.message)
+  } else {
+    fetchProjects()
+    closeDeleteModal()
+  }
+}
+
+const restoreProject = async (id) => {
+  const { error } = await supabase.from('projects').update({ is_deleted: false }).eq('id', id)
+  if (error) {
+    alert('Error restoring project: ' + error.message)
+  } else {
+    fetchProjects()
+  }
+}
+
+const permanentDeleteProject = async (id) => {
+  if (!confirm('¿Estás SEGURO? Esta acción borrará los datos y la imagen de forma permanente.')) return
   
   const { error } = await supabase.from('projects').delete().eq('id', id)
   if (error) {
-    alert('Error deleting project: ' + error.message)
+    alert('Error deleting permanently: ' + error.message)
   } else {
     fetchProjects()
   }
@@ -334,6 +370,10 @@ const submitProject = async () => {
         <button v-if="isEditing" :class="['tab-btn', { active: activeTab === 'add' && isEditing }]" @click="activeTab = 'add'">
           <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg>
           {{ t('admin.editProject') }}
+        </button>
+        <button :class="['tab-btn', { active: activeTab === 'trash' }]" @click="activeTab = 'trash'">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
+          Papelera
         </button>
       </div>
 
@@ -466,12 +506,12 @@ const submitProject = async () => {
       <!-- MANAGE SECTION -->
       <div v-if="activeTab === 'manage'" class="manage-section fade-in">
         <div class="card">
-          <div v-if="projectsList.length === 0" style="padding: 32px; text-align: center; color: var(--text-secondary);">
+          <div v-if="projectsList.filter(p => !p.is_deleted).length === 0" style="padding: 32px; text-align: center; color: var(--text-secondary);">
             {{ t('admin.noProjects') }}
           </div>
           
           <div class="project-list">
-            <div v-for="(p, index) in projectsList" :key="p.id" class="project-list-item">
+            <div v-for="(p, index) in projectsList.filter(p => !p.is_deleted)" :key="p.id" class="project-list-item">
               <div class="list-reorder">
                 <button @click="moveProject(index, 'up')" :disabled="index === 0" class="order-btn" :title="t('admin.moveUp')">
                   <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"></polyline></svg>
@@ -482,7 +522,7 @@ const submitProject = async () => {
               </div>
               <img :src="p.image" class="list-thumb" />
               <div class="list-info">
-                <h4>
+                <h4 @click="loadForEdit(p)" class="clickable-title">
                   {{ p.title }}
                   <svg v-if="p.show_on_homepage" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="#FFD700" stroke="#FFD700" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="star-icon"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
                 </h4>
@@ -493,10 +533,58 @@ const submitProject = async () => {
                   <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
                 </router-link>
                 <button @click="loadForEdit(p)" class="btn-small">{{ t('admin.edit') }}</button>
-                <button @click="deleteProject(p.id)" class="btn-small danger">{{ t('admin.delete') }}</button>
+                <button @click="openDeleteModal(p)" class="btn-small danger">{{ t('admin.delete') }}</button>
               </div>
             </div>
           </div>
+        </div>
+      </div>
+
+      <!-- TRASH SECTION -->
+      <div v-if="activeTab === 'trash'" class="manage-section fade-in">
+        <div class="card">
+          <h2 class="card-title">Papelera</h2>
+          <p class="help-text mb-24">Los proyectos aquí listados no son visibles en la web. Puedes restaurarlos o eliminarlos definitivamente.</p>
+          
+          <div v-if="projectsList.filter(p => p.is_deleted).length === 0" style="padding: 32px; text-align: center; color: var(--text-secondary);">
+            La papelera está vacía.
+          </div>
+          
+          <div class="project-list">
+            <div v-for="p in projectsList.filter(p => p.is_deleted)" :key="p.id" class="project-list-item">
+              <img :src="p.image" class="list-thumb" />
+              <div class="list-info">
+                <h4>{{ p.title }}</h4>
+                <span>{{ p.category }} • Borrado el {{ new Date(p.updated_at || p.created_at).toLocaleDateString() }}</span>
+              </div>
+              <div class="list-actions">
+                <button @click="restoreProject(p.id)" class="btn-small">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 6px;"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"></path><polyline points="16 8 21 8 21 3"></polyline></svg>
+                  Restaurar
+                </button>
+                <button @click="permanentDeleteProject(p.id)" class="btn-small danger">Eliminar para siempre</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Custom Delete Modal -->
+    <div v-if="showDeleteModal" class="modal-overlay fade-in" @click.self="closeDeleteModal">
+      <div class="modal-content scale-in">
+        <div class="modal-header">
+          <div class="warning-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+          </div>
+          <h3>¿Mover a la Papelera?</h3>
+        </div>
+        <p class="modal-body">
+          Vas a enviar <strong>{{ projectToDelete?.title }}</strong> a la papelera. Podrás restaurarlo más tarde si cambias de opinión.
+        </p>
+        <div class="modal-footer">
+          <button @click="closeDeleteModal" class="btn-small">{{ t('admin.cancelEdit') }}</button>
+          <button @click="deleteProject" class="btn btn-primary danger-btn">Mover a la Papelera</button>
         </div>
       </div>
     </div>
@@ -608,6 +696,16 @@ const submitProject = async () => {
   margin-bottom: 4px;
 }
 
+.clickable-title {
+  cursor: pointer;
+  transition: opacity var(--transition-fast);
+  display: inline-block;
+}
+
+.clickable-title:hover {
+  opacity: 0.7;
+}
+
 .list-info span {
   font-size: 0.875rem;
   color: var(--text-secondary);
@@ -615,6 +713,7 @@ const submitProject = async () => {
 
 .list-actions {
   display: flex;
+  align-items: center;
   gap: 8px;
 }
 
@@ -865,14 +964,19 @@ input:focus, textarea:focus {
 
 /* Messages & Utilities */
 .btn-small {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   background: var(--bg-color);
   border: 1px solid var(--border-color);
   padding: 6px 14px;
+  height: 32px; /* Altura fija para consistencia total */
   border-radius: 100px;
   font-size: 0.85rem;
   cursor: pointer;
   color: var(--text-primary);
   transition: all var(--transition-fast);
+  line-height: 1;
 }
 
 .btn-small:hover {
@@ -973,4 +1077,82 @@ input:checked + .slider:before {
 
 .mb-24 { margin-bottom: 24px; }
 .mt-8 { margin-top: 8px; }
+
+/* Modal Styles */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(8px);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+
+.modal-content {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  max-width: 450px;
+  width: 100%;
+  padding: 32px;
+  box-shadow: 0 24px 48px rgba(0, 0, 0, 0.4);
+}
+
+.modal-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.warning-icon {
+  width: 48px;
+  height: 48px;
+  background: rgba(239, 68, 68, 0.1);
+  color: #ef4444;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.modal-body {
+  text-align: center;
+  color: var(--text-secondary);
+  line-height: 1.6;
+  margin-bottom: 32px;
+}
+
+.modal-footer {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+}
+
+.danger-btn {
+  background: #ef4444 !important;
+  color: white !important;
+}
+
+.danger-btn:hover {
+  background: #dc2626 !important;
+  transform: translateY(-2px);
+}
+
+.scale-in {
+  animation: scaleIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+@keyframes scaleIn {
+  from { opacity: 0; transform: scale(0.9); }
+  to { opacity: 1; transform: scale(1); }
+}
 </style>
