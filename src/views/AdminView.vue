@@ -1085,8 +1085,7 @@ input:checked + .slider:before {
   left: 0;
   width: 100%;
   height: 100%;
-  background: rgba(0, 0, 0, 0.7);
-  backdrop-filter: blur(8px);
+  background: rgba(0, 0, 0, 0.4); /* Mucho más ligero y sin blur */
   z-index: 1000;
   display: flex;
   align-items: center;
@@ -1095,21 +1094,19 @@ input:checked + .slider:before {
 }
 
 .modal-content {
-  background: rgba(var(--bg-color-rgb, 10, 10, 10), 0.5);
-  backdrop-filter: blur(20px) saturate(180%);
-  -webkit-backdrop-filter: blur(20px) saturate(180%);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
   border-radius: var(--radius-lg);
   max-width: 400px;
   width: 100%;
   padding: 40px 32px;
-  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.5);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
 }
 
 :root[data-theme="light"] .modal-content {
-  background: rgba(255, 255, 255, 0.7);
-  border: 1px solid rgba(0, 0, 0, 0.05);
-  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.1);
+  background: #FFFFFF;
+  border: 1px solid var(--border-color);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
 }
 
 .modal-header {
