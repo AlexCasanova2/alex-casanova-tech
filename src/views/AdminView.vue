@@ -583,8 +583,8 @@ const submitProject = async () => {
           Vas a enviar <strong>{{ projectToDelete?.title }}</strong> a la papelera. Podrás restaurarlo más tarde si cambias de opinión.
         </p>
         <div class="modal-footer">
-          <button @click="closeDeleteModal" class="btn-small">{{ t('admin.cancelEdit') }}</button>
-          <button @click="deleteProject" class="btn btn-primary danger-btn">Mover a la Papelera</button>
+          <button @click="closeDeleteModal" class="btn-small secondary">Cancelar</button>
+          <button @click="deleteProject" class="btn-small danger-btn">Mover a la Papelera</button>
         </div>
       </div>
     </div>
@@ -1095,13 +1095,21 @@ input:checked + .slider:before {
 }
 
 .modal-content {
-  background: var(--bg-secondary);
-  border: 1px solid var(--border-color);
+  background: rgba(var(--bg-color-rgb, 10, 10, 10), 0.5);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: var(--radius-lg);
-  max-width: 450px;
+  max-width: 400px;
   width: 100%;
-  padding: 32px;
-  box-shadow: 0 24px 48px rgba(0, 0, 0, 0.4);
+  padding: 40px 32px;
+  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.5);
+}
+
+:root[data-theme="light"] .modal-content {
+  background: rgba(255, 255, 255, 0.7);
+  border: 1px solid rgba(0, 0, 0, 0.05);
+  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.1);
 }
 
 .modal-header {
@@ -1135,15 +1143,24 @@ input:checked + .slider:before {
   display: flex;
   gap: 12px;
   justify-content: center;
+  margin-top: 8px;
+}
+
+.modal-footer .btn-small {
+  padding: 10px 20px;
+  height: 40px;
+  font-weight: 500;
 }
 
 .danger-btn {
   background: #ef4444 !important;
   color: white !important;
+  border-color: #ef4444 !important;
 }
 
 .danger-btn:hover {
   background: #dc2626 !important;
+  border-color: #dc2626 !important;
   transform: translateY(-2px);
 }
 
