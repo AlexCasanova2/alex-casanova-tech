@@ -386,21 +386,7 @@ const submitProject = async () => {
             </div>
           </div>
 
-          <div class="card">
-            <div style="display: flex; align-items: center; gap: 12px;">
-              <input type="checkbox" v-model="newProject.show_on_homepage" id="show-homepage" style="width: auto; height: auto;" />
-              <label for="show-homepage" style="cursor: pointer;">{{ t('admin.showOnHomepage') }}</label>
-            </div>
-          </div>
 
-          <div class="card">
-            <h3 class="card-title">{{ t('admin.order') }}</h3>
-            <div class="input-group">
-              <label>{{ t('admin.order') }}</label>
-              <input type="number" v-model="newProject.sort_order" placeholder="0" />
-              <span class="help-text">Menor número = mayor prioridad</span>
-            </div>
-          </div>
 
           <div class="card">
             <h3 class="card-title">{{ t('admin.seoSettings') }}</h3>
@@ -419,10 +405,27 @@ const submitProject = async () => {
         <div class="form-sidebar">
           <div class="card publish-card">
             <h3 class="card-title">{{ t('admin.publishing') }}</h3>
-            <p class="help-text mb-16">{{ isEditing ? t('admin.publishEdit') : t('admin.publishNew') }}</p>
-            <button type="submit" class="btn btn-primary w-full" :disabled="isSaving">
-              {{ isSaving ? t('admin.btnSave') : (isEditing ? t('admin.btnUpdate') : t('admin.btnPublish')) }}
-            </button>
+            
+            <div class="visibility-setting mb-24">
+              <div class="toggle-container">
+                <span class="toggle-label">{{ t('admin.showOnHomepage') }}</span>
+                <label class="switch">
+                  <input type="checkbox" v-model="newProject.show_on_homepage">
+                  <span class="slider round"></span>
+                </label>
+              </div>
+              <p class="help-text mt-8">{{ isEditing ? t('admin.publishEdit') : t('admin.publishNew') }}</p>
+            </div>
+
+            <div style="display: flex; flex-direction: column; gap: 12px;">
+              <button type="submit" class="btn btn-primary w-full" :disabled="isSaving">
+                {{ isSaving ? t('admin.btnSave') : (isEditing ? t('admin.btnUpdate') : t('admin.btnPublish')) }}
+              </button>
+              <router-link v-if="isEditing" :to="`/project/${editingId}`" target="_blank" class="btn-small secondary" style="display: flex; justify-content: center; align-items: center; padding: 12px;">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 8px;"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                {{ t('admin.view') }} Proyecto en Vivo
+              </router-link>
+            </div>
           </div>
 
           <div class="card">
@@ -486,6 +489,9 @@ const submitProject = async () => {
                 <span>{{ p.category }} • {{ new Date(p.created_at).toLocaleDateString() }}</span>
               </div>
               <div class="list-actions">
+                <router-link :to="`/project/${p.id}`" target="_blank" class="btn-small secondary" :title="t('admin.view')">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                </router-link>
                 <button @click="loadForEdit(p)" class="btn-small">{{ t('admin.edit') }}</button>
                 <button @click="deleteProject(p.id)" class="btn-small danger">{{ t('admin.delete') }}</button>
               </div>
@@ -871,6 +877,18 @@ input:focus, textarea:focus {
 
 .btn-small:hover {
   background: var(--bg-secondary);
+  border-color: var(--text-primary);
+}
+
+.btn-small.secondary {
+  background: var(--bg-secondary);
+  border-color: var(--border-color);
+  color: var(--text-secondary);
+}
+
+.btn-small.secondary:hover {
+  color: var(--text-primary);
+  border-color: var(--text-primary);
 }
 
 .error-msg, .success-msg {
@@ -888,4 +906,71 @@ input:focus, textarea:focus {
   color: #10b981;
   border: 1px solid rgba(16, 185, 129, 0.2);
 }
+
+/* Toggle Switch Styles */
+.toggle-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.toggle-label {
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.switch {
+  position: relative;
+  display: inline-block;
+  width: 44px;
+  height: 24px;
+}
+
+.switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: var(--border-color);
+  transition: .4s;
+}
+
+.slider:before {
+  position: absolute;
+  content: "";
+  height: 18px;
+  width: 18px;
+  left: 3px;
+  bottom: 3px;
+  background-color: white;
+  transition: .4s;
+}
+
+input:checked + .slider {
+  background-color: #10b981; /* Green success color */
+}
+
+input:checked + .slider:before {
+  transform: translateX(20px);
+}
+
+.slider.round {
+  border-radius: 34px;
+}
+
+.slider.round:before {
+  border-radius: 50%;
+}
+
+.mb-24 { margin-bottom: 24px; }
+.mt-8 { margin-top: 8px; }
 </style>
