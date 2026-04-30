@@ -27,7 +27,8 @@ const newProject = ref({
   tags: '',
   url: '',
   seo_title: '',
-  seo_description: ''
+  seo_description: '',
+  sort_order: 0
 })
 
 const slugify = (text) => {
@@ -57,7 +58,7 @@ const successMessage = ref('')
 const contentTextarea = ref(null)
 
 const fetchProjects = async () => {
-  const { data, error } = await supabase.from('projects').select('*').order('created_at', { ascending: false })
+  const { data, error } = await supabase.from('projects').select('*').order('sort_order', { ascending: true })
   if (data) projectsList.value = data
 }
 
@@ -176,7 +177,8 @@ const loadForEdit = (project) => {
     tags: project.tags ? project.tags.join(', ') : '',
     url: project.url || '',
     seo_title: project.seo_title || '',
-    seo_description: project.seo_description || ''
+    seo_description: project.seo_description || '',
+    sort_order: project.sort_order || 0
   }
   isEditing.value = true
   editingId.value = project.id
@@ -189,7 +191,7 @@ const loadForEdit = (project) => {
 const cancelEdit = () => {
   isEditing.value = false
   editingId.value = null
-  newProject.value = { title: '', slug: '', description: '', content: '', category: '', tags: '', url: '', seo_title: '', seo_description: '' }
+  newProject.value = { title: '', slug: '', description: '', content: '', category: '', tags: '', url: '', seo_title: '', seo_description: '', sort_order: 0 }
   coverImageFile.value = null
   coverImagePreview.value = null
 }
@@ -232,7 +234,8 @@ const submitProject = async () => {
       tags: tagsArray,
       url: newProject.value.url || null,
       seo_title: newProject.value.seo_title || null,
-      seo_description: newProject.value.seo_description || null
+      seo_description: newProject.value.seo_description || null,
+      sort_order: parseInt(newProject.value.sort_order) || 0
     }
 
     if (isEditing.value) {
@@ -354,6 +357,15 @@ const submitProject = async () => {
           </div>
 
           <div class="card">
+            <h3 class="card-title">{{ t('admin.order') }}</h3>
+            <div class="input-group">
+              <label>{{ t('admin.order') }}</label>
+              <input type="number" v-model="newProject.sort_order" placeholder="0" />
+              <span class="help-text">Menor número = mayor prioridad</span>
+            </div>
+          </div>
+
+          <div class="card">
             <h3 class="card-title">{{ t('admin.seoSettings') }}</h3>
             <div class="input-group">
               <label>{{ t('admin.seoTitle') }}</label>
@@ -423,7 +435,7 @@ const submitProject = async () => {
               <img :src="p.image" class="list-thumb" />
               <div class="list-info">
                 <h4>{{ p.title }}</h4>
-                <span>{{ p.category }} • {{ new Date(p.created_at).toLocaleDateString() }}</span>
+                <span>{{ p.category }} • {{ new Date(p.created_at).toLocaleDateString() }} • <strong>Order: {{ p.sort_order }}</strong></span>
               </div>
               <div class="list-actions">
                 <button @click="loadForEdit(p)" class="btn-small">{{ t('admin.edit') }}</button>

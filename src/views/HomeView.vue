@@ -12,7 +12,7 @@ onMounted(async () => {
   const { data, error } = await supabase
     .from('projects')
     .select('*')
-    .order('created_at', { ascending: false })
+    .order('sort_order', { ascending: true })
     .limit(3)
     
   if (!error && data) {

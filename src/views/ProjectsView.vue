@@ -14,7 +14,7 @@ onMounted(async () => {
   const { data, error } = await supabase
     .from('projects')
     .select('*')
-    .order('created_at', { ascending: false })
+    .order('sort_order', { ascending: true })
     
   if (!error && data) {
     projectsData.value = data
