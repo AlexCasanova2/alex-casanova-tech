@@ -28,7 +28,8 @@ const newProject = ref({
   url: '',
   seo_title: '',
   seo_description: '',
-  sort_order: 0
+  sort_order: 0,
+  show_on_homepage: true
 })
 
 const slugify = (text) => {
@@ -178,7 +179,8 @@ const loadForEdit = (project) => {
     url: project.url || '',
     seo_title: project.seo_title || '',
     seo_description: project.seo_description || '',
-    sort_order: project.sort_order || 0
+    sort_order: project.sort_order || 0,
+    show_on_homepage: project.show_on_homepage !== false
   }
   isEditing.value = true
   editingId.value = project.id
@@ -191,7 +193,7 @@ const loadForEdit = (project) => {
 const cancelEdit = () => {
   isEditing.value = false
   editingId.value = null
-  newProject.value = { title: '', slug: '', description: '', content: '', category: '', tags: '', url: '', seo_title: '', seo_description: '', sort_order: 0 }
+  newProject.value = { title: '', slug: '', description: '', content: '', category: '', tags: '', url: '', seo_title: '', seo_description: '', sort_order: 0, show_on_homepage: true }
   coverImageFile.value = null
   coverImagePreview.value = null
 }
@@ -204,6 +206,33 @@ const deleteProject = async (id) => {
     alert('Error deleting project: ' + error.message)
   } else {
     fetchProjects()
+  }
+}
+
+const moveProject = async (index, direction) => {
+  const targetIndex = direction === 'up' ? index - 1 : index + 1
+  if (targetIndex < 0 || targetIndex >= projectsList.value.length) return
+
+  const currentProject = projectsList.value[index]
+  const targetProject = projectsList.value[targetIndex]
+
+  // Swap locally for instant feedback
+  const tempOrder = currentProject.sort_order
+  currentProject.sort_order = targetProject.sort_order
+  targetProject.sort_order = tempOrder
+
+  projectsList.value.splice(index, 1)
+  projectsList.value.splice(targetIndex, 0, currentProject)
+
+  // Persist to DB
+  try {
+    await Promise.all([
+      supabase.from('projects').update({ sort_order: currentProject.sort_order }).eq('id', currentProject.id),
+      supabase.from('projects').update({ sort_order: targetProject.sort_order }).eq('id', targetProject.id)
+    ])
+  } catch (error) {
+    console.error('Error updating order:', error)
+    fetchProjects() // Revert if failed
   }
 }
 
@@ -235,7 +264,8 @@ const submitProject = async () => {
       url: newProject.value.url || null,
       seo_title: newProject.value.seo_title || null,
       seo_description: newProject.value.seo_description || null,
-      sort_order: parseInt(newProject.value.sort_order) || 0
+      sort_order: parseInt(newProject.value.sort_order) || 0,
+      show_on_homepage: newProject.value.show_on_homepage
     }
 
     if (isEditing.value) {
@@ -357,6 +387,13 @@ const submitProject = async () => {
           </div>
 
           <div class="card">
+            <div style="display: flex; align-items: center; gap: 12px;">
+              <input type="checkbox" v-model="newProject.show_on_homepage" id="show-homepage" style="width: auto; height: auto;" />
+              <label for="show-homepage" style="cursor: pointer;">{{ t('admin.showOnHomepage') }}</label>
+            </div>
+          </div>
+
+          <div class="card">
             <h3 class="card-title">{{ t('admin.order') }}</h3>
             <div class="input-group">
               <label>{{ t('admin.order') }}</label>
@@ -431,11 +468,22 @@ const submitProject = async () => {
           </div>
           
           <div class="project-list">
-            <div v-for="p in projectsList" :key="p.id" class="project-list-item">
+            <div v-for="(p, index) in projectsList" :key="p.id" class="project-list-item">
+              <div class="list-reorder">
+                <button @click="moveProject(index, 'up')" :disabled="index === 0" class="order-btn" :title="t('admin.moveUp')">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"></polyline></svg>
+                </button>
+                <button @click="moveProject(index, 'down')" :disabled="index === projectsList.length - 1" class="order-btn" :title="t('admin.moveDown')">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                </button>
+              </div>
               <img :src="p.image" class="list-thumb" />
               <div class="list-info">
-                <h4>{{ p.title }}</h4>
-                <span>{{ p.category }} • {{ new Date(p.created_at).toLocaleDateString() }} • <strong>Order: {{ p.sort_order }}</strong></span>
+                <h4>
+                  {{ p.title }}
+                  <svg v-if="p.show_on_homepage" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="#FFD700" stroke="#FFD700" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="star-icon"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+                </h4>
+                <span>{{ p.category }} • {{ new Date(p.created_at).toLocaleDateString() }} • <strong>{{ t('admin.order') }}: {{ p.sort_order }}</strong></span>
               </div>
               <div class="list-actions">
                 <button @click="loadForEdit(p)" class="btn-small">{{ t('admin.edit') }}</button>
@@ -562,6 +610,42 @@ const submitProject = async () => {
 .list-actions {
   display: flex;
   gap: 8px;
+}
+
+.list-reorder {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.order-btn {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  color: var(--text-secondary);
+  padding: 4px;
+  border-radius: 4px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all var(--transition-fast);
+}
+
+.order-btn:hover:not(:disabled) {
+  color: var(--text-primary);
+  border-color: var(--text-primary);
+}
+
+.order-btn:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.star-icon {
+  display: inline-block;
+  vertical-align: middle;
+  margin-left: 6px;
+  filter: drop-shadow(0 0 4px rgba(255, 215, 0, 0.3));
 }
 
 .btn-small.danger {

@@ -12,6 +12,7 @@ onMounted(async () => {
   const { data, error } = await supabase
     .from('projects')
     .select('*')
+    .eq('show_on_homepage', true)
     .order('sort_order', { ascending: true })
     .limit(3)
     

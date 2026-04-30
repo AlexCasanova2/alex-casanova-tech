@@ -80,7 +80,10 @@ const messages = {
       seoTitlePlaceholder: 'Título personalizado para buscadores',
       seoDesc: 'Descripción SEO (Opcional)',
       seoDescPlaceholder: 'Descripción personalizada para buscadores',
-      order: 'Orden de aparición'
+      order: 'Orden de aparición',
+      showOnHomepage: 'Mostrar en la Homepage',
+      moveUp: 'Subir prioridad',
+      moveDown: 'Bajar prioridad'
     },
     project: {
       live: 'Ver Proyecto ↗',
@@ -178,7 +181,10 @@ const messages = {
       seoTitlePlaceholder: 'Custom title for search engines',
       seoDesc: 'SEO Description (Optional)',
       seoDescPlaceholder: 'Custom description for search engines',
-      order: 'Display Order'
+      order: 'Display Order',
+      showOnHomepage: 'Show on Homepage',
+      moveUp: 'Move Up',
+      moveDown: 'Move Down'
     },
     project: {
       live: 'Live Project ↗',
@@ -276,7 +282,10 @@ const messages = {
       seoTitlePlaceholder: 'Títol personalitzat per a cercadors',
       seoDesc: 'Descripció SEO (Opcional)',
       seoDescPlaceholder: 'Descripció personalitzada per a cercadors',
-      order: 'Ordre d\'aparició'
+      order: 'Ordre d\'aparició',
+      showOnHomepage: 'Mostrar a la Homepage',
+      moveUp: 'Pujar prioritat',
+      moveDown: 'Baixar prioritat'
     },
     project: {
       live: 'Veure Projecte ↗',
