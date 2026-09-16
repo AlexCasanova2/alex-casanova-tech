@@ -1,9 +1,12 @@
 <script setup>
-import { ref, onMounted, watch } from 'vue'
+import { computed, ref, onMounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { supabase } from '../config/supabase'
-const { t } = useI18n()
+import AdminClients from '../components/admin/AdminClients.vue'
+import AdminQuotes from '../components/admin/AdminQuotes.vue'
+import AdminSettings from '../components/admin/AdminSettings.vue'
+const { t, locale } = useI18n()
 const route = useRoute()
 const router = useRouter()
 
@@ -15,7 +18,14 @@ const errorMessage = ref('')
 
 // Tabs
 const activeTab = ref('manage') // 'add' | 'manage' | 'trash'
+const activeModule = ref('projects')
 const projectsList = ref([])
+const moduleCopy = {
+  es: { projects: 'Proyectos', clients: 'Clientes', quotes: 'Presupuestos', settings: 'Ajustes' },
+  ca: { projects: 'Projectes', clients: 'Clients', quotes: 'Pressupostos', settings: 'Configuració' },
+  en: { projects: 'Projects', clients: 'Clients', quotes: 'Quotes', settings: 'Settings' }
+}
+const modules = computed(() => moduleCopy[locale.value] || moduleCopy.es)
 
 // Form state
 const newProject = ref({
@@ -357,7 +367,15 @@ const submitProject = async () => {
           <p class="subtitle">{{ t('admin.workspaceDesc') }}</p>
         </div>
       </div>
+
+      <nav class="workspace-nav" aria-label="Admin sections">
+        <button v-for="module in ['projects', 'clients', 'quotes', 'settings']" :key="module" :class="{ active: activeModule === module }" @click="activeModule = module">
+          <span>{{ module === 'projects' ? '01' : module === 'clients' ? '02' : module === 'quotes' ? '03' : '04' }}</span>
+          {{ modules[module] }}
+        </button>
+      </nav>
       
+      <div v-show="activeModule === 'projects'" class="project-admin">
       <div class="tabs">
         <button :class="['tab-btn', { active: activeTab === 'manage' }]" @click="activeTab = 'manage'">
           <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
@@ -568,6 +586,11 @@ const submitProject = async () => {
           </div>
         </div>
       </div>
+      </div>
+
+      <AdminClients v-show="activeModule === 'clients'" />
+      <AdminQuotes v-show="activeModule === 'quotes'" />
+      <AdminSettings v-show="activeModule === 'settings'" />
     </div>
 
     <!-- Custom Delete Modal -->
@@ -615,6 +638,43 @@ const submitProject = async () => {
 .subtitle {
   color: var(--text-secondary);
   margin-top: 4px;
+}
+
+.workspace-nav {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  border: 1px solid var(--border-color);
+  border-radius: 14px;
+  overflow: hidden;
+  margin-bottom: 36px;
+  background: var(--bg-secondary);
+}
+
+.workspace-nav button {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 15px 18px;
+  border: 0;
+  border-right: 1px solid var(--border-color);
+  background: transparent;
+  color: var(--text-secondary);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+  transition: color var(--transition-fast), background var(--transition-fast);
+}
+
+.workspace-nav button:last-child { border-right: 0; }
+.workspace-nav button span { font-size: .65rem; color: var(--text-secondary); }
+.workspace-nav button:hover { color: var(--text-primary); }
+.workspace-nav button.active { background: var(--text-primary); color: var(--bg-color); }
+.workspace-nav button.active span { color: inherit; opacity: .55; }
+
+@media (max-width: 650px) {
+  .workspace-nav { grid-template-columns: 1fr 1fr; }
+  .workspace-nav button:nth-child(2) { border-right: 0; }
+  .workspace-nav button:nth-child(-n+2) { border-bottom: 1px solid var(--border-color); }
 }
 
 /* Premium Segmented Control Tabs */
