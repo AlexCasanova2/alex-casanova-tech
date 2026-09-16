@@ -54,6 +54,15 @@ const fetchData = async () => {
   if(settingsResult.data) settings.value={...defaultSettings(),...settingsResult.data,default_terms:{...defaultSettings().default_terms,...settingsResult.data.default_terms},issuer_snapshot:settingsResult.data.issuer_snapshot||{}}
 }
 
+const upsertClient = client => {
+  const index=clients.value.findIndex(item=>item.id===client.id)
+  if(index===-1) clients.value.push(client)
+  else clients.value[index]=client
+  clients.value.sort((a,b)=>a.name.localeCompare(b.name))
+}
+
+defineExpose({ upsertClient })
+
 const openNew = () => { form.value=makeForm(); mode.value='edit'; successMessage.value=''; errorMessage.value=''; window.scrollTo({top:0,behavior:'smooth'}) }
 const openEdit = quote => { form.value={...quote,client_snapshot:{...(quote.client_snapshot||{})},issuer_snapshot:{...(quote.issuer_snapshot||{})},quote_items:[...(quote.quote_items||[])].sort((a,b)=>a.position-b.position).map(item=>({...item}))}; if(!form.value.quote_items.length) form.value.quote_items=[blankItem()]; mode.value='edit'; errorMessage.value=''; window.scrollTo({top:0,behavior:'smooth'}) }
 const selectClient = () => { const client=clients.value.find(item=>item.id===form.value.client_id); if(!client) return; const defaultTerms=Object.values(settings.value.default_terms||{}); const usesDefault=!form.value.terms||defaultTerms.includes(form.value.terms); form.value.client_snapshot={name:client.name,tax_id:client.tax_id,email:client.email,phone:client.phone,address:client.address}; form.value.language=client.language||form.value.language; if(usesDefault) form.value.terms=settings.value.default_terms?.[form.value.language]||'' }

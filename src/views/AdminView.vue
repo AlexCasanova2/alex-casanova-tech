@@ -20,12 +20,14 @@ const errorMessage = ref('')
 const activeTab = ref('manage') // 'add' | 'manage' | 'trash'
 const activeModule = ref('projects')
 const projectsList = ref([])
+const quotesAdmin = ref(null)
 const moduleCopy = {
   es: { projects: 'Proyectos', clients: 'Clientes', quotes: 'Presupuestos', settings: 'Ajustes' },
   ca: { projects: 'Projectes', clients: 'Clients', quotes: 'Pressupostos', settings: 'Configuració' },
   en: { projects: 'Projects', clients: 'Clients', quotes: 'Quotes', settings: 'Settings' }
 }
 const modules = computed(() => moduleCopy[locale.value] || moduleCopy.es)
+const syncClientWithQuotes = client => quotesAdmin.value?.upsertClient(client)
 
 // Form state
 const newProject = ref({
@@ -588,8 +590,8 @@ const submitProject = async () => {
       </div>
       </div>
 
-      <AdminClients v-show="activeModule === 'clients'" />
-      <AdminQuotes v-show="activeModule === 'quotes'" />
+      <AdminClients v-show="activeModule === 'clients'" @client-saved="syncClientWithQuotes" />
+      <AdminQuotes v-show="activeModule === 'quotes'" ref="quotesAdmin" />
       <AdminSettings v-show="activeModule === 'settings'" />
     </div>
 
