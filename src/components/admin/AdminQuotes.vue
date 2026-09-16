@@ -6,11 +6,46 @@ import { calculateLineTotal, calculateQuoteTotals, formatCurrency } from '../../
 
 const { locale } = useI18n()
 const words = {
-  es:{title:'Presupuestos',subtitle:'De la primera cifra al sí definitivo.',new:'Nuevo presupuesto',all:'Todos',draft:'Borrador',sent:'Enviado',accepted:'Aceptado',rejected:'Rechazado',expired:'Caducado',search:'Buscar número, título o cliente',empty:'No hay presupuestos con estos filtros.',client:'Cliente',date:'Fecha',valid:'Válido hasta',amount:'Total',status:'Estado',actions:'Acciones',edit:'Editar',pdf:'PDF',archive:'Archivar',back:'Volver',document:'Documento',quoteTitle:'Título del presupuesto',language:'Idioma',notes:'Notas para el cliente',terms:'Condiciones',items:'Conceptos',description:'Descripción',quantity:'Cantidad',unit:'Unidad',price:'Precio',lineTotal:'Importe',addLine:'Añadir concepto',summary:'Resumen',subtotal:'Subtotal',discount:'Descuento',vat:'IVA',withholding:'IRPF',total:'Total',save:'Guardar presupuesto',saving:'Guardando...',download:'Descargar PDF',choose:'Selecciona un cliente',units:'ud.',days:'días',active:'En curso',archived:'Archivados',restore:'Restaurar',saved:'Presupuesto guardado.'},
-  ca:{title:'Pressupostos',subtitle:'De la primera xifra al sí definitiu.',new:'Nou pressupost',all:'Tots',draft:'Esborrany',sent:'Enviat',accepted:'Acceptat',rejected:'Rebutjat',expired:'Caducat',search:'Cerca número, títol o client',empty:'No hi ha pressupostos amb aquests filtres.',client:'Client',date:'Data',valid:'Vàlid fins',amount:'Total',status:'Estat',actions:'Accions',edit:'Editar',pdf:'PDF',archive:'Arxivar',back:'Tornar',document:'Document',quoteTitle:'Títol del pressupost',language:'Idioma',notes:'Notes per al client',terms:'Condicions',items:'Conceptes',description:'Descripció',quantity:'Quantitat',unit:'Unitat',price:'Preu',lineTotal:'Import',addLine:'Afegir concepte',summary:'Resum',subtotal:'Subtotal',discount:'Descompte',vat:'IVA',withholding:'IRPF',total:'Total',save:'Desar pressupost',saving:'Desant...',download:'Descarregar PDF',choose:'Selecciona un client',units:'u.',days:'dies',active:'En curs',archived:'Arxivats',restore:'Restaurar',saved:'Pressupost desat.'},
-  en:{title:'Quotes',subtitle:'From the first figure to the final yes.',new:'New quote',all:'All',draft:'Draft',sent:'Sent',accepted:'Accepted',rejected:'Rejected',expired:'Expired',search:'Search number, title or client',empty:'No quotes match these filters.',client:'Client',date:'Date',valid:'Valid until',amount:'Total',status:'Status',actions:'Actions',edit:'Edit',pdf:'PDF',archive:'Archive',back:'Back',document:'Document',quoteTitle:'Quote title',language:'Language',notes:'Client notes',terms:'Terms',items:'Items',description:'Description',quantity:'Quantity',unit:'Unit',price:'Price',lineTotal:'Amount',addLine:'Add item',summary:'Summary',subtotal:'Subtotal',discount:'Discount',vat:'VAT',withholding:'Withholding',total:'Total',save:'Save quote',saving:'Saving...',download:'Download PDF',choose:'Select a client',units:'unit',days:'days',active:'Active',archived:'Archived',restore:'Restore',saved:'Quote saved.'}
+  es:{title:'Presupuestos',subtitle:'De la primera cifra al sí definitivo.',new:'Nuevo presupuesto',all:'Todos',draft:'Borrador',sent:'Enviado',accepted:'Aceptado',rejected:'Rechazado',expired:'Caducado',search:'Buscar número, título o cliente',empty:'No hay presupuestos con estos filtros.',client:'Cliente',date:'Fecha',valid:'Válido hasta',amount:'Total',status:'Estado',actions:'Acciones',edit:'Editar',pdf:'PDF',archive:'Archivar',back:'Volver',document:'Documento',quoteTitle:'Título del presupuesto',language:'Idioma',notes:'Notas para el cliente',terms:'Condiciones',items:'Conceptos',description:'Descripción',quantity:'Cantidad',unit:'Unidad',price:'Precio',lineTotal:'Importe',addLine:'Añadir concepto vacío',summary:'Resumen',subtotal:'Subtotal',discount:'Descuento',vat:'IVA',withholding:'IRPF',total:'Total',save:'Guardar presupuesto',saving:'Guardando...',download:'Descargar PDF',choose:'Selecciona un cliente',units:'ud.',days:'días',active:'En curso',archived:'Archivados',restore:'Restaurar',saved:'Presupuesto guardado.',quickItems:'Conceptos rápidos',quickHelp:'Añade una base profesional y adapta después alcance y precio.',addPreset:'Añadir',removeItem:'Eliminar concepto',requiredTitle:'Escribe un título para el presupuesto.',requiredClient:'Selecciona un cliente.',requiredItems:'Completa la descripción de todos los conceptos.'},
+  ca:{title:'Pressupostos',subtitle:'De la primera xifra al sí definitiu.',new:'Nou pressupost',all:'Tots',draft:'Esborrany',sent:'Enviat',accepted:'Acceptat',rejected:'Rebutjat',expired:'Caducat',search:'Cerca número, títol o client',empty:'No hi ha pressupostos amb aquests filtres.',client:'Client',date:'Data',valid:'Vàlid fins',amount:'Total',status:'Estat',actions:'Accions',edit:'Editar',pdf:'PDF',archive:'Arxivar',back:'Tornar',document:'Document',quoteTitle:'Títol del pressupost',language:'Idioma',notes:'Notes per al client',terms:'Condicions',items:'Conceptes',description:'Descripció',quantity:'Quantitat',unit:'Unitat',price:'Preu',lineTotal:'Import',addLine:'Afegir concepte buit',summary:'Resum',subtotal:'Subtotal',discount:'Descompte',vat:'IVA',withholding:'IRPF',total:'Total',save:'Desar pressupost',saving:'Desant...',download:'Descarregar PDF',choose:'Selecciona un client',units:'u.',days:'dies',active:'En curs',archived:'Arxivats',restore:'Restaurar',saved:'Pressupost desat.',quickItems:'Conceptes ràpids',quickHelp:'Afegeix una base professional i adapta després abast i preu.',addPreset:'Afegir',removeItem:'Eliminar concepte',requiredTitle:'Escriu un títol per al pressupost.',requiredClient:'Selecciona un client.',requiredItems:'Completa la descripció de tots els conceptes.'},
+  en:{title:'Quotes',subtitle:'From the first figure to the final yes.',new:'New quote',all:'All',draft:'Draft',sent:'Sent',accepted:'Accepted',rejected:'Rejected',expired:'Expired',search:'Search number, title or client',empty:'No quotes match these filters.',client:'Client',date:'Date',valid:'Valid until',amount:'Total',status:'Status',actions:'Actions',edit:'Edit',pdf:'PDF',archive:'Archive',back:'Back',document:'Document',quoteTitle:'Quote title',language:'Language',notes:'Client notes',terms:'Terms',items:'Items',description:'Description',quantity:'Quantity',unit:'Unit',price:'Price',lineTotal:'Amount',addLine:'Add empty item',summary:'Summary',subtotal:'Subtotal',discount:'Discount',vat:'VAT',withholding:'Withholding',total:'Total',save:'Save quote',saving:'Saving...',download:'Download PDF',choose:'Select a client',units:'unit',days:'days',active:'Active',archived:'Archived',restore:'Restore',saved:'Quote saved.',quickItems:'Quick items',quickHelp:'Add a professional starting point, then adjust scope and price.',addPreset:'Add',removeItem:'Remove item',requiredTitle:'Enter a quote title.',requiredClient:'Select a client.',requiredItems:'Complete every item description.'}
 }
 const c = computed(() => words[locale.value] || words.es)
+const presetCatalog = computed(() => ({
+  es: [
+    { code:'WEB', title:'Web corporativa', description:'Diseño y desarrollo de sitio web corporativo responsive, optimizado para todos los dispositivos y preparado para la gestión de contenidos.', unit:'proyecto' },
+    { code:'LAND', title:'Landing page', description:'Diseño y desarrollo de landing page orientada a conversión, con estructura de contenidos, formularios y analítica básica.', unit:'proyecto' },
+    { code:'SHOP', title:'Tienda online', description:'Diseño y desarrollo de ecommerce con catálogo, carrito, pasarela de pago, configuración de envíos y formación de uso.', unit:'proyecto' },
+    { code:'UX', title:'Diseño UX/UI', description:'Arquitectura de información, wireframes, diseño visual responsive y prototipo navegable de alta fidelidad.', unit:'proyecto' },
+    { code:'SEO', title:'Auditoría SEO técnica', description:'Análisis técnico SEO, indexación, arquitectura, metadatos, enlazado interno y plan priorizado de mejoras.', unit:'auditoría' },
+    { code:'SEO+', title:'SEO mensual', description:'Seguimiento SEO mensual, investigación de palabras clave, optimización de contenidos e informe de evolución.', unit:'mes' },
+    { code:'PERF', title:'Core Web Vitals', description:'Auditoría y optimización de rendimiento, carga, estabilidad visual y métricas Core Web Vitals.', unit:'servicio' },
+    { code:'CARE', title:'Mantenimiento web', description:'Actualizaciones, copias de seguridad, monitorización, soporte técnico y pequeñas mejoras evolutivas.', unit:'mes' },
+    { code:'DATA', title:'Analítica digital', description:'Configuración de GA4, Google Tag Manager, Search Console, eventos y panel básico de medición.', unit:'servicio' }
+  ],
+  ca: [
+    { code:'WEB', title:'Web corporativa', description:'Disseny i desenvolupament de lloc web corporatiu responsive, optimitzat per a tots els dispositius i preparat per gestionar continguts.', unit:'projecte' },
+    { code:'LAND', title:'Landing page', description:'Disseny i desenvolupament de landing page orientada a conversió, amb estructura de continguts, formularis i analítica bàsica.', unit:'projecte' },
+    { code:'SHOP', title:'Botiga online', description:'Disseny i desenvolupament d’ecommerce amb catàleg, cistella, passarel·la de pagament, enviaments i formació.', unit:'projecte' },
+    { code:'UX', title:'Disseny UX/UI', description:'Arquitectura de la informació, wireframes, disseny visual responsive i prototip navegable d’alta fidelitat.', unit:'projecte' },
+    { code:'SEO', title:'Auditoria SEO tècnica', description:'Anàlisi tècnica SEO, indexació, arquitectura, metadades, enllaçat intern i pla prioritzat de millores.', unit:'auditoria' },
+    { code:'SEO+', title:'SEO mensual', description:'Seguiment SEO mensual, recerca de paraules clau, optimització de continguts i informe d’evolució.', unit:'mes' },
+    { code:'PERF', title:'Core Web Vitals', description:'Auditoria i optimització de rendiment, càrrega, estabilitat visual i mètriques Core Web Vitals.', unit:'servei' },
+    { code:'CARE', title:'Manteniment web', description:'Actualitzacions, còpies de seguretat, monitorització, suport tècnic i petites millores evolutives.', unit:'mes' },
+    { code:'DATA', title:'Analítica digital', description:'Configuració de GA4, Google Tag Manager, Search Console, esdeveniments i panell bàsic de mesura.', unit:'servei' }
+  ],
+  en: [
+    { code:'WEB', title:'Corporate website', description:'Design and development of a responsive corporate website, optimized for every device and ready for content management.', unit:'project' },
+    { code:'LAND', title:'Landing page', description:'Conversion-focused landing page design and development, including content structure, forms and basic analytics.', unit:'project' },
+    { code:'SHOP', title:'Online store', description:'Ecommerce design and development with catalogue, cart, payment gateway, shipping setup and training.', unit:'project' },
+    { code:'UX', title:'UX/UI design', description:'Information architecture, wireframes, responsive visual design and a high-fidelity interactive prototype.', unit:'project' },
+    { code:'SEO', title:'Technical SEO audit', description:'Technical SEO, indexing, architecture, metadata and internal linking review with a prioritized action plan.', unit:'audit' },
+    { code:'SEO+', title:'Monthly SEO', description:'Monthly SEO tracking, keyword research, content optimization and progress reporting.', unit:'month' },
+    { code:'PERF', title:'Core Web Vitals', description:'Performance, loading and visual stability audit and optimization focused on Core Web Vitals.', unit:'service' },
+    { code:'CARE', title:'Web maintenance', description:'Updates, backups, monitoring, technical support and small continuous improvements.', unit:'month' },
+    { code:'DATA', title:'Digital analytics', description:'GA4, Google Tag Manager, Search Console, event tracking and basic measurement dashboard setup.', unit:'service' }
+  ]
+}[form.value.language || locale.value] || []))
 const localeCode = computed(() => ({es:'es-ES',ca:'ca-ES',en:'en-IE'}[locale.value] || 'es-ES'))
 const localDate = value => `${value.getFullYear()}-${String(value.getMonth()+1).padStart(2,'0')}-${String(value.getDate()).padStart(2,'0')}`
 const today = () => localDate(new Date())
@@ -21,6 +56,7 @@ const defaultSettings = () => ({quote_prefix:'PRE',default_language:'es',currenc
 const quotes = ref([]), clients = ref([]), settings = ref(defaultSettings())
 const mode = ref('list'), filter = ref('all'), search = ref(''), showArchived = ref(false)
 const isSaving = ref(false), isGenerating = ref(false), errorMessage = ref(''), successMessage = ref('')
+const validationAttempted = ref(false)
 const form = ref({})
 
 const makeForm = () => { const issue = today(); const language=settings.value.default_language || 'es'; return {id:null,quote_number:null,title:'Proyecto digital',client_id:'',status:'draft',language,currency:'EUR',issue_date:issue,valid_until:addDays(issue,settings.value.default_validity_days),client_snapshot:{},issuer_snapshot:{...settings.value.issuer_snapshot},notes:'',terms:settings.value.default_terms?.[language] || '',discount_percentage:0,vat_percentage:settings.value.default_vat_percentage,withholding_percentage:settings.value.default_withholding_percentage,quote_items:[blankItem()]} }
@@ -63,17 +99,25 @@ const upsertClient = client => {
 
 defineExpose({ upsertClient })
 
-const openNew = () => { form.value=makeForm(); mode.value='edit'; successMessage.value=''; errorMessage.value=''; window.scrollTo({top:0,behavior:'smooth'}) }
-const openEdit = quote => { form.value={...quote,client_snapshot:{...(quote.client_snapshot||{})},issuer_snapshot:{...(quote.issuer_snapshot||{})},quote_items:[...(quote.quote_items||[])].sort((a,b)=>a.position-b.position).map(item=>({...item}))}; if(!form.value.quote_items.length) form.value.quote_items=[blankItem()]; mode.value='edit'; errorMessage.value=''; window.scrollTo({top:0,behavior:'smooth'}) }
+const openNew = () => { form.value=makeForm(); mode.value='edit'; successMessage.value=''; errorMessage.value=''; validationAttempted.value=false; window.scrollTo({top:0,behavior:'smooth'}) }
+const openEdit = quote => { form.value={...quote,client_snapshot:{...(quote.client_snapshot||{})},issuer_snapshot:{...(quote.issuer_snapshot||{})},quote_items:[...(quote.quote_items||[])].sort((a,b)=>a.position-b.position).map(item=>({...item}))}; if(!form.value.quote_items.length) form.value.quote_items=[blankItem()]; mode.value='edit'; errorMessage.value=''; validationAttempted.value=false; window.scrollTo({top:0,behavior:'smooth'}) }
 const selectClient = () => { const client=clients.value.find(item=>item.id===form.value.client_id); if(!client) return; const defaultTerms=Object.values(settings.value.default_terms||{}); const usesDefault=!form.value.terms||defaultTerms.includes(form.value.terms); form.value.client_snapshot={name:client.name,tax_id:client.tax_id,email:client.email,phone:client.phone,address:client.address}; form.value.language=client.language||form.value.language; if(usesDefault) form.value.terms=settings.value.default_terms?.[form.value.language]||'' }
 const changeLanguage = () => { const defaultTerms=Object.values(settings.value.default_terms||{}); if(!form.value.terms||defaultTerms.includes(form.value.terms)) form.value.terms=settings.value.default_terms?.[form.value.language]||'' }
 const addItem = () => form.value.quote_items.push(blankItem())
+const addPreset = preset => {
+  const item={description:`${preset.title}\n${preset.description}`,quantity:1,unit:preset.unit,unit_price:0}
+  const onlyItem=form.value.quote_items.length===1 ? form.value.quote_items[0] : null
+  if(onlyItem&&!onlyItem.description.trim()&&!Number(onlyItem.unit_price)) form.value.quote_items[0]=item
+  else form.value.quote_items.push(item)
+}
 const removeItem = index => { if(form.value.quote_items.length>1) form.value.quote_items.splice(index,1) }
 
 const saveQuote = async () => {
-  if(!form.value.client_id){ errorMessage.value=c.value.choose; return }
-  const items=form.value.quote_items.filter(item=>item.description.trim()).map((item,index)=>({description:item.description.trim(),quantity:Number(item.quantity),unit:item.unit||c.value.units,unit_price:Number(item.unit_price),position:index}))
-  if(!items.length){ errorMessage.value=c.value.items; return }
+  validationAttempted.value=true
+  if(!form.value.title?.trim()){ errorMessage.value=c.value.requiredTitle; return }
+  if(!form.value.client_id){ errorMessage.value=c.value.requiredClient; return }
+  if(!form.value.quote_items.length||form.value.quote_items.some(item=>!item.description.trim())){ errorMessage.value=c.value.requiredItems; return }
+  const items=form.value.quote_items.map((item,index)=>({description:item.description.trim(),quantity:Number(item.quantity),unit:item.unit||c.value.units,unit_price:Number(item.unit_price),position:index}))
   isSaving.value=true; errorMessage.value=''; successMessage.value=''
   const payload={id:form.value.id,client_id:form.value.client_id,title:form.value.title,status:form.value.status,language:form.value.language,currency:'EUR',issue_date:form.value.issue_date,valid_until:form.value.valid_until,client_snapshot:form.value.client_snapshot,issuer_snapshot:form.value.issuer_snapshot,notes:form.value.notes,terms:form.value.terms,discount_percentage:Number(form.value.discount_percentage),vat_percentage:Number(form.value.vat_percentage),withholding_percentage:Number(form.value.withholding_percentage)}
   const {data,error}=await supabase.rpc('save_quote',{p_quote:payload,p_items:items})
@@ -110,13 +154,31 @@ onMounted(fetchData)
     <template v-else>
       <header class="editor-header"><button type="button" class="back-button" @click="mode='list'">← {{ c.back }}</button><div class="document-id"><span>{{ form.quote_number || c.draft }}</span><small>{{ form.client_snapshot?.name || c.choose }}</small></div><div class="editor-actions"><button v-if="form.id" type="button" class="button-outline" :disabled="isGenerating" @click="downloadPdf(form)">{{ c.download }}</button><button type="submit" form="quote-editor" class="btn btn-primary" :disabled="isSaving">{{ isSaving?c.saving:c.save }}</button></div></header>
       <div v-if="successMessage" class="notice success">{{ successMessage }}</div><div v-if="errorMessage" class="notice error">{{ errorMessage }}</div>
-      <form id="quote-editor" class="workbench" @submit.prevent="saveQuote">
+      <form id="quote-editor" class="workbench" novalidate @submit.prevent="saveQuote">
         <div class="document-sheet">
-          <div class="sheet-top"><div><span class="eyebrow">{{ c.document }}</span><input v-model="form.title" class="title-input" :aria-label="c.quoteTitle" required/></div><div class="number-stamp">{{ form.quote_number || 'AUTO' }}</div></div>
-          <div class="meta-grid"><label><span>{{ c.client }}</span><select v-model="form.client_id" required @change="selectClient"><option value="">{{ c.choose }}</option><option v-for="client in clients" :key="client.id" :value="client.id" :disabled="client.archived_at && client.id !== form.client_id">{{ client.name }}{{ client.archived_at ? ` · ${c.archived}` : '' }}</option></select></label><label><span>{{ c.language }}</span><select v-model="form.language" @change="changeLanguage"><option value="es">ES</option><option value="ca">CA</option><option value="en">EN</option></select></label><label><span>{{ c.date }}</span><input v-model="form.issue_date" type="date" :aria-label="c.date" required/></label><label><span>{{ c.valid }}</span><input v-model="form.valid_until" type="date" :aria-label="c.valid"/></label></div>
+          <div class="sheet-top"><div><span class="eyebrow">{{ c.document }}</span><input v-model="form.title" :class="['title-input',{invalid:validationAttempted&&!form.title?.trim()}]" :aria-label="c.quoteTitle"/></div><div class="number-stamp">{{ form.quote_number || 'AUTO' }}</div></div>
+          <div class="meta-grid"><label><span>{{ c.client }}</span><select v-model="form.client_id" :class="{invalid:validationAttempted&&!form.client_id}" @change="selectClient"><option value="">{{ c.choose }}</option><option v-for="client in clients" :key="client.id" :value="client.id" :disabled="client.archived_at && client.id !== form.client_id">{{ client.name }}{{ client.archived_at ? ` · ${c.archived}` : '' }}</option></select></label><label><span>{{ c.language }}</span><select v-model="form.language" @change="changeLanguage"><option value="es">ES</option><option value="ca">CA</option><option value="en">EN</option></select></label><label><span>{{ c.date }}</span><input v-model="form.issue_date" type="date" :aria-label="c.date"/></label><label><span>{{ c.valid }}</span><input v-model="form.valid_until" type="date" :aria-label="c.valid"/></label></div>
           <div class="items-title"><h3>{{ c.items }}</h3><span>{{ form.quote_items.length.toString().padStart(2,'0') }}</span></div>
+          <div class="preset-library">
+            <div class="preset-heading"><div><span class="eyebrow">{{ c.quickItems }}</span><p>{{ c.quickHelp }}</p></div><span class="scroll-hint">→</span></div>
+            <div class="preset-track">
+              <button v-for="preset in presetCatalog" :key="preset.code" type="button" class="preset-card" @click="addPreset(preset)">
+                <span class="preset-code">{{ preset.code }}</span>
+                <strong>{{ preset.title }}</strong>
+                <small>{{ preset.description }}</small>
+                <span class="preset-add">+ {{ c.addPreset }}</span>
+              </button>
+            </div>
+          </div>
           <div class="line-head"><span>{{ c.description }}</span><span>{{ c.quantity }}</span><span>{{ c.unit }}</span><span>{{ c.price }}</span><span>{{ c.lineTotal }}</span><span></span></div>
-          <div v-for="(item,index) in form.quote_items" :key="item.id||index" class="line-item"><textarea v-model="item.description" rows="2" :aria-label="c.description" required></textarea><input v-model.number="item.quantity" type="number" min="0" step="0.01" :aria-label="c.quantity"/><input v-model="item.unit" :aria-label="c.unit"/><input v-model.number="item.unit_price" type="number" min="0" step="0.01" :aria-label="c.price"/><strong>{{ money(calculateLineTotal(item.quantity,item.unit_price)) }}</strong><button type="button" :aria-label="`${c.archive} ${c.items}`" @click="removeItem(index)">×</button></div>
+          <div v-for="(item,index) in form.quote_items" :key="item.id||index" :class="['line-item',{invalidRow:validationAttempted&&!item.description.trim()}]">
+            <label class="line-control description-control"><span class="mobile-field-label">{{ c.description }}</span><textarea v-model="item.description" rows="3" :aria-label="c.description"></textarea></label>
+            <label class="line-control"><span class="mobile-field-label">{{ c.quantity }}</span><input v-model.number="item.quantity" type="number" min="0" step="0.01" :aria-label="c.quantity"/></label>
+            <label class="line-control"><span class="mobile-field-label">{{ c.unit }}</span><input v-model="item.unit" :aria-label="c.unit"/></label>
+            <label class="line-control price-control"><span class="mobile-field-label">{{ c.price }}</span><div><input v-model.number="item.unit_price" type="number" min="0" step="0.01" :aria-label="c.price"/><span>€</span></div></label>
+            <div class="line-total-control"><span class="mobile-field-label">{{ c.lineTotal }}</span><strong>{{ money(calculateLineTotal(item.quantity,item.unit_price)) }}</strong></div>
+            <button type="button" class="remove-item" :aria-label="c.removeItem" @click="removeItem(index)">×</button>
+          </div>
           <button type="button" class="add-line" @click="addItem">+ {{ c.addLine }}</button>
           <div class="text-fields"><label><span>{{ c.notes }}</span><textarea v-model="form.notes" rows="4"></textarea></label><label><span>{{ c.terms }}</span><textarea v-model="form.terms" rows="4"></textarea></label></div>
         </div>
@@ -134,4 +196,40 @@ onMounted(fetchData)
 .document-sheet,.meta-grid,.meta-grid label,.text-fields label,.line-item>*{min-width:0}
 .document-sheet input,.document-sheet select,.document-sheet textarea,.quote-sidebar input,.quote-sidebar select{width:100%}
 @media(max-width:650px){.document-sheet{width:100%}.meta-grid,.text-fields,.quote-sidebar{grid-template-columns:minmax(0,1fr)}.line-item{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}}
+.preset-library{margin:0 0 28px;padding:18px;background:var(--bg-color);border:1px solid var(--border-color);border-radius:14px;overflow:hidden}
+.preset-heading{display:flex;justify-content:space-between;align-items:flex-start;gap:18px;margin-bottom:14px}
+.preset-heading p{font-size:.78rem;margin:4px 0 0;line-height:1.45}
+.scroll-hint{color:var(--text-secondary);font-size:1.25rem}
+.preset-track{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(210px,1fr);gap:10px;overflow-x:auto;padding-bottom:8px;scroll-snap-type:x proximity;scrollbar-width:thin;scrollbar-color:var(--border-color) transparent}
+.preset-card{position:relative;display:flex;flex-direction:column;align-items:flex-start;min-height:172px;padding:16px;text-align:left;background:var(--bg-secondary);color:var(--text-primary);border:1px solid var(--border-color);border-radius:11px;cursor:pointer;scroll-snap-align:start;transition:transform var(--transition-fast),border-color var(--transition-fast),background var(--transition-fast)}
+.preset-card:hover{transform:translateY(-2px);border-color:var(--text-secondary)}
+.preset-code{display:inline-flex;margin-bottom:14px;padding:4px 7px;border-radius:5px;background:var(--lime);color:#111;font:700 .62rem/1 monospace;letter-spacing:.06em}
+.preset-card strong{font-size:.9rem;margin-bottom:7px}
+.preset-card small{display:-webkit-box;overflow:hidden;color:var(--text-secondary);font-size:.72rem;line-height:1.45;-webkit-line-clamp:3;-webkit-box-orient:vertical}
+.preset-add{margin-top:auto;padding-top:12px;color:var(--text-primary);font-size:.72rem;font-weight:700}
+.meta-grid label>span,.text-fields label>span,.mobile-field-label{font-size:.65rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--text-secondary)}
+.meta-grid input,.meta-grid select,.line-control input,.line-control textarea,.text-fields textarea{background:var(--bg-color);border:1px solid var(--border-color);border-radius:10px;padding:12px 13px;transition:border-color var(--transition-fast),box-shadow var(--transition-fast),background var(--transition-fast)}
+.meta-grid input:hover,.meta-grid select:hover,.line-control input:hover,.line-control textarea:hover,.text-fields textarea:hover{border-color:var(--text-secondary)}
+.meta-grid input:focus,.meta-grid select:focus,.line-control input:focus,.line-control textarea:focus,.text-fields textarea:focus{outline:0;border-color:var(--text-primary);box-shadow:0 0 0 3px color-mix(in srgb,var(--text-primary) 10%,transparent)}
+.line-head{padding:0 13px 8px}
+.line-item{margin-bottom:10px;padding:12px;background:var(--bg-color);border:1px solid var(--border-color);border-radius:12px;transition:border-color var(--transition-fast),box-shadow var(--transition-fast)}
+.line-item:focus-within{border-color:var(--text-secondary);box-shadow:0 8px 24px rgba(0,0,0,.06)}
+.line-control{display:block}
+.line-control textarea{display:block;min-height:92px;line-height:1.45;resize:vertical}
+.line-control input{min-height:46px}
+.mobile-field-label{display:none;margin:0 0 6px}
+.price-control>div{position:relative}
+.price-control>div>span{position:absolute;right:12px;top:50%;transform:translateY(-50%);color:var(--text-secondary);font-weight:700;pointer-events:none}
+.price-control input{padding-right:30px}
+.line-total-control{display:flex;justify-content:flex-end;align-items:center;min-height:46px;text-align:right}
+.line-total-control strong{font-variant-numeric:tabular-nums}
+.remove-item{display:grid;place-items:center;width:28px;height:28px;padding:0;border-radius:50%!important;transition:background var(--transition-fast),color var(--transition-fast)}
+.remove-item:hover{background:rgba(239,68,68,.1)!important;color:#ef4444!important}
+.add-line{margin-top:4px!important;padding:14px!important;border-radius:11px!important;font-weight:650}
+.add-line:hover{border-color:var(--text-primary)!important;color:var(--text-primary)!important;background:var(--bg-color)!important}
+.text-fields{padding-top:8px}
+.text-fields textarea{min-height:126px;line-height:1.55}
+.invalid{border-color:#ef4444!important;box-shadow:0 0 0 3px rgba(239,68,68,.1)!important}
+.line-item.invalidRow{border-color:#ef4444;box-shadow:0 0 0 3px rgba(239,68,68,.08)}
+@media(max-width:650px){.preset-library{margin-left:-4px;margin-right:-4px;padding:14px}.preset-track{grid-auto-columns:minmax(78vw,1fr)}.line-item{padding:14px;gap:12px}.description-control{grid-column:1/-1}.mobile-field-label{display:block}.line-total-control{justify-content:flex-start;flex-direction:column;align-items:flex-start;gap:5px;text-align:left}.remove-item{align-self:end;justify-self:end}.text-fields{gap:18px}}
 </style>
