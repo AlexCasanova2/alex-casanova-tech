@@ -3,6 +3,12 @@ import { validateQuoteValues } from './quoteValidation'
 
 const quote = () => ({ issue_date: '2026-09-17', valid_until: '2026-10-17', discount_percentage: 0, vat_percentage: 21, withholding_percentage: 15, quote_items: [{ quantity: 1.5, unit_price: 0 }] })
 describe('quote validation', () => {
+  it('validates the global amount including zero', () => {
+    expect(validateQuoteValues({...quote(),pricing_mode:'global',global_price:0})).toBeNull()
+    for (const global_price of ['', null, -10, Infinity]) {
+      expect(validateQuoteValues({...quote(),pricing_mode:'global',global_price})).toBe('amounts')
+    }
+  })
   it('allows fractional quantities and free items', () => expect(validateQuoteValues(quote())).toBeNull())
   it('rejects empty, negative and non-finite amounts', () => {
     for (const value of ['', null, -1, Infinity, 'invalid']) {

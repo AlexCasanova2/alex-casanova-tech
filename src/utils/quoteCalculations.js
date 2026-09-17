@@ -15,11 +15,11 @@ export function calculateLineTotal(quantity, unitPrice) {
 
 export function calculateQuoteTotals(
   items = [],
-  { discountPercentage = 0, vatPercentage = 0, withholdingPercentage = 0 } = {},
+  { discountPercentage = 0, vatPercentage = 0, withholdingPercentage = 0, pricingMode = 'itemized', globalPrice = 0 } = {},
 ) {
   const safeItems = Array.isArray(items) ? items : []
   const subtotal = roundMoney(
-    safeItems.reduce(
+    pricingMode === 'global' ? finiteNumber(globalPrice) : safeItems.reduce(
       (sum, item) => sum + calculateLineTotal(item?.quantity, item?.unitPrice ?? item?.unit_price),
       0,
     ),

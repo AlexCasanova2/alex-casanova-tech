@@ -15,3 +15,7 @@ supabase/migrations/202609160001_create_crm.sql
 Apply it with the Supabase CLI (`supabase db push`) when the project is linked, or run the migration once from the Supabase SQL editor. The migration creates the client, quote and settings tables, row-level security policies, yearly quote numbering and the transactional `save_quote` function.
 
 Authenticated users only have access to their own CRM records. The existing portfolio tables are not modified.
+
+### Quote pricing modes
+
+Apply `supabase/migrations/202609170001_quote_pricing_modes.sql` after the initial CRM migration. This adds per-item and global project pricing, and the transactional `save_quote_priced` RPC. Existing quotes keep per-item pricing. Global prices are before discount and tax; individual item rates are retained when switching modes but are omitted from global-price PDFs.

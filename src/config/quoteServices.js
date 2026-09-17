@@ -1,0 +1,24 @@
+// Granular scope items. Rates are intentionally left to the quote author.
+const services = [
+  ['BRIEF', ['Briefing y requisitos', 'Briefing i requisits', 'Discovery and requirements'], ['Reunión inicial, objetivos, públicos y definición del alcance.', 'Reunió inicial, objectius, públics i definició de l’abast.', 'Kickoff meeting, goals, audiences and scope definition.']],
+  ['MAP', ['Arquitectura web', 'Arquitectura web', 'Website architecture'], ['Mapa del sitio, navegación y jerarquía de contenidos.', 'Mapa del lloc, navegació i jerarquia de continguts.', 'Sitemap, navigation and content hierarchy.']],
+  ['WIRE', ['Wireframes', 'Wireframes', 'Wireframes'], ['Estructura de las pantallas y recorridos principales del usuario.', 'Estructura de pantalles i recorreguts principals de l’usuari.', 'Screen layouts and primary user journeys.']],
+  ['UI', ['Sistema visual', 'Sistema visual', 'Visual system'], ['Tipografía, colores, componentes y estados de interacción.', 'Tipografia, colors, components i estats d’interacció.', 'Typography, colors, components and interaction states.']],
+  ['HOME', ['Página de inicio', 'Pàgina d’inici', 'Homepage'], ['Maquetación responsive de la página de inicio y llamadas a la acción.', 'Maquetació responsive de la pàgina d’inici i crides a l’acció.', 'Responsive homepage implementation and calls to action.']],
+  ['PAGE', ['Página interior', 'Pàgina interior', 'Inner page'], ['Diseño y desarrollo de una página de servicio o contenido.', 'Disseny i desenvolupament d’una pàgina de servei o contingut.', 'Design and development of a service or content page.']],
+  ['CMS', ['Configuración del CMS', 'Configuració del CMS', 'CMS configuration'], ['Tipos de contenido, campos editables y permisos de gestión.', 'Tipus de contingut, camps editables i permisos de gestió.', 'Content types, editable fields and management permissions.']],
+  ['FORM', ['Formulario de contacto', 'Formulari de contacte', 'Contact form'], ['Campos, validación, protección antispam y entrega de mensajes.', 'Camps, validació, protecció antispam i lliurament de missatges.', 'Fields, validation, spam protection and message delivery.']],
+  ['API', ['Integración con API', 'Integració amb API', 'API integration'], ['Conexión con un servicio externo, mapeo de datos y gestión de errores.', 'Connexió amb un servei extern, mapatge de dades i gestió d’errors.', 'External service connection, data mapping and error handling.']],
+  ['KEY', ['Estudio de palabras clave', 'Estudi de paraules clau', 'Keyword research'], ['Investigación de intención de búsqueda, competencia y asignación a páginas.', 'Recerca d’intenció de cerca, competència i assignació a pàgines.', 'Search intent research, competitor review and page mapping.']],
+  ['META', ['SEO on-page', 'SEO on-page', 'On-page SEO'], ['Títulos, metadescripciones, encabezados y enlazado interno por página.', 'Títols, metadescripcions, encapçalaments i enllaçat intern per pàgina.', 'Titles, meta descriptions, headings and internal links per page.']],
+  ['SCHEMA', ['Datos estructurados', 'Dades estructurades', 'Structured data'], ['Implementación y validación de marcado Schema.org adecuado al contenido.', 'Implementació i validació de marcatge Schema.org adequat al contingut.', 'Implementation and validation of appropriate Schema.org markup.']],
+  ['LOCAL', ['SEO local', 'SEO local', 'Local SEO'], ['Optimización de Google Business Profile y coherencia de datos de contacto.', 'Optimització de Google Business Profile i coherència de dades de contacte.', 'Google Business Profile optimization and contact information consistency.']],
+  ['REDIR', ['Migración y redirecciones', 'Migració i redireccions', 'Migration and redirects'], ['Inventario de URLs, redirecciones 301 y comprobación tras la migración.', 'Inventari d’URLs, redireccions 301 i comprovació després de la migració.', 'URL inventory, 301 redirects and post-migration checks.']],
+  ['QA', ['Pruebas y accesibilidad', 'Proves i accessibilitat', 'Testing and accessibility'], ['Revisión multidispositivo, navegación con teclado, contraste y formularios.', 'Revisió multidispositiu, navegació amb teclat, contrast i formularis.', 'Cross-device review, keyboard navigation, contrast and forms.']],
+  ['LAUNCH', ['Publicación y formación', 'Publicació i formació', 'Launch and training'], ['Despliegue, dominio, SSL, comprobaciones finales y sesión de formación.', 'Desplegament, domini, SSL, comprovacions finals i sessió de formació.', 'Deployment, domain, SSL, final checks and a training session.']]
+]
+
+export function detailedServices(language = 'es') {
+  const index = { es: 0, ca: 1, en: 2 }[language] ?? 0
+  return services.map(([code, titles, descriptions]) => ({ code, title: titles[index], description: descriptions[index], unit: ['ud.', 'u.', 'unit'][index] }))
+}

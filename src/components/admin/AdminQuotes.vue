@@ -4,6 +4,7 @@ import { useI18n } from 'vue-i18n'
 import { supabase } from '../../config/supabase'
 import { calculateLineTotal, calculateQuoteTotals, formatCurrency } from '../../utils/quoteCalculations'
 import { validateQuoteValues } from '../../utils/quoteValidation'
+import { detailedServices } from '../../config/quoteServices'
 
 const { locale } = useI18n()
 const words = {
@@ -12,6 +13,18 @@ const words = {
   en:{title:'Quotes',subtitle:'From the first figure to the final yes.',new:'New quote',all:'All',draft:'Draft',sent:'Sent',accepted:'Accepted',rejected:'Rejected',expired:'Expired',search:'Search number, title or client',empty:'No quotes match these filters.',client:'Client',date:'Date',valid:'Valid until',amount:'Total',status:'Status',actions:'Actions',edit:'Edit',pdf:'PDF',archive:'Archive',back:'Back',document:'Document',quoteTitle:'Quote title',language:'Language',notes:'Client notes',terms:'Terms',items:'Items',description:'Description',quantity:'Quantity',unit:'Unit',price:'Price',lineTotal:'Amount',addLine:'Add empty item',summary:'Summary',subtotal:'Subtotal',discount:'Discount',vat:'VAT',withholding:'Withholding',total:'Total',save:'Save quote',saving:'Saving...',download:'Download PDF',choose:'Select a client',units:'unit',days:'days',active:'Active',archived:'Archived',restore:'Restore',saved:'Quote saved.',quickItems:'Quick items',quickHelp:'Add a professional starting point, then adjust scope and price.',addPreset:'Add',removeItem:'Remove item',requiredTitle:'Enter a quote title.',requiredClient:'Select a client.',requiredItems:'Complete every item description.'}
 }
 const c = computed(() => words[locale.value] || words.es)
+const pricingCopy = computed(() => ({
+  es: { label:'Cómo se presupuesta', itemized:'Precio por concepto', global:'Precio global', amount:'Precio global antes de impuestos (€)', help:'Los conceptos detallan el trabajo incluido. El descuento y los impuestos se aplican al precio global.' },
+  ca: { label:'Com es pressuposta', itemized:'Preu per concepte', global:'Preu global', amount:'Preu global abans d’impostos (€)', help:'Els conceptes detallen el treball inclòs. El descompte i els impostos s’apliquen al preu global.' },
+  en: { label:'Pricing method', itemized:'Price per item', global:'Fixed project price', amount:'Project price before tax (€)', help:'Items describe the included scope. Discount and taxes apply to the project price.' }
+}[locale.value] || {}))
+const serviceSearch = ref('')
+const serviceCatalog = computed(() => {
+  const normalize = text => text.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase()
+  const query = normalize(serviceSearch.value.trim())
+  return [...presetCatalog.value, ...detailedServices(form.value.language || locale.value)]
+    .filter(service => normalize(`${service.code} ${service.title} ${service.description}`).includes(query))
+})
 const presetCatalog = computed(() => ({
   es: [
     { code:'WEB', title:'Web corporativa', description:'Diseño y desarrollo de sitio web corporativo responsive, optimizado para todos los dispositivos y preparado para la gestión de contenidos.', unit:'proyecto' },
@@ -61,7 +74,7 @@ const validationAttempted = ref(false)
 const form = ref({})
 
 const makeForm = () => { const issue = today(); const language=settings.value.default_language || 'es'; return {id:null,quote_number:null,title:'Proyecto digital',client_id:'',status:'draft',language,currency:'EUR',issue_date:issue,valid_until:addDays(issue,settings.value.default_validity_days),client_snapshot:{},issuer_snapshot:{...settings.value.issuer_snapshot},notes:'',terms:settings.value.default_terms?.[language] || '',discount_percentage:0,vat_percentage:settings.value.default_vat_percentage,withholding_percentage:settings.value.default_withholding_percentage,quote_items:[blankItem()]} }
-const totals = computed(() => calculateQuoteTotals(form.value.quote_items, {discountPercentage:form.value.discount_percentage,vatPercentage:form.value.vat_percentage,withholdingPercentage:form.value.withholding_percentage}))
+const totals = computed(() => calculateQuoteTotals(form.value.quote_items, {discountPercentage:form.value.discount_percentage,vatPercentage:form.value.vat_percentage,withholdingPercentage:form.value.withholding_percentage,pricingMode:form.value.pricing_mode,globalPrice:form.value.global_price}))
 const money = value => formatCurrency(value, localeCode.value, 'EUR')
 const statusLabel = status => c.value[status] || status
 const isExpired = quote => quote.status === 'sent' && quote.valid_until && quote.valid_until < today()
@@ -102,7 +115,7 @@ const upsertClient = client => {
 const updateSettings = value => { settings.value = structuredClone(value) }
 defineExpose({ upsertClient, updateSettings })
 
-const openNew = () => { form.value=makeForm(); mode.value='edit'; successMessage.value=''; errorMessage.value=''; validationAttempted.value=false; window.scrollTo({top:0,behavior:'smooth'}) }
+const openNew = () => { form.value={...makeForm(),pricing_mode:'itemized',global_price:0}; mode.value='edit'; successMessage.value=''; errorMessage.value=''; validationAttempted.value=false; window.scrollTo({top:0,behavior:'smooth'}) }
 const openEdit = quote => { form.value={...quote,client_snapshot:{...(quote.client_snapshot||{})},issuer_snapshot:{...(quote.issuer_snapshot||{})},quote_items:[...(quote.quote_items||[])].sort((a,b)=>a.position-b.position).map(item=>({...item}))}; if(!form.value.quote_items.length) form.value.quote_items=[blankItem()]; mode.value='edit'; errorMessage.value=''; validationAttempted.value=false; window.scrollTo({top:0,behavior:'smooth'}) }
 const selectClient = () => { const client=clients.value.find(item=>item.id===form.value.client_id); if(!client) return; const defaultTerms=Object.values(settings.value.default_terms||{}); const usesDefault=!form.value.terms||defaultTerms.includes(form.value.terms); form.value.client_snapshot={name:client.name,tax_id:client.tax_id,email:client.email,phone:client.phone,address:client.address}; form.value.language=client.language||form.value.language; if(usesDefault) form.value.terms=settings.value.default_terms?.[form.value.language]||'' }
 const changeLanguage = () => { const defaultTerms=Object.values(settings.value.default_terms||{}); if(!form.value.terms||defaultTerms.includes(form.value.terms)) form.value.terms=settings.value.default_terms?.[form.value.language]||'' }
@@ -132,10 +145,15 @@ const saveQuote = async () => {
     return
   }
   const items=form.value.quote_items.map((item,index)=>({description:item.description.trim(),quantity:Number(item.quantity),unit:item.unit||c.value.units,unit_price:Number(item.unit_price),position:index}))
+  if (form.value.pricing_mode === 'global') {
+    items.forEach(item => { if (!Number.isFinite(item.unit_price) || item.unit_price < 0) item.unit_price = 0 })
+  }
   isSaving.value=true; errorMessage.value=''; successMessage.value=''
   const payload={id:form.value.id,client_id:form.value.client_id,title:form.value.title,status:form.value.status,language:form.value.language,currency:'EUR',issue_date:form.value.issue_date,valid_until:form.value.valid_until,client_snapshot:form.value.client_snapshot,issuer_snapshot:form.value.issuer_snapshot,notes:form.value.notes,terms:form.value.terms,discount_percentage:Number(form.value.discount_percentage),vat_percentage:Number(form.value.vat_percentage),withholding_percentage:Number(form.value.withholding_percentage)}
   try {
-    const {data,error}=await supabase.rpc('save_quote',{p_quote:payload,p_items:items})
+    payload.pricing_mode = form.value.pricing_mode || 'itemized'
+    payload.global_price = Number(form.value.global_price || 0)
+    const {data,error}=await supabase.rpc('save_quote_priced',{p_quote:payload,p_items:items})
     if(error) throw error
     // Preserve the saved ID even if refreshing the list fails, preventing duplicate inserts.
     form.value = { ...form.value, ...data, quote_items: items }
@@ -180,8 +198,9 @@ onMounted(fetchData)
           <div class="items-title"><h3>{{ c.items }}</h3><span>{{ form.quote_items.length.toString().padStart(2,'0') }}</span></div>
           <div class="preset-library">
             <div class="preset-heading"><div><span class="eyebrow">{{ c.quickItems }}</span><p>{{ c.quickHelp }}</p></div><span class="scroll-hint">→</span></div>
+            <input v-model="serviceSearch" class="service-search" type="search" :aria-label="c.quickItems" :placeholder="`${c.quickItems}: web, SEO, CMS…`" />
             <div class="preset-track">
-              <button v-for="preset in presetCatalog" :key="preset.code" type="button" class="preset-card" @click="addPreset(preset)">
+              <button v-for="preset in serviceCatalog" :key="preset.code" type="button" class="preset-card" @click="addPreset(preset)">
                 <span class="preset-code">{{ preset.code }}</span>
                 <strong>{{ preset.title }}</strong>
                 <small>{{ preset.description }}</small>
@@ -190,18 +209,27 @@ onMounted(fetchData)
             </div>
           </div>
           <div class="line-head"><span>{{ c.description }}</span><span>{{ c.quantity }}</span><span>{{ c.unit }}</span><span>{{ c.price }}</span><span>{{ c.lineTotal }}</span><span></span></div>
-          <div v-for="(item,index) in form.quote_items" :key="item.id||index" :class="['line-item',{invalidRow:validationAttempted&&!item.description.trim()}]">
+          <div v-for="(item,index) in form.quote_items" :key="item.id||index" :class="['line-item',{invalidRow:validationAttempted&&!item.description.trim(), 'global-line':form.pricing_mode === 'global'}]">
             <label class="line-control description-control"><span class="mobile-field-label">{{ c.description }}</span><textarea v-model="item.description" rows="3" :aria-label="c.description"></textarea></label>
             <label class="line-control"><span class="mobile-field-label">{{ c.quantity }}</span><input v-model.number="item.quantity" type="number" min="0" step="0.01" :aria-label="c.quantity"/></label>
             <label class="line-control"><span class="mobile-field-label">{{ c.unit }}</span><input v-model="item.unit" :aria-label="c.unit"/></label>
-            <label class="line-control price-control"><span class="mobile-field-label">{{ c.price }}</span><div><input v-model.number="item.unit_price" type="number" min="0" step="0.01" :aria-label="c.price"/><span>€</span></div></label>
-            <div class="line-total-control"><span class="mobile-field-label">{{ c.lineTotal }}</span><strong>{{ money(calculateLineTotal(item.quantity,item.unit_price)) }}</strong></div>
+            <label v-if="form.pricing_mode !== 'global'" class="line-control price-control"><span class="mobile-field-label">{{ c.price }}</span><div><input v-model.number="item.unit_price" type="number" min="0" step="0.01" :aria-label="c.price"/><span>€</span></div></label>
+            <div v-if="form.pricing_mode !== 'global'" class="line-total-control"><span class="mobile-field-label">{{ c.lineTotal }}</span><strong>{{ money(calculateLineTotal(item.quantity,item.unit_price)) }}</strong></div>
             <button type="button" class="remove-item" :aria-label="c.removeItem" @click="removeItem(index)">×</button>
           </div>
           <button type="button" class="add-line" @click="addItem">+ {{ c.addLine }}</button>
           <div class="text-fields"><label><span>{{ c.notes }}</span><textarea v-model="form.notes" rows="4"></textarea></label><label><span>{{ c.terms }}</span><textarea v-model="form.terms" rows="4"></textarea></label></div>
         </div>
         <aside class="quote-sidebar">
+          <div class="side-card pricing-card">
+            <label for="pricing-mode">{{ pricingCopy.label }}</label>
+            <select id="pricing-mode" v-model="form.pricing_mode"><option value="itemized">{{ pricingCopy.itemized }}</option><option value="global">{{ pricingCopy.global }}</option></select>
+            <template v-if="form.pricing_mode === 'global'">
+              <label for="global-price">{{ pricingCopy.amount }}</label>
+              <input id="global-price" v-model.number="form.global_price" type="number" min="0" step="0.01" inputmode="decimal" />
+              <p>{{ pricingCopy.help }}</p>
+            </template>
+          </div>
           <div class="side-card"><span class="eyebrow">{{ c.status }}</span><select v-model="form.status" :class="['large-status',form.status]"><option value="draft">{{ c.draft }}</option><option value="sent">{{ c.sent }}</option><option value="accepted">{{ c.accepted }}</option><option value="rejected">{{ c.rejected }}</option></select></div>
           <div class="side-card totals-card"><h3>{{ c.summary }}</h3><label><span>{{ c.discount }} (%)</span><input v-model.number="form.discount_percentage" type="number" min="0" max="100" step="0.01"/></label><label><span>{{ c.vat }} (%)</span><input v-model.number="form.vat_percentage" type="number" min="0" max="100" step="0.01"/></label><label><span>{{ c.withholding }} (%)</span><input v-model.number="form.withholding_percentage" type="number" min="0" max="100" step="0.01"/></label><div class="sum-row"><span>{{ c.subtotal }}</span><strong>{{ money(totals.subtotal) }}</strong></div><div v-if="totals.discountAmount" class="sum-row"><span>{{ c.discount }}</span><strong>-{{ money(totals.discountAmount) }}</strong></div><div class="sum-row"><span>{{ c.vat }}</span><strong>{{ money(totals.vatAmount) }}</strong></div><div v-if="totals.withholdingAmount" class="sum-row"><span>{{ c.withholding }}</span><strong>-{{ money(totals.withholdingAmount) }}</strong></div><div class="grand-total"><span>{{ c.total }}</span><strong>{{ money(totals.total) }}</strong></div></div>
         </aside>
@@ -276,4 +304,10 @@ onMounted(fetchData)
   .editor-actions{justify-self:stretch}
   .title-input{font-size:1.4rem!important}
 }
+.pricing-card{display:flex;flex-direction:column;gap:12px}
+.pricing-card label{font-size:.8rem;font-weight:600}
+.pricing-card p{font-size:.78rem;line-height:1.5;margin:0}
+.pricing-card input{font-size:1.25rem;font-variant-numeric:tabular-nums}
+.service-search{margin-bottom:14px}
+.line-item.global-line{grid-template-columns:minmax(0,1fr) minmax(0,1fr) 28px}
 </style>

@@ -34,7 +34,8 @@ export async function generateQuotePdf(quote) {
   const issuer = quote.issuer_snapshot || {}
   const client = quote.client_snapshot || {}
   const items = [...(quote.quote_items || [])].sort((a,b) => a.position - b.position)
-  const totals = calculateQuoteTotals(items, { discountPercentage:quote.discount_percentage, vatPercentage:quote.vat_percentage, withholdingPercentage:quote.withholding_percentage })
+  const globalPricing = quote.pricing_mode === 'global'
+  const totals = calculateQuoteTotals(items, { discountPercentage:quote.discount_percentage, vatPercentage:quote.vat_percentage, withholdingPercentage:quote.withholding_percentage, pricingMode:quote.pricing_mode, globalPrice:quote.global_price })
   const money = value => formatCurrency(value, locale, quote.currency || 'EUR')
   const doc = new jsPDF({ unit:'mm', format:'a4' })
   const pageWidth = doc.internal.pageSize.getWidth()
@@ -69,19 +70,22 @@ export async function generateQuotePdf(quote) {
   autoTable(doc, {
     startY:106 + Math.max(0, titleLines.length - 1) * 6,
     margin:{ left:16, right:16 },
-    head:[[t.description,t.quantity,t.unit,t.price,t.amount]],
-    body:items.map(item => [item.description, Number(item.quantity).toLocaleString(locale), item.unit, money(item.unit_price), money(Number(item.quantity)*Number(item.unit_price))]),
+    head:[globalPricing ? [t.description,t.quantity,t.unit] : [t.description,t.quantity,t.unit,t.price,t.amount]],
+    body:items.map(item => globalPricing
+      ? [item.description, Number(item.quantity).toLocaleString(locale), item.unit]
+      : [item.description, Number(item.quantity).toLocaleString(locale), item.unit, money(item.unit_price), money(Number(item.quantity)*Number(item.unit_price))]),
     styles:{ font:'helvetica', fontSize:8.5, cellPadding:3.2, lineColor:[225,225,225], lineWidth:.1, textColor:[35,35,35] },
     headStyles:{ fillColor:[18,18,18], textColor:[255,255,255], fontStyle:'bold' },
     alternateRowStyles:{ fillColor:[247,247,244] },
-    columnStyles:{ 0:{cellWidth:82},1:{halign:'right'},2:{halign:'center'},3:{halign:'right'},4:{halign:'right'} },
+    columnStyles: globalPricing ? {0:{cellWidth:125},1:{halign:'right'},2:{halign:'center'}} : { 0:{cellWidth:82},1:{halign:'right'},2:{halign:'center'},3:{halign:'right'},4:{halign:'right'} },
     didDrawPage:data => { if (data.pageNumber > 1) { doc.setFontSize(8); doc.setTextColor(130,130,130); doc.text(`${quote.quote_number} · ${t.page} ${data.pageNumber}`, pageWidth - 16, 12, {align:'right'}) } }
   })
 
   let y = doc.lastAutoTable.finalY + 9
   const ensureSpace = amount => { if (y + amount > 280) { doc.addPage(); y = 20 } }
   ensureSpace(48)
-  const summary = [[t.subtotal,money(totals.subtotal)]]
+  const globalLabel = {es:'Precio global',ca:'Preu global',en:'Project price'}[language] || 'Project price'
+  const summary = [[globalPricing ? globalLabel : t.subtotal,money(totals.subtotal)]]
   if (Number(quote.discount_percentage)) summary.push([`${t.discount} (${quote.discount_percentage}%)`, `-${money(totals.discountAmount)}`])
   if (Number(quote.vat_percentage)) summary.push([`${t.vat} (${quote.vat_percentage}%)`, money(totals.vatAmount)])
   if (Number(quote.withholding_percentage)) summary.push([`${t.withholding} (${quote.withholding_percentage}%)`, `-${money(totals.withholdingAmount)}`])

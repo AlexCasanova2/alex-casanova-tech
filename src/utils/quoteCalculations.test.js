@@ -19,6 +19,14 @@ describe('calculateLineTotal', () => {
 })
 
 describe('calculateQuoteTotals', () => {
+  it('uses the project price instead of summing items in global mode', () => {
+    expect(calculateQuoteTotals([{quantity:10,unit_price:999}], {
+      pricingMode:'global', globalPrice:1000, discountPercentage:10, vatPercentage:21, withholdingPercentage:15
+    })).toEqual({subtotal:1000,discountAmount:100,base:900,vatAmount:189,withholdingAmount:135,total:954})
+  })
+  it('ignores the saved project price when returning to itemized mode', () => {
+    expect(calculateQuoteTotals([{quantity:2,unit_price:100}], {pricingMode:'itemized',globalPrice:1000}).total).toBe(200)
+  })
   it('applies discount before VAT and IRPF withholding', () => {
     expect(calculateQuoteTotals(
       [
