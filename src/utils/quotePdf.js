@@ -10,12 +10,12 @@ const text = {
 
 const localeCodes = { es:'es-ES', ca:'ca-ES', en:'en-IE' }
 const formatDate = (date, language) => date ? new Intl.DateTimeFormat(localeCodes[language]).format(new Date(`${date}T12:00:00`)) : '—'
-const addressLines = entity => [entity?.address?.line1 || entity?.address, [entity?.address?.postal_code || entity?.postal_code, entity?.address?.city || entity?.city].filter(Boolean).join(' '), entity?.address?.country || entity?.country].filter(Boolean)
+const addressLines = entity => [typeof entity?.address === 'string' ? entity.address : entity?.address?.line1, [entity?.address?.postal_code || entity?.postal_code, entity?.address?.city || entity?.city].filter(Boolean).join(' '), entity?.address?.country || entity?.country].filter(Boolean)
 
 async function loadImage(url) {
   if (!url) return null
   try {
-    const response = await fetch(url)
+    const response = await fetch(url, { signal: AbortSignal.timeout(8000) })
     if (!response.ok) return null
     const blob = await response.blob()
     return await new Promise(resolve => {

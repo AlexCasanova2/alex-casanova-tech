@@ -3,6 +3,7 @@ import { computed, onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { supabase } from '../../config/supabase'
 import { calculateLineTotal, calculateQuoteTotals, formatCurrency } from '../../utils/quoteCalculations'
+import { validateQuoteValues } from '../../utils/quoteValidation'
 
 const { locale } = useI18n()
 const words = {
@@ -86,7 +87,8 @@ const fetchData = async () => {
   ])
   const error=quoteResult.error||clientResult.error||settingsResult.error
   if(error) errorMessage.value=error.message
-  quotes.value=quoteResult.data||[]; clients.value=clientResult.data||[]
+  if (!quoteResult.error) quotes.value=quoteResult.data||[]
+  if (!clientResult.error) clients.value=clientResult.data||[]
   if(settingsResult.data) settings.value={...defaultSettings(),...settingsResult.data,default_terms:{...defaultSettings().default_terms,...settingsResult.data.default_terms},issuer_snapshot:settingsResult.data.issuer_snapshot||{}}
 }
 
@@ -97,7 +99,8 @@ const upsertClient = client => {
   clients.value.sort((a,b)=>a.name.localeCompare(b.name))
 }
 
-defineExpose({ upsertClient })
+const updateSettings = value => { settings.value = structuredClone(value) }
+defineExpose({ upsertClient, updateSettings })
 
 const openNew = () => { form.value=makeForm(); mode.value='edit'; successMessage.value=''; errorMessage.value=''; validationAttempted.value=false; window.scrollTo({top:0,behavior:'smooth'}) }
 const openEdit = quote => { form.value={...quote,client_snapshot:{...(quote.client_snapshot||{})},issuer_snapshot:{...(quote.issuer_snapshot||{})},quote_items:[...(quote.quote_items||[])].sort((a,b)=>a.position-b.position).map(item=>({...item}))}; if(!form.value.quote_items.length) form.value.quote_items=[blankItem()]; mode.value='edit'; errorMessage.value=''; validationAttempted.value=false; window.scrollTo({top:0,behavior:'smooth'}) }
@@ -113,17 +116,33 @@ const addPreset = preset => {
 const removeItem = index => { if(form.value.quote_items.length>1) form.value.quote_items.splice(index,1) }
 
 const saveQuote = async () => {
+  if (isSaving.value) return
   validationAttempted.value=true
   if(!form.value.title?.trim()){ errorMessage.value=c.value.requiredTitle; return }
   if(!form.value.client_id){ errorMessage.value=c.value.requiredClient; return }
   if(!form.value.quote_items.length||form.value.quote_items.some(item=>!item.description.trim())){ errorMessage.value=c.value.requiredItems; return }
+  const validationError = validateQuoteValues(form.value)
+  if (validationError) {
+    const messages = {
+      es: { dates:'Revisa las fechas: la validez debe ser posterior o igual a la emisión.', year:'Un presupuesto numerado debe mantener su año de emisión.', percentages:'Los porcentajes deben estar entre 0 y 100.', amounts:'Introduce cantidades y precios válidos, iguales o mayores que cero.' },
+      ca: { dates:'Revisa les dates: la validesa ha de ser posterior o igual a l’emissió.', year:'Un pressupost numerat ha de mantenir l’any d’emissió.', percentages:'Els percentatges han d’estar entre 0 i 100.', amounts:'Introdueix quantitats i preus vàlids, iguals o superiors a zero.' },
+      en: { dates:'Check the dates: expiry must be on or after the issue date.', year:'A numbered quote must keep its issue year.', percentages:'Percentages must be between 0 and 100.', amounts:'Enter valid quantities and prices greater than or equal to zero.' }
+    }
+    errorMessage.value = (messages[locale.value] || messages.es)[validationError]
+    return
+  }
   const items=form.value.quote_items.map((item,index)=>({description:item.description.trim(),quantity:Number(item.quantity),unit:item.unit||c.value.units,unit_price:Number(item.unit_price),position:index}))
   isSaving.value=true; errorMessage.value=''; successMessage.value=''
   const payload={id:form.value.id,client_id:form.value.client_id,title:form.value.title,status:form.value.status,language:form.value.language,currency:'EUR',issue_date:form.value.issue_date,valid_until:form.value.valid_until,client_snapshot:form.value.client_snapshot,issuer_snapshot:form.value.issuer_snapshot,notes:form.value.notes,terms:form.value.terms,discount_percentage:Number(form.value.discount_percentage),vat_percentage:Number(form.value.vat_percentage),withholding_percentage:Number(form.value.withholding_percentage)}
-  const {data,error}=await supabase.rpc('save_quote',{p_quote:payload,p_items:items})
-  if(error) errorMessage.value=error.message
-  else { successMessage.value=c.value.saved; await fetchData(); const saved=quotes.value.find(q=>q.id===data.id); if(saved) openEdit(saved) }
-  isSaving.value=false
+  try {
+    const {data,error}=await supabase.rpc('save_quote',{p_quote:payload,p_items:items})
+    if(error) throw error
+    // Preserve the saved ID even if refreshing the list fails, preventing duplicate inserts.
+    form.value = { ...form.value, ...data, quote_items: items }
+    successMessage.value=c.value.saved
+    await fetchData()
+  } catch (error) { errorMessage.value=error.message }
+  finally { isSaving.value=false }
 }
 
 const updateStatus = async (quote,status) => { const {error}=await supabase.from('quotes').update({status}).eq('id',quote.id); if(error) errorMessage.value=error.message; else await fetchData() }
@@ -232,4 +251,29 @@ onMounted(fetchData)
 .invalid{border-color:#ef4444!important;box-shadow:0 0 0 3px rgba(239,68,68,.1)!important}
 .line-item.invalidRow{border-color:#ef4444;box-shadow:0 0 0 3px rgba(239,68,68,.08)}
 @media(max-width:650px){.preset-library{margin-left:-4px;margin-right:-4px;padding:14px}.preset-track{grid-auto-columns:minmax(78vw,1fr)}.line-item{padding:14px;gap:12px}.description-control{grid-column:1/-1}.mobile-field-label{display:block}.line-total-control{justify-content:flex-start;flex-direction:column;align-items:flex-start;gap:5px;text-align:left}.remove-item{align-self:end;justify-self:end}.text-fields{gap:18px}}
+/* Keep the editor usable within the admin's 1100px container, not just the viewport. */
+.sheet-top>div:first-child{min-width:0;flex:1}
+.title-input{font-size:clamp(1.4rem,2.5vw,2rem)!important;max-width:100%}
+.number-stamp{flex-shrink:0}
+.meta-grid{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
+.line-head{display:none}
+.line-item{grid-template-columns:minmax(0,1fr) minmax(0,1fr) minmax(0,1fr) minmax(0,1fr) 28px;gap:12px;align-items:end}
+.description-control{grid-column:1/-1}
+.mobile-field-label{display:block}
+.line-total-control{display:flex;flex-direction:column;align-items:flex-end;gap:6px}
+.line-control textarea{min-height:110px}
+.preset-track{min-width:0;max-width:100%;grid-auto-columns:220px}
+.editor-header{grid-template-columns:auto minmax(0,1fr) auto;gap:12px}
+.editor-actions{flex-wrap:wrap;justify-content:flex-end;min-width:0}
+.editor-actions .btn{font-size:.85rem}
+.quote-row>*{min-width:0;overflow-wrap:anywhere}
+.metric-wide strong{color:var(--text-primary)}
+@media(max-width:650px){
+  .meta-grid{grid-template-columns:minmax(0,1fr)}
+  .line-item{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
+  .line-total-control{align-items:flex-start}
+  .editor-header{grid-template-columns:auto minmax(0,1fr)}
+  .editor-actions{justify-self:stretch}
+  .title-input{font-size:1.4rem!important}
+}
 </style>

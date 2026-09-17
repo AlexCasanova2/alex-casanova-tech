@@ -1,5 +1,5 @@
 <script setup>
-import { computed, onMounted, onUnmounted, ref } from 'vue'
+import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { supabase } from '../../config/supabase'
 
@@ -20,6 +20,35 @@ const isSaving = ref(false)
 const errorMessage = ref('')
 const toastMessage = ref('')
 let toastTimer
+const clientDialog = ref(null)
+let restoreFocus = null
+let previousOverflow = ''
+let previousInert = false
+const restorePage = () => {
+  document.body.style.overflow = previousOverflow
+  const app = document.getElementById('app')
+  if (app) app.inert = previousInert
+  restoreFocus?.focus()
+}
+watch(isEditing, async open => {
+  if (!open) { restorePage(); return }
+  restoreFocus = document.activeElement
+  previousOverflow = document.body.style.overflow
+  const app = document.getElementById('app')
+  previousInert = app?.inert || false
+  if (app) app.inert = true
+  document.body.style.overflow = 'hidden'
+  await nextTick()
+  clientDialog.value?.querySelector('input')?.focus()
+})
+const handleDialogKey = event => {
+  if (event.key === 'Escape' && !isSaving.value) closeForm()
+  if (event.key !== 'Tab') return
+  const controls = [...clientDialog.value.querySelectorAll('input, select, textarea, button:not(:disabled)')]
+  const first = controls[0], last = controls.at(-1)
+  if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last?.focus() }
+  else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first?.focus() }
+}
 
 const emptyForm = () => ({ id: null, name: '', tax_id: '', email: '', phone: '', language: 'es', notes: '', address: { line1: '', city: '', postal_code: '', country: 'España' } })
 const form = ref(emptyForm())
@@ -70,16 +99,18 @@ const upsertLocalClient = client => {
 }
 
 const saveClient = async () => {
+  if (isSaving.value) return
   isSaving.value = true
   errorMessage.value = ''
+  try {
   const isUpdate = Boolean(form.value.id)
   const payload = {
     name: form.value.name.trim(),
-    tax_id: form.value.tax_id.trim() || null,
-    email: form.value.email.trim() || null,
-    phone: form.value.phone.trim() || null,
+    tax_id: (form.value.tax_id || '').trim() || null,
+    email: (form.value.email || '').trim() || null,
+    phone: (form.value.phone || '').trim() || null,
     language: form.value.language,
-    notes: form.value.notes.trim() || null,
+    notes: (form.value.notes || '').trim() || null,
     address: form.value.address
   }
   const query = form.value.id
@@ -93,7 +124,8 @@ const saveClient = async () => {
     closeForm()
     showToast(isUpdate ? c.value.updated : c.value.created)
   }
-  isSaving.value = false
+  } catch (error) { errorMessage.value = error.message }
+  finally { isSaving.value = false }
 }
 
 const toggleArchive = async client => {
@@ -106,7 +138,7 @@ const toggleArchive = async client => {
 }
 
 onMounted(fetchClients)
-onUnmounted(() => clearTimeout(toastTimer))
+onUnmounted(() => { clearTimeout(toastTimer); if (isEditing.value) restorePage() })
 </script>
 
 <template>
@@ -144,7 +176,7 @@ onUnmounted(() => clearTimeout(toastTimer))
 
     <Teleport to="body">
       <div v-if="isEditing" class="drawer-backdrop">
-        <form class="client-drawer" role="dialog" aria-modal="true" :aria-label="form.id ? c.details : c.newDetails" @submit.prevent="saveClient">
+        <form ref="clientDialog" class="client-drawer" role="dialog" aria-modal="true" :aria-label="form.id ? c.details : c.newDetails" @keydown="handleDialogKey" @submit.prevent="saveClient">
           <div class="drawer-head"><div><span class="eyebrow">CRM / CLIENT</span><h3>{{ form.id ? c.details : c.newDetails }}</h3></div><button type="button" class="close" :aria-label="c.cancel" @click="closeForm">×</button></div>
           <div class="field wide"><label>{{ c.name }}</label><input v-model="form.name" required autofocus /></div>
           <div class="field"><label>{{ c.tax }}</label><input v-model="form.tax_id" /></div>
@@ -184,4 +216,9 @@ onUnmounted(() => clearTimeout(toastTimer))
 .toast-enter-active,.toast-leave-active{transition:opacity .2s ease,transform .3s cubic-bezier(.16,1,.3,1)}
 .toast-enter-from,.toast-leave-to{opacity:0;transform:translateY(12px)}
 @media(max-width:700px){.client-drawer{padding:32px 20px}.success-toast{right:16px;bottom:16px}}
+.drawer-backdrop{overscroll-behavior:contain;color:var(--text-primary)}
+.client-drawer .field{min-width:0}
+.client-drawer input,.client-drawer textarea,.client-drawer select{min-width:0}
+.toast-check{background:#d7ff4f}
+.client-copy{min-width:0;overflow-wrap:anywhere}
 </style>

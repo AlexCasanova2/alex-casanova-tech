@@ -592,7 +592,7 @@ const submitProject = async () => {
 
       <AdminClients v-show="activeModule === 'clients'" @client-saved="syncClientWithQuotes" />
       <AdminQuotes v-show="activeModule === 'quotes'" ref="quotesAdmin" />
-      <AdminSettings v-show="activeModule === 'settings'" />
+      <AdminSettings v-show="activeModule === 'settings'" @settings-saved="quotesAdmin?.updateSettings($event)" />
     </div>
 
     <!-- Custom Delete Modal -->

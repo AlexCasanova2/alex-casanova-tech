@@ -4,6 +4,7 @@ import { useI18n } from 'vue-i18n'
 import { supabase } from '../../config/supabase'
 
 const { locale } = useI18n()
+const emit = defineEmits(['settings-saved'])
 const labels = {
   es: { title:'Ajustes', subtitle:'La identidad que viajará con cada presupuesto.', identity:'Identidad fiscal', defaults:'Valores predeterminados', terms:'Condiciones por idioma', name:'Nombre o razón social', tax:'NIF / CIF', email:'Email', phone:'Teléfono', web:'Web', address:'Dirección', city:'Ciudad', postal:'Código postal', country:'País', logo:'URL del logotipo', prefix:'Prefijo', language:'Idioma', vat:'IVA (%)', irpf:'IRPF (%)', validity:'Validez (días)', save:'Guardar ajustes', saving:'Guardando...', saved:'Ajustes guardados.' },
   ca: { title:'Configuració', subtitle:'La identitat que viatjarà amb cada pressupost.', identity:'Identitat fiscal', defaults:'Valors predeterminats', terms:'Condicions per idioma', name:'Nom o raó social', tax:'NIF / CIF', email:'Email', phone:'Telèfon', web:'Web', address:'Adreça', city:'Ciutat', postal:'Codi postal', country:'País', logo:'URL del logotip', prefix:'Prefix', language:'Idioma', vat:'IVA (%)', irpf:'IRPF (%)', validity:'Validesa (dies)', save:'Desar configuració', saving:'Desant...', saved:'Configuració desada.' },
@@ -22,12 +23,15 @@ const fetchSettings = async () => {
 }
 
 const saveSettings = async () => {
+  if (isSaving.value) return
   isSaving.value = true; message.value = ''; errorMessage.value = ''
+  try {
   const payload = { quote_prefix:form.value.quote_prefix.trim().toUpperCase(), default_language:form.value.default_language, currency:'EUR', default_vat_percentage:Number(form.value.default_vat_percentage), default_withholding_percentage:Number(form.value.default_withholding_percentage), default_validity_days:Number(form.value.default_validity_days), default_terms:form.value.default_terms, issuer_snapshot:form.value.issuer_snapshot }
   const { data, error } = await supabase.from('crm_settings').upsert(payload, { onConflict:'owner_id' }).select().single()
   if (error) errorMessage.value = error.message
-  else { form.value.id = data.id; message.value = c.value.saved }
-  isSaving.value = false
+  else { form.value.id = data.id; message.value = c.value.saved; emit('settings-saved', data) }
+  } catch (error) { errorMessage.value = error.message }
+  finally { isSaving.value = false }
 }
 onMounted(fetchSettings)
 </script>
