@@ -7,6 +7,7 @@ import { validateQuoteValues } from '../../utils/quoteValidation'
 import { detailedServices } from '../../config/quoteServices'
 import { fillEmptyQuoteTerms } from '../../config/quoteTerms'
 import { saveQuoteWithCompatibility, PRICING_MIGRATION } from '../../utils/saveQuote'
+import { addedPresetCodes } from '../../utils/quotePresets'
 
 const { locale } = useI18n()
 const words = {
@@ -15,6 +16,7 @@ const words = {
   en:{title:'Quotes',subtitle:'From the first figure to the final yes.',new:'New quote',all:'All',draft:'Draft',sent:'Sent',accepted:'Accepted',rejected:'Rejected',expired:'Expired',search:'Search number, title or client',empty:'No quotes match these filters.',client:'Client',date:'Date',valid:'Valid until',amount:'Total',status:'Status',actions:'Actions',edit:'Edit',pdf:'PDF',archive:'Archive',back:'Back',document:'Document',quoteTitle:'Quote title',language:'Language',notes:'Client notes',terms:'Terms',items:'Items',description:'Description',quantity:'Quantity',unit:'Unit',price:'Price',lineTotal:'Amount',addLine:'Add empty item',summary:'Summary',subtotal:'Subtotal',discount:'Discount',vat:'VAT',withholding:'Withholding',total:'Total',save:'Save quote',saving:'Saving...',download:'Download PDF',choose:'Select a client',units:'unit',days:'days',active:'Active',archived:'Archived',restore:'Restore',saved:'Quote saved.',quickItems:'Quick items',quickHelp:'Add a professional starting point, then adjust scope and price.',addPreset:'Add',removeItem:'Remove item',requiredTitle:'Enter a quote title.',requiredClient:'Select a client.',requiredItems:'Complete every item description.'}
 }
 const c = computed(() => words[locale.value] || words.es)
+const addedLabel = computed(() => ({es:'Añadido',ca:'Afegit',en:'Added'}[locale.value] || 'Añadido'))
 const pricingCopy = computed(() => ({
   es: { label:'Cómo se presupuesta', itemized:'Precio por concepto', global:'Precio global', amount:'Precio global antes de impuestos (€)', help:'Los conceptos detallan el trabajo incluido. El descuento y los impuestos se aplican al precio global.' },
   ca: { label:'Com es pressuposta', itemized:'Preu per concepte', global:'Preu global', amount:'Preu global abans d’impostos (€)', help:'Els conceptes detallen el treball inclòs. El descompte i els impostos s’apliquen al preu global.' },
@@ -43,7 +45,7 @@ const serviceCatalog = computed(() => {
     .filter(service => normalize(`${service.code} ${service.title} ${service.description}`).includes(query))
 })
 const visibleServices = computed(() => showAllServices.value ? serviceCatalog.value : serviceCatalog.value.slice(0, 6))
-const presetCatalog = computed(() => ({
+const presetCatalogByLanguage = {
   es: [
     { code:'WEB', title:'Web corporativa', description:'Diseño y desarrollo de sitio web corporativo responsive, optimizado para todos los dispositivos y preparado para la gestión de contenidos.', unit:'proyecto' },
     { code:'LAND', title:'Landing page', description:'Diseño y desarrollo de landing page orientada a conversión, con estructura de contenidos, formularios y analítica básica.', unit:'proyecto' },
@@ -77,7 +79,10 @@ const presetCatalog = computed(() => ({
     { code:'CARE', title:'Web maintenance', description:'Updates, backups, monitoring, technical support and small continuous improvements.', unit:'month' },
     { code:'DATA', title:'Digital analytics', description:'GA4, Google Tag Manager, Search Console, event tracking and basic measurement dashboard setup.', unit:'service' }
   ]
-}[form.value.language || locale.value] || []))
+}
+const presetCatalog = computed(() => presetCatalogByLanguage[form.value.language || locale.value] || [])
+const allPresets = ['es','ca','en'].flatMap(language => [...presetCatalogByLanguage[language], ...detailedServices(language)])
+const addedCodes = computed(() => addedPresetCodes(form.value.quote_items, allPresets))
 const localeCode = computed(() => ({es:'es-ES',ca:'ca-ES',en:'en-IE'}[locale.value] || 'es-ES'))
 const localDate = value => `${value.getFullYear()}-${String(value.getMonth()+1).padStart(2,'0')}-${String(value.getDate()).padStart(2,'0')}`
 const today = () => localDate(new Date())
@@ -147,12 +152,16 @@ const selectClient = () => { const client=clients.value.find(item=>item.id===for
 const changeLanguage = () => { const defaultTerms=Object.values(settings.value.default_terms||{}); if(!form.value.terms||defaultTerms.includes(form.value.terms)) form.value.terms=settings.value.default_terms?.[form.value.language]||'' }
 const addItem = () => form.value.quote_items.push(blankItem())
 const addPreset = preset => {
+  if (addedCodes.value.has(preset.code)) return
   const item={description:`${preset.title}\n${preset.description}`,quantity:1,unit:preset.unit,unit_price:0}
   const onlyItem=form.value.quote_items.length===1 ? form.value.quote_items[0] : null
   if(onlyItem&&!onlyItem.description.trim()&&!Number(onlyItem.unit_price)) form.value.quote_items[0]=item
   else form.value.quote_items.push(item)
 }
-const removeItem = index => { if(form.value.quote_items.length>1) form.value.quote_items.splice(index,1) }
+const removeItem = index => {
+  form.value.quote_items.splice(index,1)
+  if (!form.value.quote_items.length) form.value.quote_items.push(blankItem())
+}
 
 const saveQuote = async () => {
   if (isSaving.value) return
@@ -248,11 +257,11 @@ onMounted(fetchData)
               <button v-for="category in ['all','web','design','seo','support']" :key="category" type="button" :aria-pressed="serviceCategory === category" @click="serviceCategory = category">{{ catalogCopy[category] }}</button>
             </div>
             <div class="preset-track">
-              <button v-for="preset in visibleServices" :key="preset.code" type="button" class="preset-card" :title="preset.description" @click="addPreset(preset)">
+              <button v-for="preset in visibleServices" :key="preset.code" type="button" :class="['preset-card', { 'is-added': addedCodes.has(preset.code) }]" :disabled="addedCodes.has(preset.code)" :title="preset.description" @click="addPreset(preset)">
                 <span class="preset-code">{{ preset.code }}</span>
                 <strong>{{ preset.title }}</strong>
                 <small>{{ preset.description }}</small>
-                <span class="preset-add">+ {{ c.addPreset }}</span>
+                <span class="preset-add">{{ addedCodes.has(preset.code) ? `✓ ${addedLabel}` : `+ ${c.addPreset}` }}</span>
               </button>
             </div>
             <div v-if="!serviceCatalog.length" class="catalog-empty" role="status">
@@ -444,4 +453,7 @@ onMounted(fetchData)
   .empty-state{padding:32px 16px}
 }
 @media(max-height:760px){.quote-sidebar{position:static}}
+.preset-card.is-added{opacity:.75;cursor:default;border-style:dashed}
+.preset-card.is-added:hover{transform:none;border-color:var(--border-color)}
+.preset-card.is-added .preset-add{color:var(--text-secondary)}
 </style>
