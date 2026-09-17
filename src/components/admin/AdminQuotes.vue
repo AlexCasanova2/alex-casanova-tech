@@ -1,5 +1,5 @@
 <script setup>
-import { computed, onMounted, ref } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { supabase } from '../../config/supabase'
 import { calculateLineTotal, calculateQuoteTotals, formatCurrency } from '../../utils/quoteCalculations'
@@ -19,12 +19,28 @@ const pricingCopy = computed(() => ({
   en: { label:'Pricing method', itemized:'Price per item', global:'Fixed project price', amount:'Project price before tax (€)', help:'Items describe the included scope. Discount and taxes apply to the project price.' }
 }[locale.value] || {}))
 const serviceSearch = ref('')
+const serviceCategory = ref('all')
+const showAllServices = ref(false)
+const catalogCopy = computed(() => ({
+  es: { all:'Todos', web:'Desarrollo web', design:'Diseño y estrategia', seo:'SEO', support:'Soporte y analítica', more:'Ver todos los conceptos', less:'Ver menos', empty:'No hay conceptos que coincidan.', reset:'Limpiar filtros' },
+  ca: { all:'Tots', web:'Desenvolupament web', design:'Disseny i estratègia', seo:'SEO', support:'Suport i analítica', more:'Veure tots els conceptes', less:'Veure menys', empty:'No hi ha conceptes coincidents.', reset:'Netejar filtres' },
+  en: { all:'All', web:'Web development', design:'Design and strategy', seo:'SEO', support:'Support and analytics', more:'Show all items', less:'Show less', empty:'No matching items.', reset:'Clear filters' }
+}[locale.value] || {}))
+const categoryCodes = {
+  web:['WEB','LAND','SHOP','HOME','PAGE','CMS','FORM','API'],
+  design:['UX','BRIEF','MAP','WIRE','UI'],
+  seo:['SEO','SEO+','KEY','META','SCHEMA','LOCAL','REDIR'],
+  support:['PERF','CARE','DATA','QA','LAUNCH']
+}
+watch([serviceSearch, serviceCategory], () => { showAllServices.value = false })
 const serviceCatalog = computed(() => {
   const normalize = text => text.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase()
   const query = normalize(serviceSearch.value.trim())
   return [...presetCatalog.value, ...detailedServices(form.value.language || locale.value)]
+    .filter(service => serviceCategory.value === 'all' || categoryCodes[serviceCategory.value].includes(service.code))
     .filter(service => normalize(`${service.code} ${service.title} ${service.description}`).includes(query))
 })
+const visibleServices = computed(() => showAllServices.value ? serviceCatalog.value : serviceCatalog.value.slice(0, 6))
 const presetCatalog = computed(() => ({
   es: [
     { code:'WEB', title:'Web corporativa', description:'Diseño y desarrollo de sitio web corporativo responsive, optimizado para todos los dispositivos y preparado para la gestión de contenidos.', unit:'proyecto' },
@@ -197,16 +213,24 @@ onMounted(fetchData)
           <div class="meta-grid"><label><span>{{ c.client }}</span><select v-model="form.client_id" :class="{invalid:validationAttempted&&!form.client_id}" @change="selectClient"><option value="">{{ c.choose }}</option><option v-for="client in clients" :key="client.id" :value="client.id" :disabled="client.archived_at && client.id !== form.client_id">{{ client.name }}{{ client.archived_at ? ` · ${c.archived}` : '' }}</option></select></label><label><span>{{ c.language }}</span><select v-model="form.language" @change="changeLanguage"><option value="es">ES</option><option value="ca">CA</option><option value="en">EN</option></select></label><label><span>{{ c.date }}</span><input v-model="form.issue_date" type="date" :aria-label="c.date"/></label><label><span>{{ c.valid }}</span><input v-model="form.valid_until" type="date" :aria-label="c.valid"/></label></div>
           <div class="items-title"><h3>{{ c.items }}</h3><span>{{ form.quote_items.length.toString().padStart(2,'0') }}</span></div>
           <div class="preset-library">
-            <div class="preset-heading"><div><span class="eyebrow">{{ c.quickItems }}</span><p>{{ c.quickHelp }}</p></div><span class="scroll-hint">→</span></div>
+            <div class="preset-heading"><div><span class="eyebrow">{{ c.quickItems }}</span><p>{{ c.quickHelp }}</p></div><span class="catalog-count" aria-live="polite">{{ serviceCatalog.length }}</span></div>
             <input v-model="serviceSearch" class="service-search" type="search" :aria-label="c.quickItems" :placeholder="`${c.quickItems}: web, SEO, CMS…`" />
+            <div class="catalog-filters" :aria-label="c.quickItems" role="group">
+              <button v-for="category in ['all','web','design','seo','support']" :key="category" type="button" :aria-pressed="serviceCategory === category" @click="serviceCategory = category">{{ catalogCopy[category] }}</button>
+            </div>
             <div class="preset-track">
-              <button v-for="preset in serviceCatalog" :key="preset.code" type="button" class="preset-card" @click="addPreset(preset)">
+              <button v-for="preset in visibleServices" :key="preset.code" type="button" class="preset-card" :title="preset.description" @click="addPreset(preset)">
                 <span class="preset-code">{{ preset.code }}</span>
                 <strong>{{ preset.title }}</strong>
                 <small>{{ preset.description }}</small>
                 <span class="preset-add">+ {{ c.addPreset }}</span>
               </button>
             </div>
+            <div v-if="!serviceCatalog.length" class="catalog-empty" role="status">
+              <p>{{ catalogCopy.empty }}</p>
+              <button type="button" @click="serviceSearch = ''; serviceCategory = 'all'">{{ catalogCopy.reset }}</button>
+            </div>
+            <button v-if="serviceCatalog.length > 6" type="button" class="catalog-expand" :aria-expanded="showAllServices" @click="showAllServices = !showAllServices">{{ showAllServices ? catalogCopy.less : `${catalogCopy.more} (${serviceCatalog.length})` }} {{ showAllServices ? '−' : '+' }}</button>
           </div>
           <div class="line-head"><span>{{ c.description }}</span><span>{{ c.quantity }}</span><span>{{ c.unit }}</span><span>{{ c.price }}</span><span>{{ c.lineTotal }}</span><span></span></div>
           <div v-for="(item,index) in form.quote_items" :key="item.id||index" :class="['line-item',{invalidRow:validationAttempted&&!item.description.trim(), 'global-line':form.pricing_mode === 'global'}]">
@@ -310,4 +334,17 @@ onMounted(fetchData)
 .pricing-card input{font-size:1.25rem;font-variant-numeric:tabular-nums}
 .service-search{margin-bottom:14px}
 .line-item.global-line{grid-template-columns:minmax(0,1fr) minmax(0,1fr) 28px}
+.preset-track{grid-auto-flow:row;grid-auto-columns:auto;grid-template-columns:repeat(2,minmax(0,1fr));overflow:visible;scroll-snap-type:none;padding:0}
+.preset-card{min-width:0;min-height:150px;padding:14px}
+.preset-card:focus-visible,.catalog-filters button:focus-visible,.catalog-expand:focus-visible{outline:2px solid var(--text-primary);outline-offset:3px}
+.preset-code{margin-bottom:10px}
+.catalog-count{padding:4px 9px;border-radius:6px;background:var(--bg-secondary);font-size:.8rem;color:var(--text-secondary);font-variant-numeric:tabular-nums}
+.catalog-filters{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:16px}
+.catalog-filters button{padding:8px 11px;border:1px solid var(--border-color);border-radius:100px;background:transparent;color:var(--text-secondary);font:inherit;font-size:.72rem;cursor:pointer}
+.catalog-filters button[aria-pressed="true"]{background:var(--text-primary);color:var(--bg-color);border-color:var(--text-primary)}
+.catalog-expand{width:100%;margin-top:14px;padding:12px;border:1px solid var(--border-color);border-radius:8px;background:var(--bg-secondary);color:var(--text-primary);cursor:pointer;font:inherit;font-size:.8rem}
+.catalog-empty{text-align:center;padding:20px 0}
+.catalog-empty p{font-size:.85rem;margin-bottom:12px}
+.catalog-empty button{border:0;background:transparent;color:var(--text-primary);text-decoration:underline;cursor:pointer}
+@media(max-width:650px){.preset-track{grid-template-columns:minmax(0,1fr);grid-auto-columns:auto}.preset-card{min-height:0}.preset-card small{-webkit-line-clamp:2}.preset-code{margin-bottom:8px}}
 </style>

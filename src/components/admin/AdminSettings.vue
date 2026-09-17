@@ -2,6 +2,7 @@
 import { computed, onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { supabase } from '../../config/supabase'
+import { fillEmptyQuoteTerms } from '../../config/quoteTerms'
 
 const { locale } = useI18n()
 const emit = defineEmits(['settings-saved'])
@@ -11,15 +12,21 @@ const labels = {
   en: { title:'Settings', subtitle:'The identity that travels with every quote.', identity:'Business identity', defaults:'Default values', terms:'Terms by language', name:'Name or company', tax:'Tax ID', email:'Email', phone:'Phone', web:'Website', address:'Address', city:'City', postal:'Postal code', country:'Country', logo:'Logo URL', prefix:'Prefix', language:'Language', vat:'VAT (%)', irpf:'Withholding (%)', validity:'Validity (days)', save:'Save settings', saving:'Saving...', saved:'Settings saved.' }
 }
 const c = computed(() => labels[locale.value] || labels.es)
+const termsHelp = computed(() => ({
+  es:'Texto de ejemplo: adapta pagos, revisiones y soporte a tu forma de trabajar. Pulsa Guardar ajustes para utilizarlo en nuevos presupuestos.',
+  ca:'Text d’exemple: adapta pagaments, revisions i suport a la teva manera de treballar. Prem Desar configuració per utilitzar-lo en pressupostos nous.',
+  en:'Example text: adapt payment, revisions and support to your workflow. Save settings to use it in new quotes.'
+}[locale.value]))
 const form = ref({ id:null, quote_prefix:'PRE', default_language:'es', currency:'EUR', default_vat_percentage:21, default_withholding_percentage:0, default_validity_days:30, default_terms:{es:'',ca:'',en:''}, issuer_snapshot:{name:'',tax_id:'',email:'',phone:'',website:'',logo_url:'',address:'',city:'',postal_code:'',country:'España'} })
 const isSaving = ref(false)
 const message = ref('')
 const errorMessage = ref('')
+form.value.default_terms = fillEmptyQuoteTerms()
 
 const fetchSettings = async () => {
   const { data, error } = await supabase.from('crm_settings').select('*').maybeSingle()
   if (error) errorMessage.value = error.message
-  if (data) form.value = { ...form.value, ...data, default_terms:{...form.value.default_terms,...data.default_terms}, issuer_snapshot:{...form.value.issuer_snapshot,...data.issuer_snapshot} }
+  if (data) form.value = { ...form.value, ...data, default_terms:fillEmptyQuoteTerms(data.default_terms), issuer_snapshot:{...form.value.issuer_snapshot,...data.issuer_snapshot} }
 }
 
 const saveSettings = async () => {
@@ -67,6 +74,7 @@ onMounted(fetchSettings)
       </div>
       <div class="settings-card terms-card">
         <div class="card-index">03</div><h3>{{ c.terms }}</h3>
+        <p class="terms-help">{{ termsHelp }}</p>
         <div class="terms-grid"><label><span>ES</span><textarea v-model="form.default_terms.es" rows="6"></textarea></label><label><span>CA</span><textarea v-model="form.default_terms.ca" rows="6"></textarea></label><label><span>EN</span><textarea v-model="form.default_terms.en" rows="6"></textarea></label></div>
       </div>
       <div v-if="message" class="notice success">{{ message }}</div><div v-if="errorMessage" class="notice error">{{ errorMessage }}</div>
@@ -77,4 +85,6 @@ onMounted(fetchSettings)
 
 <style scoped>
 .settings-section{--yellow:#ffd84d}.settings-section>header{margin-bottom:34px}.settings-section h2{font-size:clamp(2.4rem,5vw,4.5rem);margin:6px 0}.settings-section header p{margin:0}.eyebrow{font-size:.7rem;letter-spacing:.18em;color:var(--text-secondary);font-weight:700}.settings-grid{display:grid;grid-template-columns:1.45fr .75fr;gap:18px}.settings-card{position:relative;background:var(--bg-secondary);border:1px solid var(--border-color);border-radius:18px;padding:28px;overflow:hidden}.settings-card h3{font-size:1.2rem;margin-bottom:25px}.card-index{position:absolute;right:18px;top:8px;font-size:4.5rem;font-weight:800;line-height:1;color:var(--border-color)}.identity-card{grid-row:span 2}.terms-card{grid-column:1/-1}.fields{display:grid;gap:17px}.fields.two{grid-template-columns:1fr 1fr}.fields label,.terms-grid label{display:flex;flex-direction:column;gap:7px}.fields label.wide{grid-column:1/-1}.fields span,.terms-grid span{font-size:.75rem;font-weight:650;color:var(--text-secondary)}input,select,textarea{width:100%;background:var(--bg-color);color:var(--text-primary);border:1px solid var(--border-color);border-radius:9px;padding:12px 14px;font:inherit}input:focus,select:focus,textarea:focus{outline:none;border-color:var(--text-primary)}.terms-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}.save-row{grid-column:1/-1;display:flex;justify-content:flex-end}.notice{grid-column:1/-1;padding:14px 16px;border-radius:10px;border:1px solid}.notice.success{color:#10b981;background:rgba(16,185,129,.08);border-color:rgba(16,185,129,.25)}.notice.error{color:#ef4444;background:rgba(239,68,68,.08);border-color:rgba(239,68,68,.25)}@media(max-width:800px){.settings-grid{grid-template-columns:1fr}.identity-card{grid-row:auto}.terms-grid,.fields.two{grid-template-columns:1fr}.fields label.wide{grid-column:1}.terms-card{grid-column:1}.save-row{grid-column:1}}
+.terms-help{font-size:.85rem;line-height:1.6;margin-bottom:20px;max-width:760px}
+.terms-grid textarea{min-height:360px;line-height:1.6;resize:vertical}
 </style>
