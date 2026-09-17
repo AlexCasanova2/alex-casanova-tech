@@ -221,4 +221,27 @@ onUnmounted(() => { clearTimeout(toastTimer); if (isEditing.value) restorePage()
 .client-drawer input,.client-drawer textarea,.client-drawer select{min-width:0}
 .toast-check{background:#d7ff4f}
 .client-copy{min-width:0;overflow-wrap:anywhere}
+.section-heading h2{font-size:clamp(2rem,4vw,3.5rem)}
+.section-heading p{font-size:1rem}
+.client-tools{grid-template-columns:minmax(0,1fr) auto}
+.client-tools input{min-width:0;font-size:1rem}
+.client-actions{flex-wrap:wrap}
+.pill,.filter-toggle button{min-height:44px;font-size:.85rem}
+.client-drawer{grid-template-columns:repeat(2,minmax(0,1fr));padding-top:max(28px,env(safe-area-inset-top));padding-bottom:max(28px,env(safe-area-inset-bottom));overflow:visible}
+.client-drawer input,.client-drawer select,.client-drawer textarea{font-size:1rem}
+.drawer-head{gap:16px}.drawer-head>div{min-width:0}
+.drawer-head h3{font-size:clamp(1.8rem,4vw,2.6rem)}
+.close{flex-shrink:0;min-width:44px;min-height:44px}
+.drawer-actions{flex-wrap:wrap;gap:12px;padding-block:16px;border-top:1px solid var(--border-color);background:var(--bg-color)}
+.success-toast{bottom:max(16px,env(safe-area-inset-bottom));overflow-wrap:anywhere}
+.success-toast button{min-width:40px;min-height:40px}
+@media(max-width:700px){
+  .client-tools{grid-template-columns:minmax(0,1fr)}
+  .section-heading{gap:16px;margin-bottom:24px}
+  .section-heading>.btn{width:100%}
+  .client-drawer{grid-template-columns:minmax(0,1fr);padding-inline:16px;gap:16px}
+  .drawer-actions .btn{flex:1}.drawer-actions .pill{flex:0 1 auto}
+  .empty-state{padding:32px 16px}
+  .client-card{padding:16px;gap:12px}
+}
 </style>

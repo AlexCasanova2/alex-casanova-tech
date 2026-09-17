@@ -87,4 +87,19 @@ onMounted(fetchSettings)
 .settings-section{--yellow:#ffd84d}.settings-section>header{margin-bottom:34px}.settings-section h2{font-size:clamp(2.4rem,5vw,4.5rem);margin:6px 0}.settings-section header p{margin:0}.eyebrow{font-size:.7rem;letter-spacing:.18em;color:var(--text-secondary);font-weight:700}.settings-grid{display:grid;grid-template-columns:1.45fr .75fr;gap:18px}.settings-card{position:relative;background:var(--bg-secondary);border:1px solid var(--border-color);border-radius:18px;padding:28px;overflow:hidden}.settings-card h3{font-size:1.2rem;margin-bottom:25px}.card-index{position:absolute;right:18px;top:8px;font-size:4.5rem;font-weight:800;line-height:1;color:var(--border-color)}.identity-card{grid-row:span 2}.terms-card{grid-column:1/-1}.fields{display:grid;gap:17px}.fields.two{grid-template-columns:1fr 1fr}.fields label,.terms-grid label{display:flex;flex-direction:column;gap:7px}.fields label.wide{grid-column:1/-1}.fields span,.terms-grid span{font-size:.75rem;font-weight:650;color:var(--text-secondary)}input,select,textarea{width:100%;background:var(--bg-color);color:var(--text-primary);border:1px solid var(--border-color);border-radius:9px;padding:12px 14px;font:inherit}input:focus,select:focus,textarea:focus{outline:none;border-color:var(--text-primary)}.terms-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}.save-row{grid-column:1/-1;display:flex;justify-content:flex-end}.notice{grid-column:1/-1;padding:14px 16px;border-radius:10px;border:1px solid}.notice.success{color:#10b981;background:rgba(16,185,129,.08);border-color:rgba(16,185,129,.25)}.notice.error{color:#ef4444;background:rgba(239,68,68,.08);border-color:rgba(239,68,68,.25)}@media(max-width:800px){.settings-grid{grid-template-columns:1fr}.identity-card{grid-row:auto}.terms-grid,.fields.two{grid-template-columns:1fr}.fields label.wide{grid-column:1}.terms-card{grid-column:1}.save-row{grid-column:1}}
 .terms-help{font-size:.85rem;line-height:1.6;margin-bottom:20px;max-width:760px}
 .terms-grid textarea{min-height:360px;line-height:1.6;resize:vertical}
+.settings-section h2{font-size:clamp(2rem,4vw,3.5rem)}
+.settings-section header p{font-size:1rem}
+.settings-grid{grid-template-columns:minmax(0,1.4fr) minmax(0,1fr)}
+.settings-card,.fields,.fields label,.terms-grid label{min-width:0}
+.settings-card{padding:clamp(18px,3vw,28px)}
+.identity-card{grid-row:auto}
+.fields.two{grid-template-columns:repeat(2,minmax(0,1fr))}
+.terms-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
+.fields input,.fields select,.terms-grid textarea{font-size:1rem}
+.card-index{pointer-events:none;font-size:3rem;top:12px;opacity:.55}
+.settings-card h3{position:relative;padding-right:40px;line-height:1.3}
+.save-row{padding-block:12px;gap:12px}
+@media(max-width:1000px){.terms-grid{grid-template-columns:minmax(0,1fr)}.terms-grid textarea{min-height:260px}}
+@media(max-width:800px){.settings-grid{grid-template-columns:minmax(0,1fr)}.identity-card,.terms-card{grid-column:1}}
+@media(max-width:480px){.fields.two{grid-template-columns:minmax(0,1fr)}.save-row .btn{width:100%}.terms-grid textarea{min-height:240px}}
 </style>

@@ -1231,4 +1231,50 @@ input:checked + .slider:before {
   from { opacity: 0; transform: scale(0.9); }
   to { opacity: 1; transform: scale(1); }
 }
+/* Admin layouts adapt to available width, including long translated labels. */
+.admin-dashboard,.project-admin,.form-main,.form-sidebar,.input-group,.list-info{min-width:0}
+.admin-login{width:100%;padding-top:12px}
+.admin-login h1{font-size:clamp(2rem,5vw,3rem)}
+.login-form{padding:clamp(20px,4vw,40px)}
+.login-form input{width:100%}
+.dashboard-header h1{font-size:clamp(2rem,4.5vw,3.5rem)}
+.workspace-nav{grid-template-columns:repeat(4,minmax(0,1fr));margin-bottom:28px}
+.workspace-nav button{min-width:0;min-height:48px;overflow-wrap:anywhere;justify-content:center;padding:12px}
+.tabs{display:flex;flex-wrap:wrap;max-width:100%;border-radius:16px;margin-bottom:24px}
+.tab-btn{flex:1 1 auto;justify-content:center;min-height:44px;padding:10px 14px;font-size:.85rem}
+.pro-layout{grid-template-columns:minmax(0,1fr)}
+.input-group input,.input-group textarea{width:100%;font-size:1rem}
+.card{padding:clamp(16px,3vw,32px)}
+.card-title{overflow-wrap:anywhere}
+.content-toolbar{flex-wrap:wrap;max-width:100%}
+.content-label-row{flex-wrap:wrap}
+.toolbar-btn,.btn-small,.order-btn{min-height:44px;height:auto}
+.order-btn{min-width:44px}
+.list-info h4,.list-info span{overflow-wrap:anywhere}
+.list-thumb{flex-shrink:0}
+.list-actions{flex-wrap:wrap}
+.modal-overlay{overflow-y:auto;overscroll-behavior:contain}
+.modal-content{max-height:calc(100dvh - 32px);overflow:auto;padding:24px}
+.modal-footer{flex-wrap:wrap}
+@media(min-width:1050px){.pro-layout{grid-template-columns:minmax(0,1fr) 300px}}
+@media(max-width:800px){
+  .project-list-item{display:grid;grid-template-columns:auto minmax(0,1fr);gap:12px;padding:14px}
+  .list-reorder{grid-column:1;grid-row:1 / span 2;gap:8px}
+  .list-thumb{width:64px;height:48px}
+  .list-reorder+.list-thumb{grid-column:2}
+  .list-info{grid-column:1/-1}
+  .list-reorder~.list-info{grid-column:2}
+  .list-actions{grid-column:1/-1;display:flex;gap:8px}
+  .list-actions .btn-small{flex:1 1 auto}
+  .project-list-item>.list-thumb:first-child{grid-column:1}.project-list-item>.list-thumb:first-child+.list-info{grid-column:2}
+}
+@media(max-width:650px){
+  .workspace-nav{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .workspace-nav button{justify-content:flex-start;font-size:.85rem;gap:6px}
+  .dashboard-header{margin-bottom:20px}
+  .pro-layout,.form-main{gap:20px}
+  .card-title{margin-bottom:18px}
+  .subtitle{font-size:1rem}
+  .modal-overlay{padding:16px}
+}
 </style>

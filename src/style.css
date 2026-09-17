@@ -46,22 +46,19 @@ body {
   width: 100%;
   max-width: 1100px;
   margin: 0 auto;
-  padding: 0 24px;
+  padding-left: max(clamp(16px, 3vw, 24px), env(safe-area-inset-left));
+  padding-right: max(clamp(16px, 3vw, 24px), env(safe-area-inset-right));
 }
 
 .page-wrapper {
-  padding-top: 180px;
-  padding-bottom: 80px;
-  min-height: 100vh;
+  padding-top: clamp(28px, 4vw, 56px);
+  padding-bottom: clamp(40px, 6vw, 80px);
+  min-width: 0;
+  flex: 1;
   display: flex;
   flex-direction: column;
 }
 
-@media (min-width: 768px) {
-  .page-wrapper {
-    padding-top: 120px;
-  }
-}
 
 /* Typography */
 h1, h2, h3, h4 {
@@ -71,7 +68,7 @@ h1, h2, h3, h4 {
   color: var(--text-primary);
 }
 
-h1 { font-size: clamp(3rem, 6vw, 5rem); }
+h1 { font-size: clamp(2.25rem, 6vw, 5rem); }
 h2 { font-size: clamp(2rem, 4vw, 3rem); }
 h3 { font-size: clamp(1.25rem, 2vw, 1.75rem); }
 p { color: var(--text-secondary); font-size: 1.125rem; }
@@ -136,6 +133,25 @@ a {
 @keyframes fadeIn {
   to {
     opacity: 1;
-    transform: translateY(0);
+    transform: none;
   }
+}
+
+/* Shrink content, not the viewport: long URLs and grid children must be wrappable. */
+html { scroll-padding-top: 90px; -webkit-text-size-adjust: 100%; }
+main, section, article, form, fieldset { min-width: 0; }
+h1, h2, h3, h4, p, label { overflow-wrap: anywhere; }
+img, video { max-width: 100%; }
+input, select, textarea { min-width: 0; max-width: 100%; }
+button, a { touch-action: manipulation; }
+button, .btn { max-width: 100%; }
+.btn { min-height: 44px; text-align: center; gap: 8px; }
+button:disabled { cursor: not-allowed; opacity: .6; }
+:focus-visible { outline: 2px solid var(--text-primary); outline-offset: 3px; }
+@media (max-width: 899px) {
+  /* Keep iOS from zooming the page when focusing a form control. */
+  body input, body select, body textarea { font-size: max(1rem, 16px); }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: .01ms !important; animation-delay: 0s !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; scroll-behavior: auto !important; }
 }

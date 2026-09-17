@@ -200,4 +200,12 @@ const filteredProjects = computed(() => {
   font-size: 1rem;
   margin-top: 4px;
 }
+.projects-grid{grid-template-columns:minmax(0,1fr);gap:clamp(24px,4vw,40px)}
+.project-card,.project-info{min-width:0}
+.filter-btn{min-height:44px;max-width:100%;overflow-wrap:anywhere}
+.filters{gap:8px;margin-bottom:28px}
+.page-header{margin-bottom:28px}
+@media(min-width:768px){.projects-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:480px){.project-card{gap:14px}.project-card h3{font-size:1.3rem}}
+@media(hover:none){.overlay{opacity:1;background:linear-gradient(transparent 55%,rgba(0,0,0,.35));align-items:flex-end;justify-content:flex-end;padding:12px}.view-btn{transform:none;padding:8px 14px}}
 </style>

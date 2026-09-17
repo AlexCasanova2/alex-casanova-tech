@@ -10,6 +10,13 @@ const { t, locale } = useI18n()
 
 const isDarkMode = ref(true)
 const userSession = ref(null)
+const menuOpen = ref(false)
+const menuButton = ref(null)
+const closeMenu = () => {
+  if (!menuOpen.value) return
+  menuOpen.value = false
+  menuButton.value?.focus()
+}
 
 const toggleTheme = () => {
   isDarkMode.value = !isDarkMode.value
@@ -58,6 +65,7 @@ const updateGlobalSEO = () => {
 }
 
 watch([() => route.path, locale], () => {
+  menuOpen.value = false
   updateGlobalSEO()
 })
 
@@ -88,10 +96,14 @@ onMounted(() => {
 
 <template>
   <div class="app-container">
-    <nav class="navbar">
+    <nav class="navbar" @keydown.esc="closeMenu">
       <div class="container nav-content">
         <router-link to="/" class="logo">{{ userData.name }}</router-link>
-        <div class="nav-links">
+        <button ref="menuButton" class="menu-toggle" type="button" aria-controls="main-navigation" :aria-expanded="menuOpen" :aria-label="locale === 'en' ? 'Navigation menu' : locale === 'ca' ? 'Menú de navegació' : 'Menú de navegación'" @click="menuOpen = !menuOpen">
+          <span>{{ locale === 'en' ? 'Menu' : 'Menú' }}</span>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path v-if="menuOpen" d="m6 6 12 12M6 18 18 6"/><path v-else d="M4 7h16M4 12h16M4 17h16"/></svg>
+        </button>
+        <div id="main-navigation" :class="['nav-links', { 'is-open': menuOpen }]">
           <router-link to="/">{{ t('nav.work') }}</router-link>
           <router-link to="/projects">{{ t('nav.archive') }}</router-link>
           <router-link to="/contact">{{ t('nav.contact') }}</router-link>
@@ -334,4 +346,29 @@ onMounted(() => {
   opacity: 0;
   transform: translateY(-10px);
 }
+/* A flow-based sticky header avoids guessed offsets when language or auth changes. */
+.app-container{min-height:100svh;min-width:0}
+.navbar{position:sticky;top:0;left:auto;padding:12px 0;border-color:var(--border-color)}
+.nav-content{flex-direction:row;flex-wrap:wrap;justify-content:space-between;gap:12px}
+.logo{min-height:44px;display:inline-flex;align-items:center}
+.nav-links{gap:20px}
+.nav-links>a{display:inline-flex;align-items:center;min-height:44px}
+.nav-actions{gap:4px;flex-wrap:wrap}
+.theme-toggle{width:44px;height:44px;flex-shrink:0;padding:10px;margin:0}
+.lang-switcher{gap:0;margin-right:4px;padding:2px}
+.lang-switcher button{min-width:40px;min-height:40px;font-size:.75rem}
+.menu-toggle{display:none}
+.footer-content{text-align:center;gap:16px}
+.social-links a{display:inline-flex;align-items:center;min-height:44px}
+@media(max-width:899px){
+  .navbar{padding:8px 0}
+  .menu-toggle{display:inline-flex;align-items:center;justify-content:center;gap:10px;min-height:44px;padding:8px 12px;border:1px solid var(--border-color);border-radius:100px;background:var(--bg-secondary);color:var(--text-primary);font:inherit;cursor:pointer}
+  .nav-links{display:none;width:100%;flex-basis:100%;padding:8px 0;gap:4px;max-height:calc(100dvh - 84px);overflow-y:auto;overscroll-behavior:contain}
+  .nav-links.is-open{display:flex;flex-direction:column;align-items:stretch}
+  .nav-links>a{padding:8px 12px;border-radius:8px;font-size:1rem}
+  .nav-links>a.router-link-exact-active{background:var(--bg-secondary)}
+  .nav-actions{justify-content:space-between;gap:4px;padding:12px 0 0;margin:8px 0 0;border-left:0;border-top:1px solid var(--border-color)}
+  .footer{padding:28px 0}
+}
+@media(min-width:900px){.nav-content{flex-wrap:nowrap}.nav-actions{flex-wrap:nowrap}.footer-content{text-align:left}}
 </style>

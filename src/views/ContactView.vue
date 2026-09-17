@@ -255,4 +255,13 @@ const submitForm = async () => {
 .fade-leave-to {
   opacity: 0;
 }
+.contact-grid{gap:clamp(28px,5vw,60px);padding-top:0;grid-template-columns:minmax(0,1fr)}
+.contact-info,.contact-form-wrapper,.input-group{min-width:0}
+.contact-form-wrapper{padding:clamp(20px,3vw,40px)}
+.input-group input,.input-group textarea{width:100%;font-size:1rem}
+.value{overflow-wrap:anywhere;font-size:clamp(1rem,2vw,1.25rem)}
+.social-links{flex-wrap:wrap;gap:12px 24px}
+.social-links a{display:inline-flex;align-items:center;min-height:44px}
+@media(min-width:900px){.contact-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:599px){.contact-info p{margin-bottom:24px}.contact-details{gap:20px}.contact-info h1{font-size:clamp(2.1rem,8vw,3rem)}}
 </style>

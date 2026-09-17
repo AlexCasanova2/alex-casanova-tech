@@ -3,7 +3,6 @@ import HomeView from '../views/HomeView.vue'
 import ProjectsView from '../views/ProjectsView.vue'
 import ProjectDetailView from '../views/ProjectDetailView.vue'
 import ContactView from '../views/ContactView.vue'
-import AdminView from '../views/AdminView.vue'
 
 const router = createRouter({
     history: createWebHistory(import.meta.env.BASE_URL),
@@ -31,7 +30,7 @@ const router = createRouter({
         {
             path: '/admin',
             name: 'admin',
-            component: AdminView
+            component: () => import('../views/AdminView.vue')
         },
         {
             path: '/:pathMatch(.*)*',

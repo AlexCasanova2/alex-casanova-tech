@@ -55,7 +55,7 @@ onMounted(async () => {
   
   <main class="page-wrapper container fade-in" v-else-if="project">
     <div class="project-header">
-      <div style="display: flex; justify-content: space-between; align-items: center; width: 100%; margin-bottom: 40px;">
+      <div class="project-navigation">
         <router-link to="/projects" class="back-link" style="margin-bottom: 0; display: inline-flex; align-items: center; gap: 8px;">
           <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
           {{ t('project.backArchive') }}
@@ -320,5 +320,23 @@ onMounted(async () => {
   gap: 8px;
   padding: 16px 32px;
   font-size: 1.1rem;
+}
+.project-navigation{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;margin-bottom:32px}
+.project-navigation a{min-height:44px}
+.article{width:100%;min-width:0;overflow-wrap:anywhere}
+.markdown-body :deep(pre){max-width:100%;overflow-x:auto;padding:16px;border-radius:10px;background:var(--bg-secondary);font-size:.9rem;white-space:pre;overflow-wrap:normal}
+.markdown-body :deep(table){display:block;max-width:100%;overflow-x:auto;border-collapse:collapse;margin-block:24px}
+.markdown-body :deep(th),.markdown-body :deep(td){padding:10px;border:1px solid var(--border-color)}
+.markdown-body :deep(iframe),.markdown-body :deep(video){max-width:100%}
+.tag{max-width:100%;overflow-wrap:anywhere}
+@media(max-width:650px){
+  .project-header,.hero-image{margin-bottom:32px}
+  .description{font-size:1.05rem;margin-bottom:24px}
+  .tags{gap:8px}.tag{font-size:.85rem;padding:6px 12px}
+  .markdown-body :deep(h2),.cta-content h2{font-size:clamp(1.6rem,6vw,2rem)}
+  .markdown-body :deep(p),.markdown-body :deep(ul),.markdown-body :deep(ol){font-size:1rem}
+  .markdown-body :deep(img){margin-block:24px}
+  .project-cta{margin-top:48px;padding-top:32px}
+  .project-actions .btn,.cta-btn{width:100%;padding:12px 20px}
 }
 </style>

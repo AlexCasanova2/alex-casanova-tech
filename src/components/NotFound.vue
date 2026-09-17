@@ -89,4 +89,6 @@ const { t } = useI18n()
 .glitch-wrapper {
   position: relative;
 }
+.content{min-width:0;width:100%}
+@media(max-width:650px){.not-found{min-height:60svh}.desc{font-size:1rem;margin-bottom:24px}.btn{padding:12px 20px;font-size:1rem}}
 </style>

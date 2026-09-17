@@ -540,4 +540,17 @@ onMounted(async () => {
 .project-card h3 {
   font-size: 1.5rem;
 }
+.hero{padding-block:clamp(16px,5vw,72px);gap:32px}
+.hero-content,.hero-visual,.project-card,.project-info{min-width:0}
+.hero-desc{margin:24px 0 32px}
+.hero-visual{overflow:clip}
+.dot{flex-shrink:0}
+.availability{line-height:1.4;max-width:100%;margin-bottom:24px}
+.section-header{gap:20px;flex-wrap:wrap;margin-bottom:24px}
+.view-all{min-height:44px;display:inline-flex;align-items:center}
+.projects-grid{grid-template-columns:minmax(0,1fr)}
+@media(min-width:768px){.projects-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:899px){.hero-visual{display:none}.featured-work{margin-top:24px}}
+@media(max-width:480px){.hero-actions{flex-direction:column;gap:12px}.hero-btn{width:100%;padding:14px 20px}.section-header{align-items:flex-start;flex-direction:column;gap:8px}.project-card{gap:14px}.project-card h3{font-size:1.3rem}}
+@media(hover:none){.overlay{opacity:1;background:linear-gradient(transparent 55%,rgba(0,0,0,.35));align-items:flex-end;justify-content:flex-end;padding:12px}.view-btn{transform:none;padding:8px 14px}}
 </style>

@@ -195,9 +195,9 @@ onMounted(fetchData)
       <div class="quote-table">
         <div class="table-head"><span># / {{ c.document }}</span><span>{{ c.client }}</span><span>{{ c.date }}</span><span>{{ c.status }}</span><span>{{ c.amount }}</span><span></span></div>
         <article v-for="quote in filteredQuotes" :key="quote.id" class="quote-row">
-          <div class="quote-name"><strong>{{ quote.quote_number }}</strong><small>{{ quote.title }}</small></div><span>{{ quoteClientName(quote) }}</span><span>{{ new Date(`${quote.issue_date}T12:00:00`).toLocaleDateString(localeCode) }}</span>
-          <select :value="quote.status" :class="['status-select',quote.status]" @change="updateStatus(quote,$event.target.value)"><option value="draft">{{ c.draft }}</option><option value="sent">{{ c.sent }}</option><option value="accepted">{{ c.accepted }}</option><option value="rejected">{{ c.rejected }}</option></select>
-          <strong class="row-total">{{ money(quote.total) }}</strong>
+          <div class="quote-name"><strong>{{ quote.quote_number }}</strong><small>{{ quote.title }}</small></div><span class="row-client" :data-label="c.client">{{ quoteClientName(quote) }}</span><span class="row-date" :data-label="c.date">{{ new Date(`${quote.issue_date}T12:00:00`).toLocaleDateString(localeCode) }}</span>
+          <select :value="quote.status" :aria-label="`${c.status} ${quote.quote_number}`" :class="['status-select',quote.status]" @change="updateStatus(quote,$event.target.value)"><option value="draft">{{ c.draft }}</option><option value="sent">{{ c.sent }}</option><option value="accepted">{{ c.accepted }}</option><option value="rejected">{{ c.rejected }}</option></select>
+          <strong class="row-total" :data-label="c.total">{{ money(quote.total) }}</strong>
           <div class="row-actions"><span v-if="isExpired(quote)" class="expired">{{ c.expired }}</span><button @click="openEdit(quote)">{{ c.edit }}</button><button @click="downloadPdf(quote)" :disabled="isGenerating">{{ c.pdf }}</button><button @click="toggleArchive(quote)">{{ quote.archived_at?c.restore:c.archive }}</button></div>
         </article>
         <div v-if="!filteredQuotes.length" class="empty-state">{{ c.empty }}</div>
@@ -208,8 +208,17 @@ onMounted(fetchData)
       <header class="editor-header"><button type="button" class="back-button" @click="mode='list'">← {{ c.back }}</button><div class="document-id"><span>{{ form.quote_number || c.draft }}</span><small>{{ form.client_snapshot?.name || c.choose }}</small></div><div class="editor-actions"><button v-if="form.id" type="button" class="button-outline" :disabled="isGenerating" @click="downloadPdf(form)">{{ c.download }}</button><button type="submit" form="quote-editor" class="btn btn-primary" :disabled="isSaving">{{ isSaving?c.saving:c.save }}</button></div></header>
       <div v-if="successMessage" class="notice success">{{ successMessage }}</div><div v-if="errorMessage" class="notice error">{{ errorMessage }}</div>
       <form id="quote-editor" class="workbench" novalidate @submit.prevent="saveQuote">
+        <div class="side-card pricing-card">
+          <label for="pricing-mode">{{ pricingCopy.label }}</label>
+          <select id="pricing-mode" v-model="form.pricing_mode"><option value="itemized">{{ pricingCopy.itemized }}</option><option value="global">{{ pricingCopy.global }}</option></select>
+          <template v-if="form.pricing_mode === 'global'">
+            <label for="global-price">{{ pricingCopy.amount }}</label>
+            <input id="global-price" v-model.number="form.global_price" type="number" min="0" step="0.01" inputmode="decimal" />
+            <p>{{ pricingCopy.help }}</p>
+          </template>
+        </div>
         <div class="document-sheet">
-          <div class="sheet-top"><div><span class="eyebrow">{{ c.document }}</span><input v-model="form.title" :class="['title-input',{invalid:validationAttempted&&!form.title?.trim()}]" :aria-label="c.quoteTitle"/></div><div class="number-stamp">{{ form.quote_number || 'AUTO' }}</div></div>
+          <div class="sheet-top"><div><span class="eyebrow">{{ c.document }}</span><textarea v-model="form.title" rows="2" :class="['title-input',{invalid:validationAttempted&&!form.title?.trim()}]" :aria-label="c.quoteTitle"></textarea></div><div class="number-stamp">{{ form.quote_number || 'AUTO' }}</div></div>
           <div class="meta-grid"><label><span>{{ c.client }}</span><select v-model="form.client_id" :class="{invalid:validationAttempted&&!form.client_id}" @change="selectClient"><option value="">{{ c.choose }}</option><option v-for="client in clients" :key="client.id" :value="client.id" :disabled="client.archived_at && client.id !== form.client_id">{{ client.name }}{{ client.archived_at ? ` · ${c.archived}` : '' }}</option></select></label><label><span>{{ c.language }}</span><select v-model="form.language" @change="changeLanguage"><option value="es">ES</option><option value="ca">CA</option><option value="en">EN</option></select></label><label><span>{{ c.date }}</span><input v-model="form.issue_date" type="date" :aria-label="c.date"/></label><label><span>{{ c.valid }}</span><input v-model="form.valid_until" type="date" :aria-label="c.valid"/></label></div>
           <div class="items-title"><h3>{{ c.items }}</h3><span>{{ form.quote_items.length.toString().padStart(2,'0') }}</span></div>
           <div class="preset-library">
@@ -245,18 +254,13 @@ onMounted(fetchData)
           <div class="text-fields"><label><span>{{ c.notes }}</span><textarea v-model="form.notes" rows="4"></textarea></label><label><span>{{ c.terms }}</span><textarea v-model="form.terms" rows="4"></textarea></label></div>
         </div>
         <aside class="quote-sidebar">
-          <div class="side-card pricing-card">
-            <label for="pricing-mode">{{ pricingCopy.label }}</label>
-            <select id="pricing-mode" v-model="form.pricing_mode"><option value="itemized">{{ pricingCopy.itemized }}</option><option value="global">{{ pricingCopy.global }}</option></select>
-            <template v-if="form.pricing_mode === 'global'">
-              <label for="global-price">{{ pricingCopy.amount }}</label>
-              <input id="global-price" v-model.number="form.global_price" type="number" min="0" step="0.01" inputmode="decimal" />
-              <p>{{ pricingCopy.help }}</p>
-            </template>
-          </div>
           <div class="side-card"><span class="eyebrow">{{ c.status }}</span><select v-model="form.status" :class="['large-status',form.status]"><option value="draft">{{ c.draft }}</option><option value="sent">{{ c.sent }}</option><option value="accepted">{{ c.accepted }}</option><option value="rejected">{{ c.rejected }}</option></select></div>
           <div class="side-card totals-card"><h3>{{ c.summary }}</h3><label><span>{{ c.discount }} (%)</span><input v-model.number="form.discount_percentage" type="number" min="0" max="100" step="0.01"/></label><label><span>{{ c.vat }} (%)</span><input v-model.number="form.vat_percentage" type="number" min="0" max="100" step="0.01"/></label><label><span>{{ c.withholding }} (%)</span><input v-model.number="form.withholding_percentage" type="number" min="0" max="100" step="0.01"/></label><div class="sum-row"><span>{{ c.subtotal }}</span><strong>{{ money(totals.subtotal) }}</strong></div><div v-if="totals.discountAmount" class="sum-row"><span>{{ c.discount }}</span><strong>-{{ money(totals.discountAmount) }}</strong></div><div class="sum-row"><span>{{ c.vat }}</span><strong>{{ money(totals.vatAmount) }}</strong></div><div v-if="totals.withholdingAmount" class="sum-row"><span>{{ c.withholding }}</span><strong>-{{ money(totals.withholdingAmount) }}</strong></div><div class="grand-total"><span>{{ c.total }}</span><strong>{{ money(totals.total) }}</strong></div></div>
         </aside>
+        <footer class="mobile-save-bar">
+          <div><span>{{ c.total }}</span><strong>{{ money(totals.total) }}</strong></div>
+          <button type="submit" class="btn btn-primary" :disabled="isSaving">{{ isSaving ? c.saving : c.save }}</button>
+        </footer>
       </form>
     </template>
   </section>
@@ -347,4 +351,77 @@ onMounted(fetchData)
 .catalog-empty p{font-size:.85rem;margin-bottom:12px}
 .catalog-empty button{border:0;background:transparent;color:var(--text-primary);text-decoration:underline;cursor:pointer}
 @media(max-width:650px){.preset-track{grid-template-columns:minmax(0,1fr);grid-auto-columns:auto}.preset-card{min-height:0}.preset-card small{-webkit-line-clamp:2}.preset-code{margin-bottom:8px}}
+/* Responsive workbench: keep document fields readable before adding a sidebar. */
+.section-heading h2{font-size:clamp(2rem,4vw,3.5rem)}
+.section-heading p{font-size:1rem}
+.metric-strip{grid-template-columns:minmax(0,1fr) minmax(0,1fr) minmax(0,2fr)}
+.metric-strip strong{font-size:clamp(1.35rem,3vw,1.8rem);overflow-wrap:anywhere}
+.quote-tools{grid-template-columns:minmax(0,1fr) auto}
+.quote-tools>input{grid-column:1/-1;min-width:0;font-size:1rem}
+.status-filters{flex-wrap:wrap;gap:4px;overflow:visible}
+.status-filters button,.archive-filter,.row-actions button,.button-outline,.back-button{min-height:44px;font-size:.8rem}
+.workbench{grid-template-columns:minmax(0,1fr) 270px;gap:20px}
+.pricing-card{grid-column:1/-1;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,2fr);align-items:center}
+.pricing-card p{grid-column:1/-1}
+.pricing-card input,.pricing-card select{width:100%;font-size:1rem}
+.document-sheet{padding:clamp(16px,2.5vw,28px)}
+.sheet-top{gap:12px;align-items:start;flex-wrap:wrap;padding-bottom:18px}
+.number-stamp{max-width:100%;overflow-wrap:anywhere;font-size:.8rem}
+.meta-grid{padding-block:20px}
+.document-sheet input,.document-sheet select,.document-sheet textarea,.quote-sidebar input,.quote-sidebar select{font-size:1rem;min-height:44px}
+.document-sheet .title-input{line-height:1.3;resize:vertical;field-sizing:content;min-height:2.6em;white-space:pre-wrap;overflow-wrap:anywhere}
+.line-control{min-width:0}
+.line-item{grid-template-columns:repeat(2,minmax(0,1fr));align-items:start;padding:14px}
+.line-item.global-line{grid-template-columns:repeat(2,minmax(0,1fr))}
+.line-item .remove-item{grid-column:2;justify-self:end;width:44px;height:44px;min-height:44px}
+.line-total-control{align-items:flex-start;text-align:left;overflow-wrap:anywhere}
+.line-total-control strong{font-size:1rem;text-align:left}
+.text-fields{grid-template-columns:minmax(0,1fr)}
+.preset-library{margin-inline:0;padding:14px}
+.catalog-filters button,.catalog-expand,.catalog-empty button{min-height:44px}
+.preset-card{min-width:0;overflow-wrap:anywhere}
+.quote-sidebar{min-width:0;top:100px;align-self:start}
+.sum-row,.grand-total{gap:12px;flex-wrap:wrap;overflow-wrap:anywhere}
+.sum-row strong,.grand-total strong{font-variant-numeric:tabular-nums}
+.mobile-save-bar{display:none}
+@media(max-width:1049px){
+  .workbench{grid-template-columns:minmax(0,1fr)}
+  .quote-sidebar{position:static;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);align-items:start}
+  .quote-sidebar .totals-card{grid-column:2;grid-row:1 / span 2}
+  .mobile-save-bar{grid-column:1/-1;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;padding:16px 0 max(16px,env(safe-area-inset-bottom));border-top:1px solid var(--border-color)}
+  .mobile-save-bar>div{display:flex;flex-direction:column;min-width:0;overflow-wrap:anywhere}
+  .mobile-save-bar span{font-size:.75rem;color:var(--text-secondary)}
+  .mobile-save-bar strong{font-size:1.25rem;font-variant-numeric:tabular-nums}
+}
+@media(max-width:960px){
+  .quote-table{border:0;overflow:visible;display:grid;gap:12px}
+  .quote-row{grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;padding:18px;border:1px solid var(--border-color);border-radius:14px;background:var(--bg-secondary)}
+  .quote-name{grid-column:1/-1}.quote-name small{white-space:normal;overflow:visible}
+  .row-client::before,.row-date::before,.row-total::before{content:attr(data-label);display:block;font-size:.65rem;font-weight:500;text-transform:uppercase;letter-spacing:.06em;color:var(--text-secondary);margin-bottom:4px}
+  .status-select{min-width:0;min-height:44px;width:100%;font-size:1rem}
+  .row-total{text-align:right;overflow-wrap:anywhere}
+  .row-actions{border-top:1px solid var(--border-color);padding-top:12px;gap:8px}
+  .row-actions button{flex:1;background:var(--bg-color)}
+}
+@media(max-width:650px){
+  .section-heading{gap:16px;margin-bottom:24px}.section-heading>.btn{width:100%}
+  .metric-strip{grid-template-columns:repeat(2,minmax(0,1fr))}.metric-wide{grid-column:1/-1;border-top:1px solid var(--border-color)!important}
+  .metric-strip>div{padding:14px}
+  .quote-tools{grid-template-columns:minmax(0,1fr)}
+  .quote-tools>input{grid-column:1}
+  .status-filters button{flex:1 1 auto}
+  .editor-header{grid-template-columns:minmax(0,1fr);gap:12px}
+  .editor-actions{justify-self:stretch;width:100%;display:flex;gap:8px}
+  .editor-actions>*{flex:1 1 auto}
+  .document-id{display:none}
+  .sheet-top{flex-direction:column-reverse;align-items:stretch}
+  .sheet-top .number-stamp{align-self:flex-start}
+  .title-input{font-size:1.4rem!important}
+  .pricing-card{grid-template-columns:minmax(0,1fr);padding:18px}
+  .quote-sidebar{grid-template-columns:minmax(0,1fr)}
+  .quote-sidebar .totals-card{grid-column:1;grid-row:auto}
+  .mobile-save-bar{align-items:stretch}.mobile-save-bar .btn{flex:1 1 180px}
+  .empty-state{padding:32px 16px}
+}
+@media(max-height:760px){.quote-sidebar{position:static}}
 </style>
