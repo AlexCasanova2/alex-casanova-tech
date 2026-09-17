@@ -19,3 +19,13 @@ Authenticated users only have access to their own CRM records. The existing port
 ### Quote pricing modes
 
 Apply `supabase/migrations/202609170001_quote_pricing_modes.sql` after the initial CRM migration. This adds per-item and global project pricing, and the transactional `save_quote_priced` RPC. Existing quotes keep per-item pricing. Global prices are before discount and tax; individual item rates are retained when switching modes but are omitted from global-price PDFs.
+
+If PostgREST reports `Could not find the function public.save_quote_priced`, apply that pricing migration to the same Supabase project used by the website. If it was already applied successfully, reload the API schema cache from the SQL editor:
+
+```sql
+NOTIFY pgrst, 'reload schema';
+```
+
+Per-item quotes can still be saved using the original `save_quote` function while the pricing function is unavailable. Global pricing requires the migration; it is never silently converted to per-item pricing.
+
+New quotes and business settings use the same ES/CA/EN example terms when the corresponding stored terms are empty. Custom saved terms take precedence, and existing quote documents retain their saved terms.

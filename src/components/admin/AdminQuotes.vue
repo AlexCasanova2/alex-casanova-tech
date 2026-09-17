@@ -5,6 +5,8 @@ import { supabase } from '../../config/supabase'
 import { calculateLineTotal, calculateQuoteTotals, formatCurrency } from '../../utils/quoteCalculations'
 import { validateQuoteValues } from '../../utils/quoteValidation'
 import { detailedServices } from '../../config/quoteServices'
+import { fillEmptyQuoteTerms } from '../../config/quoteTerms'
+import { saveQuoteWithCompatibility, PRICING_MIGRATION } from '../../utils/saveQuote'
 
 const { locale } = useI18n()
 const words = {
@@ -81,13 +83,21 @@ const localDate = value => `${value.getFullYear()}-${String(value.getMonth()+1).
 const today = () => localDate(new Date())
 const addDays = (date, days) => { const value = new Date(`${date}T12:00:00`); value.setDate(value.getDate()+Number(days || 30)); return localDate(value) }
 const blankItem = () => ({description:'',quantity:1,unit:'ud.',unit_price:0})
-const defaultSettings = () => ({quote_prefix:'PRE',default_language:'es',currency:'EUR',default_vat_percentage:21,default_withholding_percentage:0,default_validity_days:30,default_terms:{es:'',ca:'',en:''},issuer_snapshot:{}})
+const defaultSettings = () => ({quote_prefix:'PRE',default_language:'es',currency:'EUR',default_vat_percentage:21,default_withholding_percentage:0,default_validity_days:30,default_terms:fillEmptyQuoteTerms(),issuer_snapshot:{}})
 
 const quotes = ref([]), clients = ref([]), settings = ref(defaultSettings())
 const mode = ref('list'), filter = ref('all'), search = ref(''), showArchived = ref(false)
 const isSaving = ref(false), isGenerating = ref(false), errorMessage = ref(''), successMessage = ref('')
 const validationAttempted = ref(false)
 const form = ref({})
+const savedPricingMode = ref('itemized')
+watch(() => settings.value.default_terms, (terms, previousTerms) => {
+  if (mode.value !== 'edit' || form.value.id) return
+  // A delayed settings response may update a new quote, but never replace custom text.
+  if (!form.value.terms || Object.values(previousTerms || {}).includes(form.value.terms)) {
+    form.value.terms = terms[form.value.language] || ''
+  }
+})
 
 const makeForm = () => { const issue = today(); const language=settings.value.default_language || 'es'; return {id:null,quote_number:null,title:'Proyecto digital',client_id:'',status:'draft',language,currency:'EUR',issue_date:issue,valid_until:addDays(issue,settings.value.default_validity_days),client_snapshot:{},issuer_snapshot:{...settings.value.issuer_snapshot},notes:'',terms:settings.value.default_terms?.[language] || '',discount_percentage:0,vat_percentage:settings.value.default_vat_percentage,withholding_percentage:settings.value.default_withholding_percentage,quote_items:[blankItem()]} }
 const totals = computed(() => calculateQuoteTotals(form.value.quote_items, {discountPercentage:form.value.discount_percentage,vatPercentage:form.value.vat_percentage,withholdingPercentage:form.value.withholding_percentage,pricingMode:form.value.pricing_mode,globalPrice:form.value.global_price}))
@@ -118,7 +128,7 @@ const fetchData = async () => {
   if(error) errorMessage.value=error.message
   if (!quoteResult.error) quotes.value=quoteResult.data||[]
   if (!clientResult.error) clients.value=clientResult.data||[]
-  if(settingsResult.data) settings.value={...defaultSettings(),...settingsResult.data,default_terms:{...defaultSettings().default_terms,...settingsResult.data.default_terms},issuer_snapshot:settingsResult.data.issuer_snapshot||{}}
+  if(settingsResult.data) settings.value={...defaultSettings(),...settingsResult.data,default_terms:fillEmptyQuoteTerms(settingsResult.data.default_terms),issuer_snapshot:settingsResult.data.issuer_snapshot||{}}
 }
 
 const upsertClient = client => {
@@ -128,11 +138,11 @@ const upsertClient = client => {
   clients.value.sort((a,b)=>a.name.localeCompare(b.name))
 }
 
-const updateSettings = value => { settings.value = structuredClone(value) }
+const updateSettings = value => { settings.value = {...structuredClone(value), default_terms:fillEmptyQuoteTerms(value.default_terms)} }
 defineExpose({ upsertClient, updateSettings })
 
-const openNew = () => { form.value={...makeForm(),pricing_mode:'itemized',global_price:0}; mode.value='edit'; successMessage.value=''; errorMessage.value=''; validationAttempted.value=false; window.scrollTo({top:0,behavior:'smooth'}) }
-const openEdit = quote => { form.value={...quote,client_snapshot:{...(quote.client_snapshot||{})},issuer_snapshot:{...(quote.issuer_snapshot||{})},quote_items:[...(quote.quote_items||[])].sort((a,b)=>a.position-b.position).map(item=>({...item}))}; if(!form.value.quote_items.length) form.value.quote_items=[blankItem()]; mode.value='edit'; errorMessage.value=''; validationAttempted.value=false; window.scrollTo({top:0,behavior:'smooth'}) }
+const openNew = () => { form.value={...makeForm(),pricing_mode:'itemized',global_price:0}; savedPricingMode.value='itemized'; mode.value='edit'; successMessage.value=''; errorMessage.value=''; validationAttempted.value=false; window.scrollTo({top:0,behavior:'smooth'}) }
+const openEdit = quote => { savedPricingMode.value=quote.pricing_mode||'itemized'; form.value={...quote,pricing_mode:savedPricingMode.value,global_price:quote.global_price||0,client_snapshot:{...(quote.client_snapshot||{})},issuer_snapshot:{...(quote.issuer_snapshot||{})},quote_items:[...(quote.quote_items||[])].sort((a,b)=>a.position-b.position).map(item=>({...item}))}; if(!form.value.quote_items.length) form.value.quote_items=[blankItem()]; mode.value='edit'; errorMessage.value=''; validationAttempted.value=false; window.scrollTo({top:0,behavior:'smooth'}) }
 const selectClient = () => { const client=clients.value.find(item=>item.id===form.value.client_id); if(!client) return; const defaultTerms=Object.values(settings.value.default_terms||{}); const usesDefault=!form.value.terms||defaultTerms.includes(form.value.terms); form.value.client_snapshot={name:client.name,tax_id:client.tax_id,email:client.email,phone:client.phone,address:client.address}; form.value.language=client.language||form.value.language; if(usesDefault) form.value.terms=settings.value.default_terms?.[form.value.language]||'' }
 const changeLanguage = () => { const defaultTerms=Object.values(settings.value.default_terms||{}); if(!form.value.terms||defaultTerms.includes(form.value.terms)) form.value.terms=settings.value.default_terms?.[form.value.language]||'' }
 const addItem = () => form.value.quote_items.push(blankItem())
@@ -169,13 +179,23 @@ const saveQuote = async () => {
   try {
     payload.pricing_mode = form.value.pricing_mode || 'itemized'
     payload.global_price = Number(form.value.global_price || 0)
-    const {data,error}=await supabase.rpc('save_quote_priced',{p_quote:payload,p_items:items})
+    const {data,error}=await saveQuoteWithCompatibility(supabase,payload,items,savedPricingMode.value)
     if(error) throw error
     // Preserve the saved ID even if refreshing the list fails, preventing duplicate inserts.
     form.value = { ...form.value, ...data, quote_items: items }
+    savedPricingMode.value = data.pricing_mode || 'itemized'
     successMessage.value=c.value.saved
     await fetchData()
-  } catch (error) { errorMessage.value=error.message }
+  } catch (error) {
+    if (error.code === 'PRICING_MIGRATION_REQUIRED') {
+      const messages = {
+        es:`Para guardar precios globales falta activar la función en Supabase. Ejecuta ${PRICING_MIGRATION} en el editor SQL. Si ya la aplicaste, ejecuta NOTIFY pgrst, 'reload schema'; y vuelve a guardar. Tu presupuesto sigue en el formulario.`,
+        ca:`Per desar preus globals cal activar la funció a Supabase. Executa ${PRICING_MIGRATION} a l’editor SQL. Si ja l’has aplicat, executa NOTIFY pgrst, 'reload schema'; i torna a desar. El pressupost continua al formulari.`,
+        en:`Global pricing requires the Supabase function. Run ${PRICING_MIGRATION} in the SQL editor. If already applied, run NOTIFY pgrst, 'reload schema'; and save again. Your quote remains in the form.`
+      }
+      errorMessage.value = messages[locale.value] || messages.es
+    } else errorMessage.value=error.message
+  }
   finally { isSaving.value=false }
 }
 
