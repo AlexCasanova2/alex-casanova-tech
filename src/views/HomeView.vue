@@ -1,10 +1,12 @@
 <script setup>
-import { ref, onMounted } from 'vue'
+import { computed, ref, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { userData } from '../config/userData'
 import { supabase } from '../config/supabase'
 
-const { t } = useI18n()
+const { t, locale } = useI18n()
+const budgetPath = computed(() => locale.value === 'ca' ? '/ca/pressupost-web' : '/es/presupuesto-web')
+const servicePath = computed(() => locale.value === 'ca' ? '/ca/disseny-web-empreses' : '/es/diseno-web-empresas')
 const featuredProjects = ref([])
 const loading = ref(true)
 
@@ -36,9 +38,9 @@ onMounted(async () => {
           {{ t('home.desc', { name: userData.name, years: userData.experienceYears }) }}
         </p>
         <div class="hero-actions">
-          <router-link to="/contact" class="hero-btn btn-filled">
+          <router-link :to="budgetPath" class="hero-btn btn-filled">
             <span class="btn-content">
-              {{ t('home.getInTouch') }}
+              {{ locale === 'ca' ? 'Calcula la teva web' : locale === 'en' ? 'Estimate your website' : 'Calcula tu web' }}
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <path d="M5 12H19M19 12L12 5M19 12L12 19" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
               </svg>
@@ -88,6 +90,11 @@ onMounted(async () => {
       </div>
     </section>
 
+    <section class="service-callout fade-in delay-1">
+      <div><span>WEB / 700</span><h2>{{ locale === 'ca' ? 'Webs corporatives que converteixen visites en oportunitats.' : locale === 'en' ? 'Corporate websites built to turn visits into opportunities.' : 'Webs corporativas que convierten visitas en oportunidades.' }}</h2></div>
+      <div><p>{{ locale === 'ca' ? 'Disseny i desenvolupament a mida des de 700 € + IVA.' : locale === 'en' ? 'Custom design and development from €700 + VAT.' : 'Diseño y desarrollo a medida desde 700 € + IVA.' }}</p><router-link :to="servicePath">{{ locale === 'ca' ? 'Descobreix el servei' : locale === 'en' ? 'Explore the service' : 'Descubre el servicio' }} →</router-link></div>
+    </section>
+
     <section class="featured-work fade-in delay-2">
       <div class="section-header">
         <h2>{{ t('home.selectedWork') }}</h2>
@@ -116,6 +123,7 @@ onMounted(async () => {
 </template>
 
 <style scoped>
+.service-callout{display:grid;grid-template-columns:1.4fr .6fr;gap:50px;margin:20px 0 110px;padding:42px;border:1px solid var(--border-color);background:var(--bg-secondary);border-radius:2px}.service-callout span{display:inline-block;margin-bottom:24px;padding:5px 8px;background:#d7ff4f;color:#111;font:700 .65rem monospace}.service-callout h2{font-size:clamp(2rem,4vw,3.5rem)}.service-callout>div:last-child{align-self:end}.service-callout p{font-size:1rem;margin-bottom:20px}.service-callout a{display:inline-block;border-bottom:1px solid var(--text-primary);padding-bottom:5px}@media(max-width:700px){.service-callout{grid-template-columns:1fr;padding:25px;margin-bottom:70px}}
 .hero {
   padding: 60px 0;
   display: grid;

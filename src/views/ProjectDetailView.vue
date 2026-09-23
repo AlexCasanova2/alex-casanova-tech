@@ -1,17 +1,18 @@
 <script setup>
-import { ref, onMounted } from 'vue'
+import { computed, ref, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { supabase } from '../config/supabase'
 import { marked } from 'marked'
 
-const { t } = useI18n()
+const { t, locale } = useI18n()
 const route = useRoute()
 const projectId = route.params.id
 
 const project = ref(null)
 const loading = ref(true)
 const userSession = ref(null)
+const budgetLink = computed(() => ({ path:locale.value === 'ca' ? '/ca/pressupost-web' : '/es/presupuesto-web', query:{ project:project.value?.slug || project.value?.id } }))
 
 onMounted(async () => {
   supabase.auth.getSession().then(({ data }) => {
@@ -100,8 +101,8 @@ onMounted(async () => {
       <div class="cta-content">
         <h2>{{ t('project.ctaTitle') }}</h2>
         <p>{{ t('project.ctaDesc') }}</p>
-        <router-link to="/contact" class="btn btn-primary cta-btn">
-          {{ t('project.ctaBtn') }}
+        <router-link :to="budgetLink" class="btn btn-primary cta-btn">
+          {{ locale === 'ca' ? 'Calcula una web com aquesta' : locale === 'en' ? 'Estimate a website like this' : 'Calcula una web como esta' }}
           <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
         </router-link>
       </div>

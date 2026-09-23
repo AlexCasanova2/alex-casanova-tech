@@ -6,6 +6,7 @@ import { supabase } from '../config/supabase'
 import AdminClients from '../components/admin/AdminClients.vue'
 import AdminQuotes from '../components/admin/AdminQuotes.vue'
 import AdminSettings from '../components/admin/AdminSettings.vue'
+import AdminLeads from '../components/admin/AdminLeads.vue'
 const { t, locale } = useI18n()
 const route = useRoute()
 const router = useRouter()
@@ -22,9 +23,9 @@ const activeModule = ref('projects')
 const projectsList = ref([])
 const quotesAdmin = ref(null)
 const moduleCopy = {
-  es: { projects: 'Proyectos', clients: 'Clientes', quotes: 'Presupuestos', settings: 'Ajustes' },
-  ca: { projects: 'Projectes', clients: 'Clients', quotes: 'Pressupostos', settings: 'Configuració' },
-  en: { projects: 'Projects', clients: 'Clients', quotes: 'Quotes', settings: 'Settings' }
+  es: { projects: 'Proyectos', leads: 'Leads', clients: 'Clientes', quotes: 'Presupuestos', settings: 'Ajustes' },
+  ca: { projects: 'Projectes', leads: 'Leads', clients: 'Clients', quotes: 'Pressupostos', settings: 'Configuració' },
+  en: { projects: 'Projects', leads: 'Leads', clients: 'Clients', quotes: 'Quotes', settings: 'Settings' }
 }
 const modules = computed(() => moduleCopy[locale.value] || moduleCopy.es)
 const syncClientWithQuotes = client => quotesAdmin.value?.upsertClient(client)
@@ -371,8 +372,8 @@ const submitProject = async () => {
       </div>
 
       <nav class="workspace-nav" aria-label="Admin sections">
-        <button v-for="module in ['projects', 'clients', 'quotes', 'settings']" :key="module" :class="{ active: activeModule === module }" @click="activeModule = module">
-          <span>{{ module === 'projects' ? '01' : module === 'clients' ? '02' : module === 'quotes' ? '03' : '04' }}</span>
+        <button v-for="(module,index) in ['projects', 'leads', 'clients', 'quotes', 'settings']" :key="module" :class="{ active: activeModule === module }" @click="activeModule = module">
+          <span>{{ String(index + 1).padStart(2, '0') }}</span>
           {{ modules[module] }}
         </button>
       </nav>
@@ -590,6 +591,7 @@ const submitProject = async () => {
       </div>
       </div>
 
+      <AdminLeads v-show="activeModule === 'leads'" />
       <AdminClients v-show="activeModule === 'clients'" @client-saved="syncClientWithQuotes" />
       <AdminQuotes v-show="activeModule === 'quotes'" ref="quotesAdmin" />
       <AdminSettings v-show="activeModule === 'settings'" @settings-saved="quotesAdmin?.updateSettings($event)" />
@@ -644,7 +646,7 @@ const submitProject = async () => {
 
 .workspace-nav {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(5, 1fr);
   border: 1px solid var(--border-color);
   border-radius: 14px;
   overflow: hidden;
@@ -675,8 +677,9 @@ const submitProject = async () => {
 
 @media (max-width: 650px) {
   .workspace-nav { grid-template-columns: 1fr 1fr; }
-  .workspace-nav button:nth-child(2) { border-right: 0; }
-  .workspace-nav button:nth-child(-n+2) { border-bottom: 1px solid var(--border-color); }
+  .workspace-nav button { border-bottom: 1px solid var(--border-color); }
+  .workspace-nav button:nth-child(even) { border-right: 0; }
+  .workspace-nav button:last-child { border-bottom:0; }
 }
 
 /* Premium Segmented Control Tabs */
@@ -1238,7 +1241,7 @@ input:checked + .slider:before {
 .login-form{padding:clamp(20px,4vw,40px)}
 .login-form input{width:100%}
 .dashboard-header h1{font-size:clamp(2rem,4.5vw,3.5rem)}
-.workspace-nav{grid-template-columns:repeat(4,minmax(0,1fr));margin-bottom:28px}
+.workspace-nav{grid-template-columns:repeat(5,minmax(0,1fr));margin-bottom:28px}
 .workspace-nav button{min-width:0;min-height:48px;overflow-wrap:anywhere;justify-content:center;padding:12px}
 .tabs{display:flex;flex-wrap:wrap;max-width:100%;border-radius:16px;margin-bottom:24px}
 .tab-btn{flex:1 1 auto;justify-content:center;min-height:44px;padding:10px 14px;font-size:.85rem}

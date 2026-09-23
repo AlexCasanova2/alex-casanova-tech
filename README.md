@@ -29,3 +29,11 @@ NOTIFY pgrst, 'reload schema';
 Per-item quotes can still be saved using the original `save_quote` function while the pricing function is unavailable. Global pricing requires the migration; it is never silently converted to per-item pricing.
 
 New quotes and business settings use the same ES/CA/EN example terms when the corresponding stored terms are empty. Custom saved terms take precedence, and existing quote documents retain their saved terms.
+
+### Lead capture
+
+Apply `supabase/migrations/202609230001_create_lead_capture.sql` after the quote migrations. It creates private leads, versioned estimator pricing, ownership policies and the `publish_lead_pricing` RPC.
+
+Copy the variables documented in `.env.example` to the local and Vercel environments. `SUPABASE_SERVICE_ROLE_KEY` and `CRM_OWNER_ID` are server-only and must never use the `VITE_` prefix. `RESEND_API_KEY` is optional for local development but required to send owner notifications and visitor confirmations in production.
+
+After deployment, open `Admin > Leads > Tarifas` and publish the initial pricing version. Until then, the public calculator uses the checked-in 700 EUR base configuration. Every submitted lead stores its pricing version and complete estimate snapshot, so later price changes do not alter historical enquiries.

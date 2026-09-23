@@ -2,14 +2,19 @@
 import { ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { userData } from '../config/userData'
+import { leadAttribution, submissionKey, submitLead, trackLeadEvent } from '../utils/leadCapture'
 
-const { t } = useI18n()
+const { t, locale } = useI18n()
 
 const form = ref({
   name: '',
   email: '',
-  message: ''
+  message: '',
+  privacyAccepted: false,
+  companyName: ''
 })
+const startedAt = Date.now()
+let currentSubmissionKey = submissionKey()
 
 const isSubmitting = ref(false)
 const isSuccess = ref(false)
@@ -20,31 +25,18 @@ const submitForm = async () => {
   errorMessage.value = ''
   
   try {
-    // Usamos FormSubmit.co para enviar el email de forma gratuita y sin backend
-    const response = await fetch("https://formsubmit.co/ajax/hola@alexcasanova.tech", {
-      method: "POST",
-      headers: { 
-        'Content-Type': 'application/json',
-        'Accept': 'application/json'
-      },
-      body: JSON.stringify({
-        Nombre: form.value.name,
-        Email: form.value.email,
-        Mensaje: form.value.message,
-        _subject: "✨ Nuevo mensaje desde el Portfolio"
-      })
-    })
-
-    if (!response.ok) throw new Error('Error de red')
+    await submitLead({ ...form.value, source:'contact', language:['es','ca'].includes(locale.value) ? locale.value : 'es', startedAt, submissionKey:currentSubmissionKey, attribution:leadAttribution() })
 
     isSuccess.value = true
-    form.value = { name: '', email: '', message: '' }
+    trackLeadEvent('generate_lead', { source:'contact' })
+    currentSubmissionKey = submissionKey()
+    form.value = { name: '', email: '', message: '', privacyAccepted:false, companyName:'' }
     
     setTimeout(() => {
       isSuccess.value = false
     }, 5000)
     
-  } catch (err) {
+  } catch {
     errorMessage.value = t('contact.error')
   } finally {
     isSubmitting.value = false
@@ -78,16 +70,18 @@ const submitForm = async () => {
         <form @submit.prevent="submitForm" class="contact-form">
           <div class="input-group">
             <label>{{ t('contact.name') }}</label>
-            <input type="text" v-model="form.name" required />
+            <input type="text" v-model="form.name" :aria-label="t('contact.name')" required />
           </div>
           <div class="input-group">
             <label>{{ t('contact.email') }}</label>
-            <input type="email" v-model="form.email" required />
+            <input type="email" v-model="form.email" :aria-label="t('contact.email')" required />
           </div>
           <div class="input-group">
             <label>{{ t('contact.message') }}</label>
-            <textarea v-model="form.message" rows="5" required></textarea>
+            <textarea v-model="form.message" :aria-label="t('contact.message')" rows="5" required></textarea>
           </div>
+          <div class="honeypot" aria-hidden="true"><label>Company name<input v-model="form.companyName" tabindex="-1" autocomplete="off" /></label></div>
+          <label class="privacy-check"><input v-model="form.privacyAccepted" type="checkbox" aria-label="Aceptación de privacidad" required /><span>{{ locale === 'ca' ? 'Accepto que s’utilitzin les meves dades per respondre aquesta sol·licitud.' : locale === 'en' ? 'I agree that my data may be used to answer this request.' : 'Acepto que se usen mis datos para responder a esta solicitud.' }} <router-link :to="locale === 'ca' ? '/ca/privacitat' : '/es/privacidad'" target="_blank">{{ locale === 'ca' ? 'Més informació' : locale === 'en' ? 'More information' : 'Más información' }}</router-link>.</span></label>
           
           <button type="submit" class="btn btn-primary" :disabled="isSubmitting" style="width: 100%; margin-top: 16px;">
             {{ isSubmitting ? t('contact.sending') : t('contact.send') }}
@@ -200,6 +194,7 @@ const submitForm = async () => {
   flex-direction: column;
   gap: 8px;
 }
+.honeypot{position:absolute;left:-10000px}.privacy-check{display:flex;align-items:flex-start;gap:10px;color:var(--text-secondary);font-size:.8rem}.privacy-check input{margin-top:3px;accent-color:var(--text-primary)}
 
 .input-group label {
   font-size: 0.875rem;

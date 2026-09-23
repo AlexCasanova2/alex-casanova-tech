@@ -1,11 +1,12 @@
 <script setup>
-import { ref, onMounted, watch } from 'vue'
-import { useRoute } from 'vue-router'
+import { computed, ref, onMounted, watch } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { userData } from './config/userData'
 import { supabase } from './config/supabase'
 
 const route = useRoute()
+const router = useRouter()
 const { t, locale } = useI18n()
 
 const isDarkMode = ref(true)
@@ -29,7 +30,20 @@ const switchLanguage = (lang) => {
   locale.value = lang
   localStorage.setItem('locale', lang)
   document.documentElement.lang = lang
+  if (route.meta.locale && lang === 'en') {
+    router.push('/')
+    return
+  }
+  if (route.meta.locale && ['es', 'ca'].includes(lang)) {
+    const target = lang === route.meta.locale ? route.path : route.meta.alternate
+    if (target) router.push(target)
+  }
 }
+
+const commercialLocale = computed(() => ['ca', 'es'].includes(locale.value) ? locale.value : 'es')
+const servicePath = computed(() => commercialLocale.value === 'ca' ? '/ca/disseny-web-empreses' : '/es/diseno-web-empresas')
+const budgetPath = computed(() => commercialLocale.value === 'ca' ? '/ca/pressupost-web' : '/es/presupuesto-web')
+const commercialLabels = computed(() => commercialLocale.value === 'ca' ? { service:'Disseny web', budget:'Pressupost' } : { service:'Diseño web', budget:'Presupuesto' })
 
 const handleLogout = async () => {
   await supabase.auth.signOut()
@@ -49,6 +63,9 @@ const updateGlobalSEO = () => {
     title = `${t('nav.contact')} | Àlex Casanova`
   } else if (route.name === 'admin') {
     title = `Admin | Àlex Casanova`
+  } else if (route.meta.title) {
+    title = `${route.meta.title} | Àlex Casanova`
+    desc = route.meta.description || desc
   }
   
   // Project detail handles its own SEO dynamically
@@ -61,15 +78,34 @@ const updateGlobalSEO = () => {
       document.head.appendChild(metaDesc)
     }
     metaDesc.content = desc
+    const canonicalUrl = `https://alexcasanova.tech${route.path}`
+    const setMeta = (selector, attribute, content) => {
+      const element = document.querySelector(selector)
+      if (element) element.setAttribute(attribute, content)
+    }
+    setMeta('meta[property="og:title"]', 'content', title)
+    setMeta('meta[property="og:description"]', 'content', desc)
+    setMeta('meta[property="og:url"]', 'content', canonicalUrl)
+    setMeta('meta[property="twitter:title"]', 'content', title)
+    setMeta('meta[property="twitter:description"]', 'content', desc)
+    setMeta('meta[property="twitter:url"]', 'content', canonicalUrl)
+    setMeta('link[rel="canonical"]', 'href', canonicalUrl)
   }
 }
 
 watch([() => route.path, locale], () => {
   menuOpen.value = false
+  if (route.meta.locale && locale.value !== route.meta.locale) {
+    locale.value = route.meta.locale
+    localStorage.setItem('locale', route.meta.locale)
+  }
+  document.documentElement.lang = route.meta.locale || locale.value
   updateGlobalSEO()
 })
 
 onMounted(() => {
+  document.documentElement.lang = route.meta.locale || locale.value
+  updateGlobalSEO()
   const savedTheme = localStorage.getItem('theme')
   if (savedTheme) {
     isDarkMode.value = savedTheme === 'dark'
@@ -106,6 +142,8 @@ onMounted(() => {
         <div id="main-navigation" :class="['nav-links', { 'is-open': menuOpen }]">
           <router-link to="/">{{ t('nav.work') }}</router-link>
           <router-link to="/projects">{{ t('nav.archive') }}</router-link>
+          <router-link :to="servicePath">{{ commercialLabels.service }}</router-link>
+          <router-link :to="budgetPath" class="nav-budget">{{ commercialLabels.budget }}</router-link>
           <router-link to="/contact">{{ t('nav.contact') }}</router-link>
           
           <div class="nav-actions">
@@ -150,6 +188,7 @@ onMounted(() => {
       <div class="container footer-content">
         <p>© {{ new Date().getFullYear() }} {{ userData.name }}. All rights reserved.</p>
         <div class="social-links">
+          <router-link :to="commercialLocale === 'ca' ? '/ca/privacitat' : '/es/privacidad'">{{ commercialLocale === 'ca' ? 'Privacitat' : 'Privacidad' }}</router-link>
           <a :href="userData.linkedin" target="_blank">LinkedIn</a>
           <a :href="userData.github" target="_blank">GitHub</a>
         </div>
@@ -227,6 +266,7 @@ onMounted(() => {
 .nav-links a.router-link-active {
   color: var(--text-primary);
 }
+.nav-links .nav-budget{border:1px solid var(--border-color);border-radius:100px;padding-left:14px;padding-right:14px}
 
 .nav-actions {
   display: flex;

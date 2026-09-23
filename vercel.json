@@ -6,6 +6,14 @@
             "destination": "/api/project-seo?slug=:slug"
         },
         {
+            "source": "/es/:path(diseno-web-empresas|precio-pagina-web|presupuesto-web)",
+            "destination": "/api/page-seo?path=es/:path"
+        },
+        {
+            "source": "/ca/:path(disseny-web-empreses|preu-pagina-web|pressupost-web)",
+            "destination": "/api/page-seo?path=ca/:path"
+        },
+        {
             "source": "/(.*)",
             "destination": "/index.html"
         }
