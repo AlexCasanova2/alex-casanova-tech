@@ -7,7 +7,7 @@ const ca = computed(() => route.meta.locale === 'ca')
 
 <template>
   <main class="privacy page-wrapper container fade-in">
-    <span class="eyebrow">LEGAL / PRIVACIDAD</span>
+    <span class="eyebrow">LEGAL / {{ ca ? 'PRIVACITAT' : 'PRIVACIDAD' }}</span>
     <h1>{{ ca ? 'Privacitat de les sol·licituds' : 'Privacidad de las solicitudes' }}</h1>
     <p class="intro">{{ ca ? 'Informació sobre el tractament de les dades que envies mitjançant els formularis d’aquesta web.' : 'Información sobre el tratamiento de los datos que envías mediante los formularios de esta web.' }}</p>
     <section><h2>{{ ca ? 'Responsable i contacte' : 'Responsable y contacto' }}</h2><p>Àlex Casanova · <a href="mailto:hola@alexcasanova.tech">hola@alexcasanova.tech</a></p></section>
@@ -18,5 +18,7 @@ const ca = computed(() => route.meta.locale === 'ca')
 </template>
 
 <style scoped>
-.privacy{max-width:820px}.eyebrow{font:700 .68rem monospace;letter-spacing:.16em;color:var(--text-secondary)}h1{margin:18px 0 25px}.intro{font-size:1.35rem;margin-bottom:65px}.privacy section{display:grid;grid-template-columns:240px 1fr;gap:35px;padding:28px 0;border-top:1px solid var(--border-color)}.privacy section h2{font-size:1rem}.privacy section p{font-size:1rem}.privacy a{text-decoration:underline}@media(max-width:650px){.privacy section{grid-template-columns:1fr;gap:10px}}
+.privacy{max-width:1080px;padding-block:clamp(45px,8vw,110px)}.eyebrow{font-size:.65rem;letter-spacing:.14em;color:var(--text-secondary)}h1{margin:22px 0 28px}.intro{font-size:1.35rem;margin-bottom:65px;max-width:720px}.privacy section{display:grid;grid-template-columns:minmax(180px,280px) 1fr;gap:clamp(35px,8vw,100px);padding:32px 0;border-top:1px solid var(--border-color)}.privacy section h2{font-size:.9rem}.privacy section p{font-size:1rem;max-width:650px}.privacy a{text-decoration:underline;text-underline-offset:3px}@media(max-width:650px){.privacy section{grid-template-columns:1fr;gap:10px}}
+.privacy h1 { font-size: clamp(2rem, 3.5vw, 3rem); line-height: 1.15; text-wrap: balance; }
+.privacy .intro { font-size: 1.0625rem; line-height: 1.7; margin-bottom: 40px; }
 </style>

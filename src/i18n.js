@@ -28,7 +28,7 @@ const messages = {
       empty: 'No se encontraron proyectos.'
     },
     contact: {
-      title: 'Hagamos algo <br>increíble.',
+      title: 'Hagamos algo increíble.',
       subtitle: 'Actualmente aceptando nuevos proyectos y colaboraciones estratégicas.',
       emailLabel: 'Email',
       socialsLabel: 'Redes Sociales',
@@ -130,7 +130,7 @@ const messages = {
       empty: 'No projects found.'
     },
     contact: {
-      title: "Let's build <br>something great.",
+      title: "Let's build something great.",
       subtitle: 'Currently accepting new projects and strategic collaborations.',
       emailLabel: 'Email',
       socialsLabel: 'Socials',
@@ -232,7 +232,7 @@ const messages = {
       empty: 'No s\'han trobat projectes.'
     },
     contact: {
-      title: 'Fem alguna cosa <br>increïble.',
+      title: 'Fem alguna cosa increïble.',
       subtitle: 'Actualment acceptant nous projectes i col·laboracions estratègiques.',
       emailLabel: 'Correu',
       socialsLabel: 'Xarxes Socials',

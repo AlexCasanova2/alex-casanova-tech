@@ -7,6 +7,7 @@ const { t } = useI18n()
 <template>
   <main class="page-wrapper container fade-in not-found">
     <div class="content">
+      <span class="eyebrow">ERROR / 404</span>
       <div class="glitch-wrapper delay-1 fade-in">
         <h1 class="title">{{ t('notFound.title') }}</h1>
       </div>
@@ -27,16 +28,16 @@ const { t } = useI18n()
 .not-found {
   display: flex;
   align-items: center;
-  justify-content: center;
-  text-align: center;
+  justify-content: flex-start;
+  text-align: left;
   min-height: calc(100vh - 200px);
 }
 
 .content {
-  max-width: 600px;
+  max-width: 820px;
   display: flex;
   flex-direction: column;
-  align-items: center;
+  align-items: flex-start;
 }
 
 .title {
@@ -44,20 +45,11 @@ const { t } = useI18n()
   font-weight: 800;
   line-height: 1;
   margin-bottom: 16px;
-  background: linear-gradient(135deg, var(--text-primary) 0%, rgba(255,255,255,0.2) 100%);
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
-  text-shadow: 0 10px 30px rgba(255, 255, 255, 0.05);
+  color: var(--text-primary);
   letter-spacing: -0.05em;
 }
 
-:root[data-theme="light"] .title {
-  background: linear-gradient(135deg, var(--text-primary) 0%, rgba(0,0,0,0.3) 100%);
-  -webkit-background-clip: text;
-  background-clip: text;
-  text-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
-}
+.eyebrow{margin-bottom:clamp(30px,6vw,70px);font-size:.65rem;letter-spacing:.14em;color:var(--text-secondary)}
 
 .subtitle {
   font-size: clamp(1.5rem, 4vw, 2.5rem);
@@ -76,7 +68,7 @@ const { t } = useI18n()
 
 .action {
   display: flex;
-  justify-content: center;
+  justify-content: flex-start;
 }
 
 .btn {

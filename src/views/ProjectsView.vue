@@ -2,6 +2,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { supabase } from '../config/supabase'
+import ProjectGridCard from '../components/ProjectGridCard.vue'
 
 const { t } = useI18n()
 
@@ -14,7 +15,9 @@ onMounted(async () => {
   const { data, error } = await supabase
     .from('projects')
     .select('*')
+    .or('is_deleted.is.null,is_deleted.eq.false')
     .order('sort_order', { ascending: true })
+    .order('id')
     
   if (!error && data) {
     projectsData.value = data
@@ -32,7 +35,7 @@ const filteredProjects = computed(() => {
 </script>
 
 <template>
-  <main class="page-wrapper container fade-in">
+  <main class="archive-page page-wrapper container fade-in">
     <div class="page-header">
       <h1>{{ t('archive.title') }}</h1>
       <p>{{ t('archive.subtitle') }}</p>
@@ -50,162 +53,13 @@ const filteredProjects = computed(() => {
     </div>
 
     <div v-if="loading" style="color: var(--text-secondary); margin-top: 24px;">{{ t('home.loading') }}</div>
-    <div v-else class="grid projects-grid">
-      <router-link :to="`/project/${project.slug || project.id}`" v-for="project in filteredProjects" :key="project.id" class="project-card">
-        <div class="project-image">
-          <img :src="project.image" :alt="project.title" loading="lazy" />
-          <div class="overlay">
-             <span class="view-btn">{{ t('home.viewProject') }}</span>
-          </div>
-        </div>
-        <div class="project-info">
-          <div class="project-meta">
-            <span class="category">{{ project.category }}</span>
-          </div>
-          <h3>{{ project.title }}</h3>
-          <p class="description">{{ project.description }}</p>
-        </div>
-      </router-link>
+    <div v-else class="archive-grid">
+      <ProjectGridCard v-for="(project,index) in filteredProjects" :key="project.id" :project="project" :index="index" />
+      <p v-if="!filteredProjects.length">{{ t('archive.empty') }}</p>
     </div>
   </main>
 </template>
 
 <style scoped>
-.page-header {
-  margin-bottom: 48px;
-}
-
-.page-header p {
-  margin-top: 16px;
-  max-width: 600px;
-}
-
-.filters {
-  display: flex;
-  gap: 12px;
-  margin-bottom: 48px;
-  flex-wrap: wrap;
-}
-
-.filter-btn {
-  background: transparent;
-  border: 1px solid var(--border-color);
-  color: var(--text-secondary);
-  padding: 8px 16px;
-  border-radius: 100px;
-  font-size: 0.9rem;
-  cursor: pointer;
-  transition: all var(--transition-fast);
-}
-
-.filter-btn:hover {
-  color: var(--text-primary);
-  border-color: var(--text-secondary);
-}
-
-.filter-btn.active {
-  background: var(--text-primary);
-  color: var(--bg-color);
-  border-color: var(--text-primary);
-}
-
-.projects-grid {
-  grid-template-columns: 1fr;
-  gap: 40px;
-}
-
-@media (min-width: 768px) {
-  .projects-grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
-}
-
-.project-card {
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-  cursor: pointer;
-}
-
-.project-image {
-  position: relative;
-  width: 100%;
-  aspect-ratio: 4/3;
-  border-radius: var(--radius-md);
-  overflow: hidden;
-  background: var(--bg-secondary);
-}
-
-.project-image img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-.project-card:hover .project-image img {
-  transform: scale(1.05);
-}
-
-.overlay {
-  position: absolute;
-  inset: 0;
-  background: rgba(0,0,0,0.4);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  opacity: 0;
-  transition: opacity var(--transition-smooth);
-}
-
-.project-card:hover .overlay {
-  opacity: 1;
-}
-
-.view-btn {
-  background: rgba(255,255,255,0.1);
-  backdrop-filter: blur(8px);
-  border: 1px solid rgba(255,255,255,0.2);
-  color: white;
-  padding: 12px 24px;
-  border-radius: 100px;
-  font-size: 0.9rem;
-  font-weight: 500;
-  transform: translateY(10px);
-  transition: all var(--transition-smooth);
-}
-
-.project-card:hover .view-btn {
-  transform: translateY(0);
-}
-
-.project-info {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.project-meta {
-  display: flex;
-  justify-content: space-between;
-  font-size: 0.875rem;
-  color: var(--text-secondary);
-}
-
-.project-card h3 {
-  font-size: 1.5rem;
-}
-
-.description {
-  font-size: 1rem;
-  margin-top: 4px;
-}
-.projects-grid{grid-template-columns:minmax(0,1fr);gap:clamp(24px,4vw,40px)}
-.project-card,.project-info{min-width:0}
-.filter-btn{min-height:44px;max-width:100%;overflow-wrap:anywhere}
-.filters{gap:8px;margin-bottom:28px}
-.page-header{margin-bottom:28px}
-@media(min-width:768px){.projects-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
-@media(max-width:480px){.project-card{gap:14px}.project-card h3{font-size:1.3rem}}
-@media(hover:none){.overlay{opacity:1;background:linear-gradient(transparent 55%,rgba(0,0,0,.35));align-items:flex-end;justify-content:flex-end;padding:12px}.view-btn{transform:none;padding:8px 14px}}
+.archive-page{padding-top:clamp(42px,7vw,90px)}.page-header{display:grid;grid-template-columns:1.2fr .8fr;gap:50px;align-items:end;padding-bottom:34px;margin-bottom:22px;border-bottom:1px solid var(--border-color)}.page-header h1{font-size:clamp(2.3rem,5vw,5rem);letter-spacing:-.055em}.page-header p{font-size:1rem;line-height:1.75;max-width:470px}.filters{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:48px}.filter-btn{min-height:40px;padding:8px 13px;background:transparent;border:1px solid var(--border-color);border-radius:4px;color:var(--text-secondary);font:inherit;font-size:.72rem;cursor:pointer}.filter-btn.active{background:var(--text-primary);border-color:var(--text-primary);color:var(--bg-color)}.archive-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:clamp(38px,7vw,90px) clamp(20px,3vw,42px)}.archive-grid :deep(.grid-project:nth-child(even)){margin-top:clamp(40px,7vw,100px)}@media(max-width:700px){.page-header{grid-template-columns:1fr;gap:18px}.filters{margin-bottom:32px}.archive-grid{grid-template-columns:1fr;gap:44px}.archive-grid :deep(.grid-project:nth-child(even)){margin-top:0}}
 </style>

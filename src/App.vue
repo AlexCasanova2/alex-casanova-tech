@@ -1,5 +1,5 @@
 <script setup>
-import { computed, ref, onMounted, watch } from 'vue'
+import { computed, ref, onMounted, onUnmounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { userData } from './config/userData'
@@ -13,6 +13,9 @@ const isDarkMode = ref(true)
 const userSession = ref(null)
 const menuOpen = ref(false)
 const menuButton = ref(null)
+const isScrolled = ref(false)
+const isHome = computed(() => route.name === 'home')
+const updateHeader = () => { isScrolled.value = window.scrollY > Math.max(80, window.innerHeight * .72) }
 const closeMenu = () => {
   if (!menuOpen.value) return
   menuOpen.value = false
@@ -101,11 +104,15 @@ watch([() => route.path, locale], () => {
   }
   document.documentElement.lang = route.meta.locale || locale.value
   updateGlobalSEO()
+  requestAnimationFrame(updateHeader)
 })
 
 onMounted(() => {
   document.documentElement.lang = route.meta.locale || locale.value
   updateGlobalSEO()
+  updateHeader()
+  window.addEventListener('scroll', updateHeader, { passive:true })
+  window.addEventListener('resize', updateHeader, { passive:true })
   const savedTheme = localStorage.getItem('theme')
   if (savedTheme) {
     isDarkMode.value = savedTheme === 'dark'
@@ -128,11 +135,15 @@ onMounted(() => {
     userSession.value = session
   })
 })
+onUnmounted(() => {
+  window.removeEventListener('scroll', updateHeader)
+  window.removeEventListener('resize', updateHeader)
+})
 </script>
 
 <template>
-  <div class="app-container">
-    <nav class="navbar" @keydown.esc="closeMenu">
+  <div :class="['app-container', { 'public-site': route.name !== 'admin' }]">
+    <nav :class="['navbar', { 'home-overlay':isHome, 'is-scrolled':isScrolled, 'menu-active':menuOpen }]" @keydown.esc="closeMenu">
       <div class="container nav-content">
         <router-link to="/" class="logo">{{ userData.name }}</router-link>
         <button ref="menuButton" class="menu-toggle" type="button" aria-controls="main-navigation" :aria-expanded="menuOpen" :aria-label="locale === 'en' ? 'Navigation menu' : locale === 'ca' ? 'Menú de navegació' : 'Menú de navegación'" @click="menuOpen = !menuOpen">
@@ -149,9 +160,9 @@ onMounted(() => {
           <div class="nav-actions">
             <!-- Language Switcher -->
             <div class="lang-switcher">
-              <button :class="{ active: locale === 'es' }" @click="switchLanguage('es')">ES</button>
-              <button :class="{ active: locale === 'ca' }" @click="switchLanguage('ca')">CA</button>
-              <button :class="{ active: locale === 'en' }" @click="switchLanguage('en')">EN</button>
+              <button :class="{ active: locale === 'es' }" :aria-pressed="locale === 'es'" @click="switchLanguage('es')">ES</button>
+              <button :class="{ active: locale === 'ca' }" :aria-pressed="locale === 'ca'" @click="switchLanguage('ca')">CA</button>
+              <button :class="{ active: locale === 'en' }" :aria-pressed="locale === 'en'" @click="switchLanguage('en')">EN</button>
             </div>
 
             <!-- Admin / Web Toggle -->
@@ -179,9 +190,7 @@ onMounted(() => {
     </nav>
 
     <router-view v-slot="{ Component }">
-      <transition name="page" mode="out-in">
-        <component :is="Component" />
-      </transition>
+      <component :is="Component" />
     </router-view>
 
     <footer class="footer">
@@ -189,8 +198,8 @@ onMounted(() => {
         <p>© {{ new Date().getFullYear() }} {{ userData.name }}. All rights reserved.</p>
         <div class="social-links">
           <router-link :to="commercialLocale === 'ca' ? '/ca/privacitat' : '/es/privacidad'">{{ commercialLocale === 'ca' ? 'Privacitat' : 'Privacidad' }}</router-link>
-          <a :href="userData.linkedin" target="_blank">LinkedIn</a>
-          <a :href="userData.github" target="_blank">GitHub</a>
+          <a :href="userData.linkedin" target="_blank" rel="noopener noreferrer">LinkedIn</a>
+          <a :href="userData.github" target="_blank" rel="noopener noreferrer">GitHub</a>
         </div>
       </div>
     </footer>
@@ -216,6 +225,7 @@ onMounted(() => {
   -webkit-backdrop-filter: blur(12px);
   border-bottom: 1px solid rgba(255,255,255,0.05);
 }
+.navbar.home-overlay{position:fixed;background:transparent;border-color:transparent;color:#fff;transition:background .35s,color .35s,border-color .35s}.navbar.home-overlay .logo,.navbar.home-overlay .nav-links>a,.navbar.home-overlay .theme-toggle{color:#fff}.navbar.home-overlay .nav-budget{border-color:rgba(255,255,255,.45)}.navbar.home-overlay .lang-switcher button{color:rgba(255,255,255,.7)}.navbar.home-overlay .lang-switcher button.active{background:#fff;color:#111}.navbar.home-overlay .nav-actions{border-color:rgba(255,255,255,.25)}.navbar.home-overlay.is-scrolled,.navbar.home-overlay.menu-active{background:var(--nav-bg);border-color:var(--border-color);color:var(--text-primary)}.navbar.home-overlay.is-scrolled .logo,.navbar.home-overlay.is-scrolled .nav-links>a,.navbar.home-overlay.is-scrolled .theme-toggle,.navbar.home-overlay.menu-active .logo,.navbar.home-overlay.menu-active .nav-links>a,.navbar.home-overlay.menu-active .theme-toggle{color:var(--text-primary)}.navbar.home-overlay.is-scrolled .nav-budget,.navbar.home-overlay.menu-active .nav-budget{border-color:var(--border-color)}.navbar.home-overlay.is-scrolled .lang-switcher button,.navbar.home-overlay.menu-active .lang-switcher button{color:var(--text-secondary)}.navbar.home-overlay.is-scrolled .lang-switcher button.active,.navbar.home-overlay.menu-active .lang-switcher button.active{background:var(--text-primary);color:var(--bg-color)}.navbar.home-overlay.is-scrolled .nav-actions,.navbar.home-overlay.menu-active .nav-actions{border-color:var(--border-color)}.navbar.home-overlay:not(.is-scrolled):not(.menu-active) .menu-toggle{color:#fff;background:rgba(0,0,0,.2);border-color:rgba(255,255,255,.42)}
 
 @media (min-width: 768px) {
   .navbar {
