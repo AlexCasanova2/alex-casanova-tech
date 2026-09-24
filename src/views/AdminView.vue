@@ -21,6 +21,12 @@ const errorMessage = ref('')
 const activeTab = ref('manage') // 'add' | 'manage' | 'trash'
 const activeModule = ref('projects')
 const projectsList = ref([])
+const activeProjects = computed(() => projectsList.value.filter(project => !project.is_deleted).sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0)))
+const homepageProjects = computed(() => activeProjects.value.filter(project => project.show_on_homepage))
+const availableHomepageProjects = computed(() => activeProjects.value.filter(project => !project.show_on_homepage))
+const homepageBusy = ref([])
+const homepageNotice = ref('')
+const homepageError = ref('')
 const quotesAdmin = ref(null)
 const moduleCopy = {
   es: { projects: 'Proyectos', leads: 'Leads', clients: 'Clientes', quotes: 'Presupuestos', settings: 'Ajustes' },
@@ -28,6 +34,11 @@ const moduleCopy = {
   en: { projects: 'Projects', leads: 'Leads', clients: 'Clients', quotes: 'Quotes', settings: 'Settings' }
 }
 const modules = computed(() => moduleCopy[locale.value] || moduleCopy.es)
+const homepageCopy = computed(() => ({
+  es: { tab:'Portada', title:'Slider principal', intro:'Elige hasta 8 proyectos y ordénalos tal como quieres que se reproduzcan.', selected:'En el slider', available:'Proyectos disponibles', empty:'Todavía no hay proyectos en el slider.', allSelected:'Todos los proyectos publicados están en el slider.', add:'Añadir', remove:'Quitar', saved:'Portada actualizada.', error:'No se ha podido actualizar la portada.', limit:'El slider admite un máximo de 8 proyectos.', position:'Posición' },
+  ca: { tab:'Portada', title:'Slider principal', intro:'Tria fins a 8 projectes i ordena’ls tal com vols que es reprodueixin.', selected:'Al slider', available:'Projectes disponibles', empty:'Encara no hi ha projectes al slider.', allSelected:'Tots els projectes publicats són al slider.', add:'Afegir', remove:'Treure', saved:'Portada actualitzada.', error:'No s’ha pogut actualitzar la portada.', limit:'El slider admet un màxim de 8 projectes.', position:'Posició' },
+  en: { tab:'Homepage', title:'Main slider', intro:'Choose up to 8 projects and arrange their playback order.', selected:'In the slider', available:'Available projects', empty:'There are no projects in the slider yet.', allSelected:'Every published project is in the slider.', add:'Add', remove:'Remove', saved:'Homepage updated.', error:'The homepage could not be updated.', limit:'The slider supports up to 8 projects.', position:'Position' }
+}[locale.value] || {}) )
 const syncClientWithQuotes = client => quotesAdmin.value?.upsertClient(client)
 
 // Form state
@@ -259,19 +270,19 @@ const permanentDeleteProject = async (id) => {
 }
 
 const moveProject = async (index, direction) => {
+  const visibleProjects = activeProjects.value
   const targetIndex = direction === 'up' ? index - 1 : index + 1
-  if (targetIndex < 0 || targetIndex >= projectsList.value.length) return
+  if (targetIndex < 0 || targetIndex >= visibleProjects.length) return
 
-  const currentProject = projectsList.value[index]
-  const targetProject = projectsList.value[targetIndex]
+  const currentProject = visibleProjects[index]
+  const targetProject = visibleProjects[targetIndex]
 
   // Swap locally for instant feedback
   const tempOrder = currentProject.sort_order
   currentProject.sort_order = targetProject.sort_order
   targetProject.sort_order = tempOrder
 
-  projectsList.value.splice(index, 1)
-  projectsList.value.splice(targetIndex, 0, currentProject)
+  projectsList.value.sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0))
 
   // Persist to DB
   try {
@@ -283,6 +294,54 @@ const moveProject = async (index, direction) => {
     console.error('Error updating order:', error)
     fetchProjects() // Revert if failed
   }
+}
+
+const setHomepageVisibility = async (project, visible) => {
+  if (homepageBusy.value.includes(project.id)) return
+  if (visible && homepageProjects.value.length >= 8) {
+    homepageError.value = homepageCopy.value.limit
+    return
+  }
+  homepageBusy.value = [...homepageBusy.value, project.id]
+  homepageNotice.value = ''
+  homepageError.value = ''
+  const previous = project.show_on_homepage
+  project.show_on_homepage = visible
+  const { error } = await supabase.from('projects').update({ show_on_homepage: visible }).eq('id', project.id)
+  if (error) {
+    project.show_on_homepage = previous
+    homepageError.value = homepageCopy.value.error
+  } else homepageNotice.value = homepageCopy.value.saved
+  homepageBusy.value = homepageBusy.value.filter(id => id !== project.id)
+}
+
+const moveHomepageProject = async (index, direction) => {
+  const selected = homepageProjects.value
+  const targetIndex = direction === 'up' ? index - 1 : index + 1
+  if (targetIndex < 0 || targetIndex >= selected.length) return
+  const currentProject = selected[index]
+  const targetProject = selected[targetIndex]
+  const currentOrder = currentProject.sort_order
+  const targetOrder = targetProject.sort_order
+  currentProject.sort_order = targetOrder
+  targetProject.sort_order = currentOrder
+  projectsList.value.sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0))
+  homepageNotice.value = ''
+  homepageError.value = ''
+  const [currentResult, targetResult] = await Promise.all([
+    supabase.from('projects').update({ sort_order: targetOrder }).eq('id', currentProject.id),
+    supabase.from('projects').update({ sort_order: currentOrder }).eq('id', targetProject.id)
+  ])
+  if (currentResult.error || targetResult.error) {
+    currentProject.sort_order = currentOrder
+    targetProject.sort_order = targetOrder
+    projectsList.value.sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0))
+    await Promise.all([
+      supabase.from('projects').update({ sort_order: currentOrder }).eq('id', currentProject.id),
+      supabase.from('projects').update({ sort_order: targetOrder }).eq('id', targetProject.id)
+    ])
+    homepageError.value = homepageCopy.value.error
+  } else homepageNotice.value = homepageCopy.value.saved
 }
 
 const submitProject = async () => {
@@ -383,6 +442,10 @@ const submitProject = async () => {
         <button :class="['tab-btn', { active: activeTab === 'manage' }]" @click="activeTab = 'manage'">
           <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
           {{ t('admin.manageProjects') }}
+        </button>
+        <button :class="['tab-btn', { active: activeTab === 'homepage' }]" @click="activeTab = 'homepage'">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="14" rx="2"/><path d="m10 9 5 2.5-5 2.5Z"/><path d="M8 21h8"/></svg>
+          {{ homepageCopy.tab }}
         </button>
         <button :class="['tab-btn', { active: activeTab === 'add' && !isEditing }]" @click="cancelEdit(); activeTab = 'add'">
           <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
@@ -524,6 +587,49 @@ const submitProject = async () => {
         </div>
       </form>
 
+      <!-- HOMEPAGE SLIDER SECTION -->
+      <section v-if="activeTab === 'homepage'" class="homepage-admin fade-in">
+        <header class="homepage-admin-head">
+          <div><span class="admin-eyebrow">HOME / SLIDER</span><h2>{{ homepageCopy.title }}</h2><p>{{ homepageCopy.intro }}</p></div>
+          <strong>{{ String(homepageProjects.length).padStart(2, '0') }}<small>/08</small></strong>
+        </header>
+        <p v-if="homepageNotice" class="success-msg" role="status">{{ homepageNotice }}</p>
+        <p v-if="homepageError" class="error-msg" role="alert">{{ homepageError }}</p>
+
+        <div class="homepage-columns">
+          <div class="card homepage-card">
+            <div class="homepage-card-title"><h3>{{ homepageCopy.selected }}</h3><span>{{ homepageProjects.length }}</span></div>
+            <p v-if="homepageProjects.length === 0" class="homepage-empty">{{ homepageCopy.empty }}</p>
+            <ol v-else class="slider-project-list">
+              <li v-for="(project, index) in homepageProjects" :key="project.id" class="slider-project-row">
+                <span class="slider-position"><small>{{ homepageCopy.position }}</small>{{ String(index + 1).padStart(2, '0') }}</span>
+                <img :src="project.image" :alt="project.title">
+                <div class="list-info"><h4>{{ project.title }}</h4><span>{{ project.category }}</span></div>
+                <div class="slider-row-actions">
+                  <div class="slider-order-actions">
+                    <button type="button" class="order-btn" :disabled="index === 0" :aria-label="t('admin.moveUp')" @click="moveHomepageProject(index, 'up')">↑</button>
+                    <button type="button" class="order-btn" :disabled="index === homepageProjects.length - 1" :aria-label="t('admin.moveDown')" @click="moveHomepageProject(index, 'down')">↓</button>
+                  </div>
+                  <button type="button" class="btn-small secondary" :disabled="homepageBusy.includes(project.id)" @click="setHomepageVisibility(project, false)">{{ homepageCopy.remove }}</button>
+                </div>
+              </li>
+            </ol>
+          </div>
+
+          <div class="card homepage-card available-card">
+            <div class="homepage-card-title"><h3>{{ homepageCopy.available }}</h3><span>{{ availableHomepageProjects.length }}</span></div>
+            <p v-if="availableHomepageProjects.length === 0" class="homepage-empty">{{ homepageCopy.allSelected }}</p>
+            <div v-else class="available-project-list">
+              <div v-for="project in availableHomepageProjects" :key="project.id" class="available-project-row">
+                <img :src="project.image" :alt="project.title">
+                <div class="list-info"><h4>{{ project.title }}</h4><span>{{ project.category }}</span></div>
+                <button type="button" class="btn-small" :disabled="homepageBusy.includes(project.id) || homepageProjects.length >= 8" @click="setHomepageVisibility(project, true)">+ {{ homepageCopy.add }}</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
       <!-- MANAGE SECTION -->
       <div v-if="activeTab === 'manage'" class="manage-section fade-in">
         <div class="card">
@@ -532,12 +638,12 @@ const submitProject = async () => {
           </div>
           
           <div class="project-list">
-            <div v-for="(p, index) in projectsList.filter(p => !p.is_deleted)" :key="p.id" class="project-list-item">
+            <div v-for="(p, index) in activeProjects" :key="p.id" class="project-list-item">
               <div class="list-reorder">
                 <button @click="moveProject(index, 'up')" :disabled="index === 0" class="order-btn" :title="t('admin.moveUp')">
                   <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"></polyline></svg>
                 </button>
-                <button @click="moveProject(index, 'down')" :disabled="index === projectsList.length - 1" class="order-btn" :title="t('admin.moveDown')">
+                <button @click="moveProject(index, 'down')" :disabled="index === activeProjects.length - 1" class="order-btn" :title="t('admin.moveDown')">
                   <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
                 </button>
               </div>
@@ -1234,6 +1340,7 @@ input:checked + .slider:before {
   from { opacity: 0; transform: scale(0.9); }
   to { opacity: 1; transform: scale(1); }
 }
+.homepage-admin{display:flex;flex-direction:column;gap:20px}.homepage-admin-head{display:flex;align-items:flex-end;justify-content:space-between;gap:30px;padding:8px 0 28px;border-bottom:1px solid var(--border-color)}.admin-eyebrow{display:block;margin-bottom:10px;font-size:.65rem;letter-spacing:.14em;color:var(--text-secondary)}.homepage-admin-head h2{font-size:clamp(2rem,4vw,3.6rem);margin-bottom:12px}.homepage-admin-head p{max-width:680px;font-size:1rem}.homepage-admin-head>strong{font-size:clamp(3rem,7vw,6rem);font-weight:500;line-height:.8;color:var(--text-secondary);letter-spacing:-.08em}.homepage-admin-head>strong small{font-size:.2em;letter-spacing:0;margin-left:8px}.homepage-columns{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(300px,.65fr);gap:20px;align-items:start}.homepage-card{padding:0;overflow:hidden}.homepage-card-title{display:flex;align-items:center;justify-content:space-between;padding:20px 22px;border-bottom:1px solid var(--border-color)}.homepage-card-title h3{font-size:1rem}.homepage-card-title span{display:grid;place-items:center;min-width:28px;height:28px;border-radius:50%;background:var(--text-primary);color:var(--bg-color);font-size:.7rem}.homepage-empty{padding:30px 22px;font-size:.9rem}.slider-project-list{list-style:none}.slider-project-row,.available-project-row{display:flex;align-items:center;gap:16px;padding:14px 18px;border-bottom:1px solid var(--border-color)}.slider-project-row:last-child,.available-project-row:last-child{border-bottom:0}.slider-project-row>img,.available-project-row>img{width:74px;height:54px;object-fit:cover;border-radius:5px;background:var(--bg-color)}.slider-position{display:flex;flex-direction:column;width:52px;font-size:1.2rem;font-weight:600}.slider-position small{font-size:.55rem;text-transform:uppercase;letter-spacing:.08em;color:var(--text-secondary);font-weight:500}.slider-row-actions{display:flex;align-items:center;gap:12px}.slider-order-actions{display:flex;gap:5px}.slider-order-actions .order-btn{min-width:36px;min-height:36px}.available-project-row{padding:14px}.available-project-row>img{width:58px;height:45px}.available-project-row .btn-small{white-space:nowrap}@media(max-width:950px){.homepage-columns{grid-template-columns:1fr}}@media(max-width:650px){.homepage-admin-head{align-items:flex-start}.homepage-admin-head>strong{font-size:3rem}.slider-project-row{display:grid;grid-template-columns:44px 64px minmax(0,1fr);gap:10px}.slider-project-row>img{width:64px;height:48px}.slider-row-actions{grid-column:2/-1;justify-content:space-between}.available-project-row{display:grid;grid-template-columns:58px minmax(0,1fr)}.available-project-row .btn-small{grid-column:1/-1}.homepage-card-title{padding:16px}.homepage-empty{padding:24px 16px}}
 /* Admin layouts adapt to available width, including long translated labels. */
 .admin-dashboard,.project-admin,.form-main,.form-sidebar,.input-group,.list-info{min-width:0}
 .admin-login{width:100%;padding-top:12px}
