@@ -18,14 +18,26 @@ const validUrl = value => {
 }
 
 function getServerClient() {
-  const url = process.env.VITE_SUPABASE_URL
+  const url = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY
-  if (!url || !key || !process.env.CRM_OWNER_ID) throw new Error('Lead capture is not configured')
+  if (!url || !key) throw new Error('Lead capture is not configured: missing Supabase server credentials')
   return createClient(url, key, { auth: { persistSession:false, autoRefreshToken:false } })
 }
 
-async function activePricing(client) {
-  const { data, error } = await client.from('lead_pricing_versions').select('id,version,config').eq('owner_id', process.env.CRM_OWNER_ID).eq('is_active', true).maybeSingle()
+async function resolveOwnerId(client) {
+  if (process.env.CRM_OWNER_ID) return process.env.CRM_OWNER_ID
+
+  // This is a single-owner portfolio. Falling back to its only CRM settings
+  // record avoids breaking public enquiries when CRM_OWNER_ID was not copied
+  // to a deployment environment.
+  const { data, error } = await client.from('crm_settings').select('owner_id').limit(2)
+  if (error) throw error
+  if (data?.length === 1) return data[0].owner_id
+  throw new Error('Lead capture is not configured: CRM_OWNER_ID is required')
+}
+
+async function activePricing(client, ownerId) {
+  const { data, error } = await client.from('lead_pricing_versions').select('id,version,config').eq('owner_id', ownerId).eq('is_active', true).maybeSingle()
   if (error) throw error
   return data || { id:null, version:0, config:defaultLeadPricing }
 }
@@ -63,8 +75,9 @@ export default async function handler(req, res) {
     const origin = req.headers.origin
     if (origin && !/^https:\/\/(www\.)?alexcasanova\.tech$/.test(origin) && !/^https:\/\/[a-z0-9-]+\.vercel\.app$/.test(origin) && !/^http:\/\/localhost:\d+$/.test(origin) && !/^http:\/\/127\.0\.0\.1:\d+$/.test(origin)) return res.status(403).json({ error:'Origin not allowed' })
     const client = getServerClient()
+    const ownerId = await resolveOwnerId(client)
     if (req.method === 'GET') {
-      const pricing = await activePricing(client)
+      const pricing = await activePricing(client, ownerId)
       return res.status(200).json({ version:pricing.version, config:normalizePricing(pricing.config) })
     }
     if (req.method !== 'POST') return res.status(405).json({ error:'Method not allowed' })
@@ -93,10 +106,10 @@ export default async function handler(req, res) {
       maintenance:Boolean(body.answers?.maintenance),
       timeline:allowedTimelines.has(body.answers?.timeline) ? body.answers.timeline : 'flexible'
     } : {}
-    const pricing = await activePricing(client)
+    const pricing = await activePricing(client, ownerId)
     const estimate = source === 'configurator' ? calculateLeadEstimate(answers, pricing.config) : { custom:true, items:[] }
     const lead = {
-      owner_id:process.env.CRM_OWNER_ID,
+      owner_id:ownerId,
       submission_key:clean(body.submissionKey, 100),
       source,
       language,
