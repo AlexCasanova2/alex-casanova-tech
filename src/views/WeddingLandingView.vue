@@ -1,8 +1,8 @@
 <script setup>
 import { onMounted, onUnmounted, ref } from 'vue'
+import LeadContactForm from '../components/LeadContactForm.vue'
 import { weddingLanding } from '../config/weddingLanding'
 
-const contactPath = '/contact?utm_source=web-bodas'
 const page = ref(null)
 let revealObserver
 
@@ -39,7 +39,7 @@ onUnmounted(() => revealObserver?.disconnect())
           <h1>{{ weddingLanding.heading }}</h1>
           <p class="hero-intro">{{ weddingLanding.intro }}</p>
           <div class="hero-actions">
-            <router-link :to="contactPath" class="wedding-button">Hablemos de vuestra boda <span aria-hidden="true">↗</span></router-link>
+            <a href="#contacto-bodas" class="wedding-button">Hablemos de vuestra boda <span aria-hidden="true">↗</span></a>
             <a href="#que-incluye" class="underlined-link">Descubrid la experiencia <span aria-hidden="true">↓</span></a>
           </div>
         </div>
@@ -98,7 +98,7 @@ onUnmounted(() => revealObserver?.disconnect())
           <span class="section-index">04 / DISEÑO A VUESTRA MEDIDA</span>
           <h2>Tan personal como vuestra historia.</h2>
           <p>Desde el primer mensaje hasta la última foto compartida, cada elemento puede adaptarse al estilo de vuestra celebración. Sin plantillas que os obliguen a encajar: primero escuchamos vuestra idea y después diseñamos la experiencia.</p>
-          <router-link :to="contactPath" class="underlined-link">Contadme vuestra idea <span aria-hidden="true">↗</span></router-link>
+          <a href="#contacto-bodas" class="underlined-link">Contadme vuestra idea <span aria-hidden="true">↗</span></a>
         </div>
       </div>
     </section>
@@ -116,12 +116,14 @@ onUnmounted(() => revealObserver?.disconnect())
       </div>
     </section>
 
-    <section class="closing-section">
-      <div class="container closing-inner" data-reveal>
-        <span class="section-index">VUESTRA HISTORIA EMPIEZA AQUÍ</span>
-        <h2>Una web para compartir lo que viene.</h2>
-        <p>Contadme cómo imagináis vuestra boda y diseñemos una invitación digital a la altura del momento.</p>
-        <router-link :to="contactPath" class="wedding-button">Hablemos de vuestra boda <span aria-hidden="true">↗</span></router-link>
+    <section id="contacto-bodas" class="closing-section" aria-labelledby="wedding-contact-title">
+      <div class="container closing-layout">
+        <div class="closing-inner" data-reveal>
+          <span class="section-index">VUESTRA HISTORIA EMPIEZA AQUÍ</span>
+          <h2 id="wedding-contact-title">Una web para compartir lo que viene.</h2>
+          <p>Contadme cómo imagináis vuestra boda y diseñemos una invitación digital a la altura del momento.</p>
+        </div>
+        <div class="closing-form"><LeadContactForm context="wedding-landing" /></div>
       </div>
     </section>
   </main>
@@ -227,7 +229,7 @@ onUnmounted(() => revealObserver?.disconnect())
 .example-preview:hover { transform: translateY(-5px); box-shadow: 0 32px 58px -36px #605951; }
 .example-preview img { display: block; width: 100%; height: auto; border: 1px solid var(--wedding-line); }
 .example-preview > span { display: flex; justify-content: space-between; padding: 13px 4px 3px; color: var(--wedding-muted); font-size: .64rem; font-weight: 600; letter-spacing: .16em; }
-.story-section { background: var(--wedding-paper); }
+.story-section { padding-bottom:clamp(75px,9vw,135px); background:url('/images/paper-grain.svg') repeat, var(--wedding-paper); }
 .story-layout { display: grid; grid-template-columns: 1fr 1fr; min-height: 510px; }
 .story-visual {
   display: flex;
@@ -239,7 +241,7 @@ onUnmounted(() => revealObserver?.disconnect())
 }
 .story-visual-label { color: #fff; font-size: .63rem; font-weight: 600; letter-spacing: .16em; }
 .story-visual-quote { font: italic clamp(2.4rem, 4.2vw, 4.7rem)/1.1 Georgia, serif; letter-spacing: -.05em; }
-.story-copy { display: flex; flex-direction: column; align-items: flex-start; justify-content: center; padding: clamp(36px, 6vw, 90px); background: url('/images/paper-grain.svg') repeat, var(--wedding-paper); }
+.story-copy { display: flex; flex-direction: column; align-items: flex-start; justify-content: center; padding: clamp(36px, 6vw, 90px); }
 .story-copy h2 { margin: 18px 0 22px; }
 .story-copy p { max-width: 480px; color: var(--wedding-muted); font-size: .96rem; line-height: 1.85; }
 .story-copy .underlined-link { margin-top: 25px; }
@@ -251,12 +253,13 @@ onUnmounted(() => revealObserver?.disconnect())
 .faq-list summary span { color: var(--wedding-muted); font-size: 1.5rem; font-weight: 400; }
 .faq-list details[open] summary span { transform: rotate(45deg); }
 .faq-list details p { max-width: 740px; padding: 0 36px 26px 0; color: var(--wedding-muted); font-size: .96rem; line-height: 1.8; }
-.closing-section { padding-block: clamp(80px, 10vw, 135px); border-top: 1px solid var(--wedding-line); background: url('/images/paper-grain.svg') repeat, var(--wedding-background); color: var(--wedding-ink); }
+.closing-section { --text-primary:var(--wedding-ink); --text-secondary:var(--wedding-muted); --border-color:var(--wedding-line); padding-block: clamp(80px, 10vw, 135px); border-top: 1px solid var(--wedding-line); background: url('/images/paper-grain.svg') repeat, var(--wedding-background); color: var(--wedding-ink); scroll-margin-top:70px; }
+.closing-layout { display:grid; grid-template-columns:minmax(0,.95fr) minmax(0,1.05fr); gap:clamp(45px,8vw,120px); align-items:start; }
 .closing-inner { display: flex; flex-direction: column; align-items: flex-start; }
 .closing-inner .section-index, .closing-inner p { color: var(--wedding-muted); }
 .closing-inner h2 { max-width: 790px; margin: 22px 0; }
 .closing-inner p { max-width: 600px; line-height: 1.7; }
-.closing-inner .wedding-button { margin-top: 32px; }
+.closing-form { min-width:0; }
 .reveal-ready { opacity: 0; transform: translateY(22px); }
 .reveal-ready.is-visible { opacity: 1; transform: translateY(0); transition: opacity .65s ease, transform .65s ease; }
 @keyframes wedding-enter {
@@ -279,6 +282,7 @@ onUnmounted(() => revealObserver?.disconnect())
   .feature-card:nth-child(even) { padding-left: 20px !important; }
   .story-layout { grid-template-columns: 1fr; }
   .story-visual { min-height: 320px; }
+  .closing-layout { grid-template-columns:1fr; }
 }
 @media (max-width: 600px) {
   .intro-band { background: linear-gradient(90deg, rgb(238 233 223 / 94%), rgb(238 233 223 / 85%)), url('/images/wedding-details.jpg') center / cover no-repeat; }

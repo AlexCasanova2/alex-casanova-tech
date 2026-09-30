@@ -25,7 +25,13 @@ export function renderSeoHtml(html, path, basePrice = 700) {
     : { '@context':'https://schema.org', '@type':'ProfessionalService', name:'Àlex Casanova · Diseño web', url:canonical, areaServed:['ES','Catalunya'], priceRange:'€€' }
   const alternate = page.alternate ? `<link rel="alternate" hreflang="${page.lang === 'es' ? 'ca' : 'es'}" href="https://alexcasanova.es${page.alternate}">` : ''
   const weddingContent = page.wedding
-    ? `<section><h2>Una invitación digital para vuestra boda</h2><p>${escapeHtml(page.body)}</p></section><section><h2>¿Qué puede incluir vuestra web de boda?</h2>${weddingLanding.features.map(feature => `<article><h3>${escapeHtml(feature.title)}</h3><p>${escapeHtml(feature.text)}</p></article>`).join('')}</section><section><h2>${escapeHtml(weddingLanding.example.title)}</h2><p>${escapeHtml(weddingLanding.example.description)}</p><p>${escapeHtml(weddingLanding.example.note)}</p><a href="${escapeHtml(weddingLanding.example.url)}" target="_blank" rel="noopener noreferrer">Ver la invitación de muestra de Clara y Mateo</a></section><section><h2>Preguntas frecuentes sobre webs para bodas</h2>${weddingLanding.faqs.map(faq => `<article><h3>${escapeHtml(faq.question)}</h3><p>${escapeHtml(faq.answer)}</p></article>`).join('')}</section><p><a href="/contact?utm_source=web-bodas">Hablemos de vuestra boda</a></p>`
+    ? [
+        `<section><h2>Una invitación digital para vuestra boda</h2><p>${escapeHtml(page.body)}</p></section>`,
+        `<section><h2>¿Qué puede incluir vuestra web de boda?</h2>${weddingLanding.features.map(feature => `<article><h3>${escapeHtml(feature.title)}</h3><p>${escapeHtml(feature.text)}</p></article>`).join('')}</section>`,
+        `<section><h2>${escapeHtml(weddingLanding.example.title)}</h2><p>${escapeHtml(weddingLanding.example.description)}</p><p>${escapeHtml(weddingLanding.example.note)}</p><a href="${escapeHtml(weddingLanding.example.url)}" target="_blank" rel="noopener noreferrer">Ver la invitación de muestra de Clara y Mateo</a></section>`,
+        `<section><h2>Preguntas frecuentes sobre webs para bodas</h2>${weddingLanding.faqs.map(faq => `<article><h3>${escapeHtml(faq.question)}</h3><p>${escapeHtml(faq.answer)}</p></article>`).join('')}</section>`,
+        '<section id="contacto-bodas"><h2>Una web para compartir lo que viene.</h2><p>Contadme cómo imagináis vuestra boda y diseñemos una invitación digital a la altura del momento.</p><a href="#contacto-bodas">Hablemos de vuestra boda</a></section>'
+      ].join('')
     : `<p>${escapeHtml(body)}</p>`
   return html.replace('<html lang="es">', `<html lang="${page.lang}"${page.wedding ? ' data-theme="light"' : ''}>`)
     .replace(/<title>.*?<\/title>/, `<title>${escapeHtml(page.title)}</title>`)

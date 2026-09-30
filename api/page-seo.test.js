@@ -22,6 +22,8 @@ describe('commercial page SEO', () => {
     expect(result).toContain(`<h2>${weddingLanding.example.title}</h2>`)
     expect(result).toContain(`href="${weddingLanding.example.url}"`)
     expect(result).toContain(weddingLanding.example.note)
+    expect(result).toContain('<section id="contacto-bodas">')
+    expect(result).toContain('href="#contacto-bodas"')
     for (const faq of weddingLanding.faqs) expect(result).toContain(`<h3>${faq.question}</h3>`)
     expect(result).toContain('"@type":"Service"')
     expect(result).not.toContain('rel="alternate"')
