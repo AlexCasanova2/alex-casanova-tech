@@ -1,4 +1,5 @@
 import { createClient } from '@supabase/supabase-js'
+import nodemailer from 'nodemailer'
 import { defaultLeadPricing, normalizePricing } from '../src/config/leadPricing.js'
 import { calculateLeadEstimate } from '../src/utils/leadEstimate.js'
 
@@ -55,9 +56,20 @@ export function isAllowedOrigin(origin) {
   return !origin || /^https:\/\/(www\.)?alexcasanova\.es$/.test(origin) || /^https:\/\/[a-z0-9-]+\.vercel\.app$/.test(origin) || /^http:\/\/localhost:\d+$/.test(origin) || /^http:\/\/127\.0\.0\.1:\d+$/.test(origin)
 }
 
-async function sendNotification(lead, estimate) {
-  if (!process.env.RESEND_API_KEY) return
-  const from = process.env.LEADS_FROM_EMAIL || 'Portfolio <leads@alexcasanova.es>'
+export function smtpSettings(env = process.env) {
+  const host = env.SMTP_HOST
+  const user = env.SMTP_USER
+  const pass = env.SMTP_PASSWORD
+  if (!host && !user && !pass) return null
+  if (!host || !user || !pass) throw new Error('Incomplete SMTP configuration')
+  const port = Number(env.SMTP_PORT || 587)
+  if (!Number.isInteger(port) || port < 1 || port > 65535) throw new Error('Invalid SMTP port')
+  return { host, port, secure:port === 465, auth:{ user, pass } }
+}
+
+export async function sendNotification(lead, estimate, settings) {
+  const transporter = nodemailer.createTransport(settings)
+  const from = process.env.LEADS_FROM_EMAIL || settings.auth.user
   const ownerEmail = process.env.LEADS_NOTIFICATION_EMAIL || 'hola@alexcasanova.es'
   const amount = estimate.custom ? 'Valoración personalizada' : `${estimate.netMin}–${estimate.netMax} EUR + IVA`
   const text = `Nuevo lead: ${lead.name}\nEmail: ${lead.email}\nOrigen: ${lead.source}\nEstimación: ${amount}\n\n${lead.message || 'Sin mensaje adicional.'}`
@@ -65,12 +77,10 @@ async function sendNotification(lead, estimate) {
     ? `Hola ${lead.name},\n\nHe rebut la teva sol·licitud. La revisaré personalment i et respondré al més aviat possible.\n\nEstimació orientativa: ${amount}.\n\nÀlex Casanova`
     : `Hola ${lead.name},\n\nHe recibido tu solicitud. La revisaré personalmente y te responderé lo antes posible.\n\nEstimación orientativa: ${amount}.\n\nÀlex Casanova`
   const messages = [
-    { from, to:[ownerEmail], subject:`Nuevo lead web: ${lead.name}`, text },
+    { from, to:[ownerEmail], replyTo:lead.email, subject:`Nuevo lead web: ${lead.name}`, text },
     { from, to:[lead.email], subject:lead.language === 'ca' ? 'He rebut la teva sol·licitud' : 'He recibido tu solicitud', text:confirmation }
   ]
-  await Promise.all(messages.map(body => fetch('https://api.resend.com/emails', {
-    method:'POST', headers:{ Authorization:`Bearer ${process.env.RESEND_API_KEY}`, 'Content-Type':'application/json' }, body:JSON.stringify(body)
-  }).then(response => { if (!response.ok) throw new Error(`Email delivery failed (${response.status})`) })))
+  await Promise.all(messages.map(message => transporter.sendMail(message)))
 }
 
 export default async function handler(req, res) {
@@ -137,10 +147,15 @@ export default async function handler(req, res) {
     if (lead.submission_key.length < 10) return res.status(422).json({ error:'Invalid submission key' })
     const { data, error } = await client.from('leads').upsert(lead, { onConflict:'owner_id,submission_key', ignoreDuplicates:true }).select('id').maybeSingle()
     if (error) throw error
-    if (data && process.env.RESEND_API_KEY) {
+    if (data) {
       try {
-        await sendNotification(lead, estimate)
-        await client.from('leads').update({ email_delivery:{ status:'sent', attempted_at:new Date().toISOString() } }).eq('id', data.id)
+        const settings = smtpSettings()
+        if (settings) {
+          await sendNotification(lead, estimate, settings)
+          await client.from('leads').update({ email_delivery:{ status:'sent', attempted_at:new Date().toISOString() } }).eq('id', data.id)
+        } else {
+          await client.from('leads').update({ email_delivery:{ status:'not_configured' } }).eq('id', data.id)
+        }
       } catch (emailError) {
         console.error('Lead email error:', emailError)
         await client.from('leads').update({ email_delivery:{ status:'failed', attempted_at:new Date().toISOString(), error:emailError.message.slice(0, 200) } }).eq('id', data.id)
