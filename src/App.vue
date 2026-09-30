@@ -226,6 +226,10 @@ onUnmounted(() => {
   border-bottom: 1px solid rgba(255,255,255,0.05);
 }
 .navbar.home-overlay{position:fixed;background:transparent;border-color:transparent;color:#fff;transition:background .35s,color .35s,border-color .35s}.navbar.home-overlay .logo,.navbar.home-overlay .nav-links>a,.navbar.home-overlay .theme-toggle{color:#fff}.navbar.home-overlay .nav-budget{border-color:rgba(255,255,255,.45)}.navbar.home-overlay .lang-switcher button{color:rgba(255,255,255,.7)}.navbar.home-overlay .lang-switcher button.active{background:#fff;color:#111}.navbar.home-overlay .nav-actions{border-color:rgba(255,255,255,.25)}.navbar.home-overlay.is-scrolled,.navbar.home-overlay.menu-active{background:var(--nav-bg);border-color:var(--border-color);color:var(--text-primary)}.navbar.home-overlay.is-scrolled .logo,.navbar.home-overlay.is-scrolled .nav-links>a,.navbar.home-overlay.is-scrolled .theme-toggle,.navbar.home-overlay.menu-active .logo,.navbar.home-overlay.menu-active .nav-links>a,.navbar.home-overlay.menu-active .theme-toggle{color:var(--text-primary)}.navbar.home-overlay.is-scrolled .nav-budget,.navbar.home-overlay.menu-active .nav-budget{border-color:var(--border-color)}.navbar.home-overlay.is-scrolled .lang-switcher button,.navbar.home-overlay.menu-active .lang-switcher button{color:var(--text-secondary)}.navbar.home-overlay.is-scrolled .lang-switcher button.active,.navbar.home-overlay.menu-active .lang-switcher button.active{background:var(--text-primary);color:var(--bg-color)}.navbar.home-overlay.is-scrolled .nav-actions,.navbar.home-overlay.menu-active .nav-actions{border-color:var(--border-color)}.navbar.home-overlay:not(.is-scrolled):not(.menu-active) .menu-toggle{color:#fff;background:rgba(0,0,0,.2);border-color:rgba(255,255,255,.42)}
+.navbar.home-overlay:not(.is-scrolled):not(.menu-active) .lang-switcher {
+  background: rgba(0, 0, 0, .42);
+  border-color: rgba(255, 255, 255, .55);
+}
 
 @media (min-width: 768px) {
   .navbar {

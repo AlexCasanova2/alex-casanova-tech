@@ -111,7 +111,8 @@ onMounted(async () => {
 .question-copy p { line-height: 1.65; }
 .option-grid { margin-top: 24px; }
 .success-panel h2 { font-size: clamp(1.7rem, 2.7vw, 2.3rem); line-height: 1.2; }
-.configurator{--signal:#ff785a}.eyebrow,.progress small,.step-number{font-family:inherit}.question-panel,.estimate-card{border-radius:0;background:transparent}.question-panel{border-width:1px 0 0;padding-inline:0}.estimate-card{border-width:1px 0;padding-inline:0}.step-number{background:transparent;color:var(--text-secondary);clip-path:none;display:inline;padding:0}.question-copy h2:focus{outline:none}.option{border-radius:0;background:transparent}.option.selected{background:var(--text-primary);color:var(--bg-color);box-shadow:none}.option.selected small{color:color-mix(in srgb,var(--bg-color) 70%,transparent)}.option.selected .option-check{color:var(--signal)}
+.configurator{--signal:#ff785a}.eyebrow,.progress small,.step-number{font-family:inherit}.question-panel,.estimate-card{border-radius:0;background:transparent}.question-panel{border-width:1px 0 0;padding-inline:0}.estimate-card{border-width:1px 0;padding-inline:0}.step-number{background:transparent;color:var(--text-secondary);clip-path:none;display:inline;padding:0}.question-copy h2:focus{outline:none}.option{border-radius:0;background:transparent}.option.selected{background:var(--text-primary);color:var(--bg-color);box-shadow:none}.option.selected small{color:color-mix(in srgb,var(--bg-color) 70%,transparent)}.option.selected .option-check{color:var(--bg-color)}
+:global(:root[data-theme="light"] .configurator) { --signal: #c6472a; }
 @media (max-width: 850px) {
   .config-head { gap: 20px; }
   .question-panel { grid-row: 1; }
