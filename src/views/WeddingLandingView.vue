@@ -135,7 +135,7 @@ onUnmounted(() => revealObserver?.disconnect())
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  min-height: min(830px, calc(100svh - 71px));
+  min-height: min(900px, 100svh);
   overflow: hidden;
   isolation: isolate;
   background: #2e3530;
@@ -255,7 +255,7 @@ onUnmounted(() => revealObserver?.disconnect())
 }
 @media (max-width: 600px) {
   .intro-band { background: linear-gradient(90deg, rgb(238 233 223 / 94%), rgb(238 233 223 / 85%)), url('/images/wedding-details.jpg') center / cover no-repeat; }
-  .wedding-hero { min-height: min(880px, calc(100svh - 61px)); }
+  .wedding-hero { min-height: min(940px, 100svh); }
   .hero-media img { object-position: 51% center; }
   .hero-media::after { background: linear-gradient(180deg, rgb(20 27 24 / 84%) 0%, rgb(20 27 24 / 68%) 45%, rgb(20 27 24 / 18%) 85%, rgb(20 27 24 / 44%) 100%); }
   .hero-layout { align-items: flex-start; padding-block: clamp(62px, 10vh, 100px) 50px; }

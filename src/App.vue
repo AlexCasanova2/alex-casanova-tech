@@ -141,7 +141,7 @@ onUnmounted(() => {
 
 <template>
   <div :class="['app-container', { 'public-site': route.name !== 'admin' }]">
-    <nav :class="['navbar', { 'home-overlay':isHome, 'is-scrolled':isScrolled, 'menu-active':menuOpen }]" @keydown.esc="closeMenu">
+    <nav :class="['navbar', { 'home-overlay':isHome, 'wedding-overlay':isWeddingPage, 'is-scrolled':isScrolled, 'menu-active':menuOpen }]" @keydown.esc="closeMenu">
       <div class="container nav-content">
         <router-link to="/" class="logo">Casanova studio</router-link>
         <button ref="menuButton" class="menu-toggle" type="button" aria-controls="main-navigation" :aria-expanded="menuOpen" :aria-label="locale === 'en' ? 'Navigation menu' : locale === 'ca' ? 'Menú de navegació' : 'Menú de navegación'" @click="menuOpen = !menuOpen">
@@ -424,4 +424,51 @@ onUnmounted(() => {
   .footer{padding:28px 0}
 }
 @media(min-width:900px){.nav-content{flex-wrap:nowrap}.nav-actions{flex-wrap:nowrap}.footer-content{text-align:left}}
+.navbar.wedding-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  background: rgb(20 27 24 / 38%);
+  border-color: rgb(255 255 255 / 28%);
+  color: #fff;
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  transition: background .3s ease, border-color .3s ease, color .3s ease;
+}
+.navbar.wedding-overlay .logo,
+.navbar.wedding-overlay .nav-links > a,
+.navbar.wedding-overlay .nav-links > a:hover,
+.navbar.wedding-overlay .nav-links > a.router-link-active,
+.navbar.wedding-overlay .theme-toggle { color: #fff; }
+.navbar.wedding-overlay .nav-budget,
+.navbar.wedding-overlay .nav-actions { border-color: rgb(255 255 255 / 38%); }
+.navbar.wedding-overlay .lang-switcher { background: rgb(20 27 24 / 35%); border-color: rgb(255 255 255 / 44%); }
+.navbar.wedding-overlay .lang-switcher button { color: #f4eee4; }
+.navbar.wedding-overlay .lang-switcher button.active { background: #f5efe5; color: #272925; }
+.navbar.wedding-overlay .menu-toggle { background: rgb(20 27 24 / 35%); border-color: rgb(255 255 255 / 44%); color: #fff; }
+.navbar.wedding-overlay.is-scrolled,
+.navbar.wedding-overlay.menu-active { background: rgb(250 248 243 / 92%); border-color: var(--border-color); color: var(--text-primary); }
+.navbar.wedding-overlay.is-scrolled .logo,
+.navbar.wedding-overlay.is-scrolled .nav-links > a,
+.navbar.wedding-overlay.is-scrolled .nav-links > a:hover,
+.navbar.wedding-overlay.is-scrolled .nav-links > a.router-link-active,
+.navbar.wedding-overlay.is-scrolled .theme-toggle,
+.navbar.wedding-overlay.menu-active .logo,
+.navbar.wedding-overlay.menu-active .nav-links > a,
+.navbar.wedding-overlay.menu-active .nav-links > a:hover,
+.navbar.wedding-overlay.menu-active .nav-links > a.router-link-active,
+.navbar.wedding-overlay.menu-active .theme-toggle { color: var(--text-primary); }
+.navbar.wedding-overlay.is-scrolled .nav-budget,
+.navbar.wedding-overlay.is-scrolled .nav-actions,
+.navbar.wedding-overlay.menu-active .nav-budget,
+.navbar.wedding-overlay.menu-active .nav-actions { border-color: var(--border-color); }
+.navbar.wedding-overlay.is-scrolled .lang-switcher,
+.navbar.wedding-overlay.menu-active .lang-switcher { background: var(--bg-color); border-color: var(--border-color); }
+.navbar.wedding-overlay.is-scrolled .lang-switcher button,
+.navbar.wedding-overlay.menu-active .lang-switcher button { color: var(--text-secondary); }
+.navbar.wedding-overlay.is-scrolled .lang-switcher button.active,
+.navbar.wedding-overlay.menu-active .lang-switcher button.active { background: var(--text-primary); color: var(--bg-color); }
+.navbar.wedding-overlay.is-scrolled .menu-toggle,
+.navbar.wedding-overlay.menu-active .menu-toggle { background: var(--bg-secondary); border-color: var(--border-color); color: var(--text-primary); }
 </style>
