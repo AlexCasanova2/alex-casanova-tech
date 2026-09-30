@@ -10,6 +10,10 @@
             "destination": "/api/page-seo?path=es/:path"
         },
         {
+            "source": "/es/web-para-bodas",
+            "destination": "/api/page-seo?path=es/web-para-bodas"
+        },
+        {
             "source": "/ca/:path(disseny-web-empreses|preu-pagina-web|pressupost-web)",
             "destination": "/api/page-seo?path=ca/:path"
         },

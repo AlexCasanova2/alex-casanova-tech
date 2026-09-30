@@ -40,6 +40,7 @@ const switchLanguage = (lang) => {
   if (route.meta.locale && ['es', 'ca'].includes(lang)) {
     const target = lang === route.meta.locale ? route.path : route.meta.alternate
     if (target) router.push(target)
+    else router.push('/')
   }
 }
 
@@ -67,7 +68,7 @@ const updateGlobalSEO = () => {
   } else if (route.name === 'admin') {
     title = `Admin | Àlex Casanova`
   } else if (route.meta.title) {
-    title = `${route.meta.title} | Àlex Casanova`
+    title = `${route.meta.title} | ${route.meta.brand || 'Àlex Casanova'}`
     desc = route.meta.description || desc
   }
   
@@ -197,6 +198,7 @@ onUnmounted(() => {
       <div class="container footer-content">
         <p>© {{ new Date().getFullYear() }} {{ userData.name }}. All rights reserved.</p>
         <div class="social-links">
+          <router-link to="/es/web-para-bodas">Webs para bodas</router-link>
           <router-link :to="commercialLocale === 'ca' ? '/ca/privacitat' : '/es/privacidad'">{{ commercialLocale === 'ca' ? 'Privacitat' : 'Privacidad' }}</router-link>
           <a :href="userData.linkedin" target="_blank" rel="noopener noreferrer">LinkedIn</a>
           <a :href="userData.github" target="_blank" rel="noopener noreferrer">GitHub</a>

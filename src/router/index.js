@@ -5,6 +5,7 @@ import ProjectDetailView from '../views/ProjectDetailView.vue'
 import ContactView from '../views/ContactView.vue'
 import LeadLandingView from '../views/LeadLandingView.vue'
 import ConfiguratorView from '../views/ConfiguratorView.vue'
+import { weddingLanding } from '../config/weddingLanding'
 
 const router = createRouter({
     history: createWebHistory(import.meta.env.BASE_URL),
@@ -53,6 +54,12 @@ const router = createRouter({
             name: 'web-budget-es',
             component: ConfiguratorView,
             meta: { locale: 'es', title: 'Calcula el presupuesto de tu página web', description: 'Configura tu web corporativa y obtén al momento una estimación orientativa antes de IVA.', alternate: '/ca/pressupost-web' }
+        },
+        {
+            path: '/es/web-para-bodas',
+            name: 'wedding-web-es',
+            component: () => import('../views/WeddingLandingView.vue'),
+            meta: { locale:'es', title:'Web para bodas e invitaciones digitales', brand:'Casanova studio', description:weddingLanding.description }
         },
         {
             path: '/ca/pressupost-web',

@@ -1,4 +1,5 @@
 import { createClient } from '@supabase/supabase-js'
+import { weddingLanding } from '../src/config/weddingLanding.js'
 
 const pages = {
   '/es/diseno-web-empresas': { lang:'es', alternate:'/ca/disseny-web-empreses', title:'Diseño web para empresas | Àlex Casanova', description:'Diseño y desarrollo de webs corporativas a medida para empresas. Proyectos desde 700 € antes de IVA.', heading:'Una web corporativa que trabaja tan bien como tu negocio.', body:'Diseño web a medida, rápido y preparado para convertir visitas en oportunidades.' },
@@ -6,10 +7,40 @@ const pages = {
   '/es/precio-pagina-web': { lang:'es', alternate:'/ca/preu-pagina-web', title:'Precio de una página web corporativa | Àlex Casanova', description:'Descubre cuánto cuesta una web corporativa y calcula una estimación según páginas, idiomas y funcionalidades.', heading:'¿Cuánto cuesta una web corporativa?', body:'Una web sencilla parte de 700 € antes de IVA. Calcula una horquilla según el alcance.' },
   '/ca/preu-pagina-web': { lang:'ca', alternate:'/es/precio-pagina-web', title:'Preu d’una pàgina web corporativa | Àlex Casanova', description:'Descobreix quant costa una web corporativa i calcula una estimació segons pàgines, idiomes i funcionalitats.', heading:'Quant costa una web corporativa?', body:'Una web senzilla parteix de 700 € abans d’IVA. Calcula una forquilla segons l’abast.' },
   '/es/presupuesto-web': { lang:'es', alternate:'/ca/pressupost-web', title:'Calcula el presupuesto de tu página web | Àlex Casanova', description:'Configura tu web corporativa y obtén al momento una estimación orientativa antes de IVA.', heading:'Ponle números a tu próxima web.', body:'Configura el alcance y obtén una estimación orientativa al momento.' },
-  '/ca/pressupost-web': { lang:'ca', alternate:'/es/presupuesto-web', title:'Calcula el pressupost de la teva pàgina web | Àlex Casanova', description:'Configura la teva web corporativa i obtén al moment una estimació orientativa abans d’IVA.', heading:'Posa números a la teva pròxima web.', body:'Configura l’abast i obtén una estimació orientativa al moment.' }
+  '/ca/pressupost-web': { lang:'ca', alternate:'/es/presupuesto-web', title:'Calcula el pressupost de la teva pàgina web | Àlex Casanova', description:'Configura la teva web corporativa i obtén al moment una estimació orientativa abans d’IVA.', heading:'Posa números a la teva pròxima web.', body:'Configura l’abast i obtén una estimació orientativa al moment.' },
+  '/es/web-para-bodas': { lang:'es', title:weddingLanding.title, description:weddingLanding.description, heading:weddingLanding.heading, body:weddingLanding.intro, wedding:true }
 }
 
 const escapeHtml = value => String(value).replace(/[&<>'"]/g, char => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', "'":'&#39;', '"':'&quot;' }[char]))
+
+export function renderSeoHtml(html, path, basePrice = 700) {
+  const page = pages[path]
+  if (!page) return null
+  const localizedPrice = new Intl.NumberFormat(page.lang === 'ca' ? 'ca-ES' : 'es-ES', { style:'currency', currency:'EUR', maximumFractionDigits:0 }).format(basePrice)
+  const description = page.description.replace('700 €', localizedPrice)
+  const body = page.body.replace('700 €', localizedPrice)
+  const canonical = `https://alexcasanova.es${path}`
+  const structuredData = page.wedding
+    ? { '@context':'https://schema.org', '@type':'Service', name:'Diseño de webs para bodas e invitaciones digitales', serviceType:'Diseño web para bodas', description:page.description, url:canonical, provider:{ '@type':'ProfessionalService', name:'Casanova studio', url:'https://alexcasanova.es/' }, areaServed:{ '@type':'Country', name:'España' } }
+    : { '@context':'https://schema.org', '@type':'ProfessionalService', name:'Àlex Casanova · Diseño web', url:canonical, areaServed:['ES','Catalunya'], priceRange:'€€' }
+  const alternate = page.alternate ? `<link rel="alternate" hreflang="${page.lang === 'es' ? 'ca' : 'es'}" href="https://alexcasanova.es${page.alternate}">` : ''
+  const weddingContent = page.wedding
+    ? `<section><h2>Una invitación digital para vuestra boda</h2><p>${escapeHtml(page.body)}</p></section><section><h2>¿Qué puede incluir vuestra web de boda?</h2>${weddingLanding.features.map(feature => `<article><h3>${escapeHtml(feature.title)}</h3><p>${escapeHtml(feature.text)}</p></article>`).join('')}</section><section><h2>Preguntas frecuentes sobre webs para bodas</h2>${weddingLanding.faqs.map(faq => `<article><h3>${escapeHtml(faq.question)}</h3><p>${escapeHtml(faq.answer)}</p></article>`).join('')}</section><p><a href="/contact?utm_source=web-bodas">Hablemos de vuestra boda</a></p>`
+    : `<p>${escapeHtml(body)}</p>`
+  return html.replace('<html lang="es">', `<html lang="${page.lang}">`)
+    .replace(/<title>.*?<\/title>/, `<title>${escapeHtml(page.title)}</title>`)
+    .replace(/(<meta name="title"\s+content=")([^"]*)("\s*\/?>)/i, `$1${escapeHtml(page.title)}$3`)
+    .replace(/(<meta name="description"\s+content=")([^"]*)("\s*\/?>)/i, `$1${escapeHtml(description)}$3`)
+    .replace(/(<link rel="canonical" href=")([^"]*)("\s*\/?>)/i, `$1${canonical}$3`)
+    .replace(/(property="og:url"\s+content=")([^"]*)(")/gi, `$1${canonical}$3`)
+    .replace(/(property="og:title"\s+content=")([^"]*)(")/gi, `$1${escapeHtml(page.title)}$3`)
+    .replace(/(property="og:description"\s+content=")([^"]*)(")/gi, `$1${escapeHtml(description)}$3`)
+    .replace(/(property="twitter:url"\s+content=")([^"]*)(")/gi, `$1${canonical}$3`)
+    .replace(/(property="twitter:title"\s+content=")([^"]*)(")/gi, `$1${escapeHtml(page.title)}$3`)
+    .replace(/(property="twitter:description"\s+content=")([^"]*)(")/gi, `$1${escapeHtml(description)}$3`)
+    .replace('</head>', `${alternate}<script type="application/ld+json">${JSON.stringify(structuredData).replace(/</g, '\\u003c')}</script></head>`)
+    .replace('<div id="app"></div>', `<div id="app"><main><h1>${escapeHtml(page.heading)}</h1>${weddingContent}</main></div>`)
+}
 
 export default async function handler(req, res) {
   const path = `/${String(req.query.path || '').replace(/^\/+|\/+$/g, '')}`
@@ -21,28 +52,12 @@ export default async function handler(req, res) {
     const response = await fetch(`${protocol}://${host}/index.html`)
     let html = await response.text()
     let basePrice = 700
-    if (process.env.VITE_SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY && process.env.CRM_OWNER_ID) {
+    if (!page.wedding && process.env.VITE_SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY && process.env.CRM_OWNER_ID) {
       const supabase = createClient(process.env.VITE_SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY, { auth:{ persistSession:false } })
       const { data } = await supabase.from('lead_pricing_versions').select('config').eq('owner_id', process.env.CRM_OWNER_ID).eq('is_active', true).maybeSingle()
       if (Number.isFinite(Number(data?.config?.basePrice))) basePrice = Number(data.config.basePrice)
     }
-    const localizedPrice = new Intl.NumberFormat(page.lang === 'ca' ? 'ca-ES' : 'es-ES', { style:'currency', currency:'EUR', maximumFractionDigits:0 }).format(basePrice)
-    const description = page.description.replace('700 €', localizedPrice)
-    const body = page.body.replace('700 €', localizedPrice)
-    const canonical = `https://alexcasanova.es${path}`
-    const alternate = `https://alexcasanova.es${page.alternate}`
-    html = html.replace('<html lang="es">', `<html lang="${page.lang}">`)
-      .replace(/<title>.*?<\/title>/, `<title>${escapeHtml(page.title)}</title>`)
-      .replace(/(<meta name="description"\s+content=")([^"]*)("\s*\/?>)/i, `$1${escapeHtml(description)}$3`)
-      .replace(/(<link rel="canonical" href=")([^"]*)("\s*\/?>)/i, `$1${canonical}$3`)
-      .replace(/(property="og:url"\s+content=")([^"]*)(")/gi, `$1${canonical}$3`)
-      .replace(/(property="og:title"\s+content=")([^"]*)(")/gi, `$1${escapeHtml(page.title)}$3`)
-      .replace(/(property="og:description"\s+content=")([^"]*)(")/gi, `$1${escapeHtml(description)}$3`)
-      .replace(/(property="twitter:url"\s+content=")([^"]*)(")/gi, `$1${canonical}$3`)
-      .replace(/(property="twitter:title"\s+content=")([^"]*)(")/gi, `$1${escapeHtml(page.title)}$3`)
-      .replace(/(property="twitter:description"\s+content=")([^"]*)(")/gi, `$1${escapeHtml(description)}$3`)
-      .replace('</head>', `<link rel="alternate" hreflang="${page.lang === 'es' ? 'ca' : 'es'}" href="${alternate}"><script type="application/ld+json">${JSON.stringify({ '@context':'https://schema.org', '@type':'ProfessionalService', name:'Àlex Casanova · Diseño web', url:canonical, areaServed:['ES','Catalunya'], priceRange:'€€' })}</script></head>`)
-      .replace('<div id="app"></div>', `<div id="app"><main><h1>${escapeHtml(page.heading)}</h1><p>${escapeHtml(body)}</p></main></div>`)
+    html = renderSeoHtml(html, path, basePrice)
     res.setHeader('Content-Type', 'text/html; charset=utf-8')
     res.setHeader('Cache-Control', 's-maxage=300, stale-while-revalidate=86400')
     return res.status(200).send(html)
