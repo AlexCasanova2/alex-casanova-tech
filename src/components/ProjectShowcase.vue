@@ -1,5 +1,6 @@
 <script setup>
 import { computed, onMounted, onUnmounted, ref } from 'vue'
+import { ArrowUpRight } from '@lucide/vue'
 import { useI18n } from 'vue-i18n'
 
 const props = defineProps({ project:{ type:Object, required:true }, index:{ type:Number, default:0 }, immersive:{ type:Boolean, default:false } })
@@ -54,14 +55,14 @@ onUnmounted(() => {
     <header class="work-heading">
       <span class="work-index">{{ labels.project }} {{ String(index + 1).padStart(2, '0') }}</span>
       <h2><router-link :to="path">{{ project.title }}</router-link></h2>
-      <span class="work-arrow" aria-hidden="true">↗</span>
+      <ArrowUpRight class="work-arrow" :size="24" aria-hidden="true" />
     </header>
     <router-link :to="path" class="work-link" :aria-label="`${labels.view}: ${project.title}`">
       <div ref="frame" class="work-frame" @pointermove="onPointerMove" @pointerleave="resetPointer">
         <img v-if="project.image && !imageFailed" :src="project.image" :alt="project.title" :loading="index === 0 ? 'eager' : 'lazy'" :fetchpriority="index === 0 ? 'high' : 'auto'" decoding="async" @error="imageFailed = true">
         <span v-else class="image-fallback">{{ project.title }}</span>
         <span v-if="immersive" class="image-shade" aria-hidden="true"></span>
-        <span class="work-action">{{ labels.view }} <span aria-hidden="true">↗</span></span>
+        <span class="work-action">{{ labels.view }} <span aria-hidden="true"><ArrowUpRight :size="20" /></span></span>
       </div>
     </router-link>
     <footer class="work-meta"><p>{{ metadata.join(' · ') }}</p><span>{{ String(index + 1).padStart(2, '0') }} / AC</span></footer>

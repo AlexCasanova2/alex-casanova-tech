@@ -1,5 +1,6 @@
 <script setup>
 import { computed, onMounted, ref } from 'vue'
+import { ArrowRight, ArrowUpRight } from '@lucide/vue'
 import { useRoute } from 'vue-router'
 import { defaultLeadPricing } from '../config/leadPricing'
 import { leadPageCopy } from '../config/leadPages'
@@ -31,7 +32,7 @@ onMounted(async () => {
         <span class="eyebrow">{{ copy.eyebrow }}</span>
         <h1>{{ copy.title }}</h1>
         <p>{{ copy.intro }}</p>
-        <div class="actions"><router-link :to="budgetPath" class="btn btn-primary">{{ copy.cta }} <span>↗</span></router-link><router-link v-if="page === 'service'" :to="pricePath" class="text-link">{{ copy.secondary }} →</router-link></div>
+        <div class="actions"><router-link :to="budgetPath" class="btn btn-primary">{{ copy.cta }} <span aria-hidden="true"><ArrowUpRight :size="18" /></span></router-link><router-link v-if="page === 'service'" :to="pricePath" class="text-link">{{ copy.secondary }} <ArrowRight :size="18" aria-hidden="true" /></router-link></div>
       </div>
       <aside v-if="page === 'service'" class="proof"><strong>150+</strong><span>{{ lang === 'ca' ? 'projectes' : 'proyectos' }}</span><p>{{ copy.proof }}</p></aside>
       <aside v-else class="price-stamp"><span>{{ copy.base }}</span><strong>{{ money(pricing.basePrice) }}</strong><small>+ IVA</small></aside>
@@ -40,11 +41,11 @@ onMounted(async () => {
     <template v-if="page === 'service'">
       <section class="container lead-section"><h2>{{ copy.section }}</h2><div class="service-grid"><article v-for="card in copy.cards" :key="card[0]"><span>{{ card[0] }}</span><h3>{{ card[1] }}</h3><p>{{ card[2] }}</p></article></div></section>
       <section class="process-band"><div class="container process-grid"><h2>{{ copy.processTitle }}</h2><ol><li v-for="(item,index) in copy.process" :key="item"><span>0{{ index + 1 }}</span>{{ item }}</li></ol></div></section>
-      <section class="container final-cta"><span>{{ money(pricing.basePrice) }} + IVA</span><h2>{{ copy.final }}</h2><p>{{ copy.finalText }}</p><router-link :to="budgetPath" class="btn btn-primary">{{ copy.cta }} →</router-link></section>
+      <section class="container final-cta"><span>{{ money(pricing.basePrice) }} + IVA</span><h2>{{ copy.final }}</h2><p>{{ copy.finalText }}</p><router-link :to="budgetPath" class="btn btn-primary">{{ copy.cta }} <ArrowRight :size="18" aria-hidden="true" /></router-link></section>
     </template>
     <template v-else>
       <section class="container pricing-layout"><div class="included"><span class="eyebrow">BASE / {{ money(pricing.basePrice) }}</span><h2>{{ copy.included }}</h2><ul><li v-for="item in copy.includedItems" :key="item">{{ item }}<span>{{ lang === 'ca' ? 'Inclòs' : 'Incluido' }}</span></li></ul></div><div class="price-factors"><h2>{{ copy.factors }}</h2><article v-for="(factor,index) in copy.factorItems" :key="factor[0]"><span>0{{ index + 1 }}</span><div><h3>{{ factor[0] }}</h3><p>{{ factor[1] }}</p></div></article><p class="price-note">{{ copy.note }}</p></div></section>
-      <section class="container final-cta"><span>{{ money(pricing.basePrice) }} + IVA</span><h2>{{ copy.cta }}</h2><router-link :to="budgetPath" class="btn btn-primary">{{ copy.cta }} →</router-link></section>
+      <section class="container final-cta"><span>{{ money(pricing.basePrice) }} + IVA</span><h2>{{ copy.cta }}</h2><router-link :to="budgetPath" class="btn btn-primary">{{ copy.cta }} <ArrowRight :size="18" aria-hidden="true" /></router-link></section>
     </template>
   </main>
 </template>
@@ -117,4 +118,5 @@ onMounted(async () => {
   .included li { font-size: .9rem; }
 }
 .lead-page{--signal:#ff785a}.hero-index,.lead-page .eyebrow,.process-grid li>span,.service-grid article>span{font-family:inherit;font-weight:600}.service-grid article{transition:background .25s,padding .25s}.service-grid article:hover{background:var(--bg-secondary)}.included{background:var(--text-primary);color:var(--bg-color);border-radius:0}.included h2,.included .eyebrow{color:var(--bg-color)}.process-band{background:var(--bg-secondary);color:var(--text-primary);border-block:1px solid var(--border-color)}.process-band h2,.process-band li{color:var(--text-primary)}.process-grid li{border-color:var(--border-color)}.process-grid li>span{color:var(--signal)}.final-cta>span{background:var(--signal)}
+.text-link { display: inline-flex; align-items: center; gap: 8px; }
 </style>

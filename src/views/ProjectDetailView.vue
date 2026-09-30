@@ -1,5 +1,6 @@
 <script setup>
 import { computed, ref, onMounted, watch } from 'vue'
+import { ArrowUpRight } from '@lucide/vue'
 import { useRoute } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { supabase } from '../config/supabase'
@@ -96,7 +97,7 @@ watch(() => route.params.id, async (projectId, _, onCleanup) => {
       </div>
 
       <div class="project-actions" v-if="project.url" style="margin-top: 32px;">
-        <a :href="project.url" target="_blank" rel="noopener noreferrer" class="btn btn-primary">{{ t('project.live') }}</a>
+        <a :href="project.url" target="_blank" rel="noopener noreferrer" class="btn btn-primary">{{ t('project.live') }} <ArrowUpRight :size="18" aria-hidden="true" /></a>
       </div>
     </div>
 
@@ -123,7 +124,7 @@ watch(() => route.params.id, async (projectId, _, onCleanup) => {
     </div>
 
     <router-link v-if="nextProject" :to="`/project/${nextProject.slug || nextProject.id}`" class="next-case">
-      <div class="next-case-label"><span>{{ locale === 'ca' ? 'Següent projecte' : locale === 'en' ? 'Next project' : 'Siguiente proyecto' }}</span><span aria-hidden="true">↗</span></div>
+      <div class="next-case-label"><span>{{ locale === 'ca' ? 'Següent projecte' : locale === 'en' ? 'Next project' : 'Siguiente proyecto' }}</span><ArrowUpRight :size="20" aria-hidden="true" /></div>
       <h2>{{ nextProject.title }}</h2>
       <div v-if="nextProject.image" class="next-case-image"><img :src="nextProject.image" :alt="nextProject.title" loading="lazy"></div>
     </router-link>

@@ -1,5 +1,6 @@
 <script setup>
 import { computed, ref, onMounted, watch } from 'vue'
+import { ArrowDown, ArrowUp } from '@lucide/vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { supabase } from '../config/supabase'
@@ -617,8 +618,8 @@ const submitProject = async () => {
                 <div class="list-info"><h4>{{ project.title }}</h4><span>{{ project.category }}</span></div>
                 <div class="slider-row-actions">
                   <div class="slider-order-actions">
-                    <button type="button" class="order-btn" :disabled="index === 0" :aria-label="t('admin.moveUp')" @click="moveHomepageProject(index, 'up')">↑</button>
-                    <button type="button" class="order-btn" :disabled="index === homepageProjects.length - 1" :aria-label="t('admin.moveDown')" @click="moveHomepageProject(index, 'down')">↓</button>
+                    <button type="button" class="order-btn" :disabled="index === 0" :aria-label="t('admin.moveUp')" @click="moveHomepageProject(index, 'up')"><ArrowUp :size="18" aria-hidden="true" /></button>
+                    <button type="button" class="order-btn" :disabled="index === homepageProjects.length - 1" :aria-label="t('admin.moveDown')" @click="moveHomepageProject(index, 'down')"><ArrowDown :size="18" aria-hidden="true" /></button>
                   </div>
                   <button type="button" class="btn-small secondary" :disabled="homepageBusy.includes(project.id)" @click="setHomepageVisibility(project, false)">{{ homepageCopy.remove }}</button>
                 </div>

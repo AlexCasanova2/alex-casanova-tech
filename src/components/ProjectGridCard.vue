@@ -1,12 +1,13 @@
 <script setup>
 import { computed } from 'vue'
+import { ArrowUpRight } from '@lucide/vue'
 const props = defineProps({ project:{ type:Object, required:true }, index:{ type:Number, default:0 } })
 const path = computed(() => `/project/${props.project.slug || props.project.id}`)
 const metadata = computed(() => [...new Set([props.project.category, ...(props.project.tags || [])].filter(Boolean))].slice(0,4).join(' · '))
 </script>
 <template>
   <router-link :to="path" class="grid-project">
-    <div class="grid-image"><img v-if="project.image" :src="project.image" :alt="project.title" loading="lazy"><span v-else>{{ project.title }}</span><i aria-hidden="true">↗</i></div>
+    <div class="grid-image"><img v-if="project.image" :src="project.image" :alt="project.title" loading="lazy"><span v-else>{{ project.title }}</span><i aria-hidden="true"><ArrowUpRight :size="20" /></i></div>
     <div class="grid-copy"><span>{{ String(index + 1).padStart(2,'0') }}</span><div><h2>{{ project.title }}</h2><p>{{ metadata }}</p></div></div>
   </router-link>
 </template>

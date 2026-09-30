@@ -1,5 +1,6 @@
 <script setup>
 import { computed, onMounted, ref, watch } from 'vue'
+import { ArrowLeft } from '@lucide/vue'
 import { useI18n } from 'vue-i18n'
 import { supabase } from '../../config/supabase'
 import { calculateLineTotal, calculateQuoteTotals, formatCurrency } from '../../utils/quoteCalculations'
@@ -234,7 +235,7 @@ onMounted(fetchData)
     </template>
 
     <template v-else>
-      <header class="editor-header"><button type="button" class="back-button" @click="mode='list'">← {{ c.back }}</button><div class="document-id"><span>{{ form.quote_number || c.draft }}</span><small>{{ form.client_snapshot?.name || c.choose }}</small></div><div class="editor-actions"><button v-if="form.id" type="button" class="button-outline" :disabled="isGenerating" @click="downloadPdf(form)">{{ c.download }}</button><button type="submit" form="quote-editor" class="btn btn-primary" :disabled="isSaving">{{ isSaving?c.saving:c.save }}</button></div></header>
+      <header class="editor-header"><button type="button" class="back-button" @click="mode='list'"><ArrowLeft :size="16" aria-hidden="true" /> {{ c.back }}</button><div class="document-id"><span>{{ form.quote_number || c.draft }}</span><small>{{ form.client_snapshot?.name || c.choose }}</small></div><div class="editor-actions"><button v-if="form.id" type="button" class="button-outline" :disabled="isGenerating" @click="downloadPdf(form)">{{ c.download }}</button><button type="submit" form="quote-editor" class="btn btn-primary" :disabled="isSaving">{{ isSaving?c.saving:c.save }}</button></div></header>
       <div v-if="successMessage" class="notice success">{{ successMessage }}</div><div v-if="errorMessage" class="notice error">{{ errorMessage }}</div>
       <form id="quote-editor" class="workbench" novalidate @submit.prevent="saveQuote">
         <div class="side-card pricing-card">
@@ -456,4 +457,5 @@ onMounted(fetchData)
 .preset-card.is-added{opacity:.75;cursor:default;border-style:dashed}
 .preset-card.is-added:hover{transform:none;border-color:var(--border-color)}
 .preset-card.is-added .preset-add{color:var(--text-secondary)}
+.back-button { display: inline-flex; align-items: center; gap: 8px; }
 </style>

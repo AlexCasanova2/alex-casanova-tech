@@ -87,8 +87,8 @@ const messages = {
       moveDown: 'Bajar prioridad'
     },
     project: {
-      live: 'Ver Proyecto ↗',
-      back: '← Volver a trabajos',
+      live: 'Ver Proyecto',
+      back: 'Volver a trabajos',
       loading: 'Cargando detalles del proyecto...',
       notFound: 'Proyecto no encontrado.',
       backArchive: 'Volver al archivo',
@@ -189,8 +189,8 @@ const messages = {
       moveDown: 'Move Down'
     },
     project: {
-      live: 'Live Project ↗',
-      back: '← Back to work',
+      live: 'Live Project',
+      back: 'Back to work',
       loading: 'Loading project details...',
       notFound: 'Project not found.',
       backArchive: 'Back to archive',
@@ -291,8 +291,8 @@ const messages = {
       moveDown: 'Baixar prioritat'
     },
     project: {
-      live: 'Veure Projecte ↗',
-      back: '← Tornar a treballs',
+      live: 'Veure Projecte',
+      back: 'Tornar a treballs',
       loading: 'Carregant detalls del projecte...',
       notFound: 'Projecte no trobat.',
       backArchive: 'Tornar a l\'arxiu',
