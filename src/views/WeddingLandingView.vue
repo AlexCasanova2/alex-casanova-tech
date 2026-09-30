@@ -29,26 +29,24 @@ onUnmounted(() => revealObserver?.disconnect())
 
 <template>
   <main ref="page" class="wedding-page">
-    <section class="wedding-hero container">
-      <div class="hero-copy">
-        <span class="eyebrow">WEBS PARA BODAS · INVITACIONES DIGITALES</span>
-        <h1>{{ weddingLanding.heading }}</h1>
-        <p class="hero-intro">{{ weddingLanding.intro }}</p>
-        <p class="hero-detail">Una web de boda personalizada para contar vuestra historia, organizar el gran día y reunir a las personas que lo hacen especial.</p>
-        <div class="hero-actions">
-          <router-link :to="contactPath" class="wedding-button">Hablemos de vuestra boda <span aria-hidden="true">↗</span></router-link>
-          <a href="#que-incluye" class="underlined-link">Descubrid qué puede incluir <span aria-hidden="true">↓</span></a>
+    <section class="wedding-hero">
+      <div class="hero-media" aria-hidden="true">
+        <img src="/images/wedding-hero.jpg" alt="" width="2000" height="1333" fetchpriority="high" decoding="async">
+      </div>
+      <div class="container hero-layout">
+        <div class="hero-copy">
+          <span class="eyebrow">CASANOVA STUDIO / WEBS PARA BODAS</span>
+          <h1>{{ weddingLanding.heading }}</h1>
+          <p class="hero-intro">{{ weddingLanding.intro }}</p>
+          <div class="hero-actions">
+            <router-link :to="contactPath" class="wedding-button">Hablemos de vuestra boda <span aria-hidden="true">↗</span></router-link>
+            <a href="#que-incluye" class="underlined-link">Descubrid la experiencia <span aria-hidden="true">↓</span></a>
+          </div>
         </div>
       </div>
-      <div class="invitation-preview" aria-hidden="true">
-        <div class="invitation-sheet">
-          <span class="invitation-kicker">CASANOVA STUDIO <span>·</span> BODAS</span>
-          <span class="invitation-folio">01 — EL COMIENZO</span>
-          <span class="invitation-title">Una historia<br>para recordar.</span>
-          <span class="invitation-rule"></span>
-          <span class="invitation-caption">Una invitación hecha para compartir</span>
-        </div>
-        <span class="preview-label">01 / UNA INVITACIÓN PERSONAL</span>
+      <div class="container hero-footer" aria-hidden="true">
+        <span>VUESTRA HISTORIA, EN UNA WEB ÚNICA</span>
+        <span>01 / INVITACIONES DIGITALES</span>
       </div>
     </section>
 
@@ -125,7 +123,7 @@ onUnmounted(() => revealObserver?.disconnect())
 }
 .wedding-page .container { max-width: 1200px; }
 .wedding-page h1, .wedding-page h2, .wedding-page h3 { color: inherit; }
-.eyebrow, .section-index, .feature-number, .preview-label {
+.eyebrow, .section-index, .feature-number {
   font-size: .65rem;
   font-weight: 600;
   letter-spacing: .16em;
@@ -133,24 +131,37 @@ onUnmounted(() => revealObserver?.disconnect())
 }
 .eyebrow, .section-index, .feature-number { color: var(--wedding-muted); }
 .wedding-hero {
-  display: grid;
-  grid-template-columns: minmax(0, 1.1fr) minmax(330px, .9fr);
-  gap: clamp(44px, 8vw, 124px);
-  align-items: center;
-  min-height: 740px;
-  padding-block: clamp(76px, 8vw, 120px);
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  min-height: min(830px, calc(100svh - 71px));
+  overflow: hidden;
+  isolation: isolate;
+  background: #2e3530;
+  color: #faf8f3;
 }
+.hero-media, .hero-media::after, .hero-media img { position: absolute; inset: 0; width: 100%; height: 100%; }
+.hero-media { z-index: -1; }
+/* Foto: https://images.unsplash.com/photo-1532712938310-34cb3982ef74 (licencia Unsplash). */
+.hero-media img { object-fit: cover; object-position: center 59%; }
+.hero-media::after {
+  content: '';
+  background: linear-gradient(90deg, rgb(20 27 24 / 88%) 0%, rgb(20 27 24 / 71%) 36%, rgb(20 27 24 / 32%) 70%, rgb(20 27 24 / 10%) 100%), linear-gradient(0deg, rgb(20 27 24 / 35%), transparent 35%);
+}
+.hero-layout { display: flex; align-items: center; width: 100%; flex: 1; padding-block: clamp(72px, 10vw, 125px); }
 .hero-copy { animation: wedding-enter .85s ease-out both; }
+.hero-copy .eyebrow { color: #e9e3d7; }
 .hero-copy h1 {
-  max-width: 750px;
-  font: normal clamp(3.15rem, 5.1vw, 5.2rem)/1.07 Georgia, 'Times New Roman', serif;
-  letter-spacing: -.055em;
-  margin: 29px 0 30px;
+  max-width: 720px;
+  font: normal clamp(3.3rem, 5.3vw, 5.5rem)/1.05 Georgia, 'Times New Roman', serif;
+  letter-spacing: -.05em;
+  margin: 30px 0 28px;
   text-wrap: balance;
 }
-.hero-intro { max-width: 580px; color: var(--wedding-ink); font-size: clamp(1.08rem, 1.55vw, 1.35rem); line-height: 1.6; }
-.hero-detail { max-width: 530px; margin-top: 18px; color: var(--wedding-muted); font-size: .92rem; line-height: 1.8; }
-.hero-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 28px; margin-top: 34px; }
+.hero-intro { max-width: 530px; color: #f4eee4; font-size: clamp(1.12rem, 1.55vw, 1.4rem); line-height: 1.6; }
+.hero-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 30px; margin-top: 40px; }
+.hero-footer { display: flex; justify-content: space-between; width: 100%; padding-block: 22px 28px; border-top: 1px solid rgb(255 255 255 / 48%); color: #f4eee4; font-size: .62rem; font-weight: 600; letter-spacing: .17em; }
 .wedding-button {
   display: inline-flex;
   align-items: center;
@@ -165,28 +176,12 @@ onUnmounted(() => revealObserver?.disconnect())
   border-radius: 0;
 }
 .wedding-button:hover { background: #44463f; color: #fff; }
+.wedding-hero .wedding-button { background: #f5efe5; color: #272925; }
+.wedding-hero .wedding-button:hover { background: #fff; color: #272925; }
 .wedding-button span, .underlined-link span { transition: transform .25s ease; }
 .wedding-button:hover span, .underlined-link:hover span { transform: translate(3px, -3px); }
 .underlined-link { display: inline-flex; align-items: center; gap: 12px; padding-block: 9px; border-bottom: 1px solid currentColor; color: var(--wedding-ink); font-size: .8rem; font-weight: 600; }
-.invitation-preview { position: relative; padding: 14px; border: 1px solid var(--wedding-line); background: url('/images/paper-grain.svg') repeat, #f4f0e8; box-shadow: 0 28px 65px -46px #615a50; animation: wedding-enter .95s .15s ease-out both; }
-.invitation-sheet {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  min-height: 495px;
-  padding: clamp(30px, 4vw, 48px);
-  border: 1px solid var(--wedding-line);
-  background: url('/images/paper-grain.svg') repeat, var(--wedding-background);
-  color: var(--wedding-ink);
-  text-align: left;
-}
-.invitation-kicker, .invitation-folio, .invitation-caption { font-size: .59rem; letter-spacing: .16em; line-height: 1.8; }
-.invitation-kicker span { padding-inline: 5px; }
-.invitation-folio { margin-top: auto; color: var(--wedding-muted); }
-.invitation-title { margin-top: 18px; font: italic clamp(2.9rem, 5vw, 4.6rem)/1.07 Georgia, 'Times New Roman', serif; letter-spacing: -.05em; }
-.invitation-rule { width: 100%; height: 1px; margin: 33px 0 17px; background: var(--wedding-line); }
-.invitation-caption { color: var(--wedding-muted); }
-.preview-label { position: absolute; right: 0; bottom: -24px; color: var(--wedding-muted); font-size: .56rem; }
+.wedding-hero .underlined-link { color: #fff; }
 .intro-band {
   padding-block: clamp(68px, 9vw, 125px);
   background: linear-gradient(90deg, #eee9df 0%, rgb(238 233 223 / 95%) 58%, rgb(238 233 223 / 69%) 100%), url('/images/wedding-details.jpg') right 44% / auto 115% no-repeat, var(--wedding-paper);
@@ -243,13 +238,13 @@ onUnmounted(() => revealObserver?.disconnect())
   to { opacity: 1; transform: translateY(0); }
 }
 @media (prefers-reduced-motion: reduce) {
-  .hero-copy, .invitation-preview { animation: none; }
+  .hero-copy { animation: none; }
   .wedding-button span, .underlined-link span, .reveal-ready.is-visible { transition: none; }
   .reveal-ready { opacity: 1; transform: none; }
 }
 @media (max-width: 900px) {
-  .wedding-hero { grid-template-columns: 1fr; min-height: auto; }
-  .invitation-preview { max-width: 600px; width: 100%; margin-inline: auto; }
+  .wedding-hero { min-height: 730px; }
+  .hero-media img { object-position: 57% center; }
   .intro-layout { grid-template-columns: 1fr; gap: 20px; }
   .features-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .feature-card { padding-left: 0 !important; padding-right: 20px; border-right: 0 !important; }
@@ -260,13 +255,15 @@ onUnmounted(() => revealObserver?.disconnect())
 }
 @media (max-width: 600px) {
   .intro-band { background: linear-gradient(90deg, rgb(238 233 223 / 94%), rgb(238 233 223 / 85%)), url('/images/wedding-details.jpg') center / cover no-repeat; }
-  .wedding-hero { padding-block: 60px 80px; gap: 55px; }
-  .hero-copy h1 { font-size: clamp(2.85rem, 12vw, 4.5rem); }
+  .wedding-hero { min-height: min(880px, calc(100svh - 61px)); }
+  .hero-media img { object-position: 51% center; }
+  .hero-media::after { background: linear-gradient(180deg, rgb(20 27 24 / 84%) 0%, rgb(20 27 24 / 68%) 45%, rgb(20 27 24 / 18%) 85%, rgb(20 27 24 / 44%) 100%); }
+  .hero-layout { align-items: flex-start; padding-block: clamp(62px, 10vh, 100px) 50px; }
+  .hero-copy h1 { font-size: clamp(2.85rem, 11.5vw, 4.5rem); }
   .hero-actions { align-items: stretch; flex-direction: column; }
   .wedding-button { width: 100%; }
-  .invitation-preview { padding: 15px; }
-  .invitation-sheet { min-height: 390px; }
-  .preview-label { right: 15px; }
+  .hero-footer { padding-block: 16px 20px; font-size: .52rem; }
+  .hero-footer span:last-child { display: none; }
   .features-grid { grid-template-columns: 1fr; }
   .feature-card, .feature-card:nth-child(odd), .feature-card:nth-child(even) { min-height: 0; padding: 24px 0 30px !important; border-right: 0 !important; }
   .feature-card h3 { margin-top: 24px; }
