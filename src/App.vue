@@ -173,6 +173,7 @@ onUnmounted(() => {
           <router-link to="/">{{ t('nav.work') }}</router-link>
           <router-link to="/projects">{{ t('nav.archive') }}</router-link>
           <router-link :to="servicePath">{{ commercialLabels.service }}</router-link>
+          <router-link :to="weddingFooter.path" class="nav-wedding">{{ weddingFooter.labels.nav }}</router-link>
           <router-link :to="budgetPath" class="nav-budget">{{ commercialLabels.budget }}</router-link>
           <router-link to="/contact">{{ t('nav.contact') }}</router-link>
           
@@ -434,7 +435,7 @@ onUnmounted(() => {
 .menu-toggle{display:none}
 .footer-content{text-align:center;gap:16px}
 .social-links a{display:inline-flex;align-items:center;min-height:44px}
-@media(max-width:899px){
+@media(max-width:939px){
   .navbar{padding:8px 0}
   .menu-toggle{display:inline-flex;align-items:center;justify-content:center;gap:10px;min-height:44px;padding:8px 12px;border:1px solid var(--border-color);border-radius:100px;background:var(--bg-secondary);color:var(--text-primary);font:inherit;cursor:pointer}
   .nav-links{display:none;width:100%;flex-basis:100%;padding:8px 0;gap:4px;max-height:calc(100dvh - 84px);overflow-y:auto;overscroll-behavior:contain}
@@ -444,7 +445,7 @@ onUnmounted(() => {
   .nav-actions{justify-content:space-between;gap:4px;padding:12px 0 0;margin:8px 0 0;border-left:0;border-top:1px solid var(--border-color)}
   .footer{padding:28px 0}
 }
-@media(min-width:900px){.nav-content{flex-wrap:nowrap}.nav-actions{flex-wrap:nowrap}.footer-content{text-align:left}}
+@media(min-width:940px){.nav-content{flex-wrap:nowrap}.nav-actions{flex-wrap:nowrap}.footer-content{text-align:left}}
 .navbar.wedding-overlay {
   position: fixed;
   top: 0;

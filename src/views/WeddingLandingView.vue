@@ -1,5 +1,6 @@
 <script setup>
 import { computed, onMounted, onUnmounted, ref } from 'vue'
+import { ArrowDown, ArrowUpRight } from '@lucide/vue'
 import { useRoute } from 'vue-router'
 import LeadContactForm from '../components/LeadContactForm.vue'
 import { weddingLandings } from '../config/weddingLanding'
@@ -42,8 +43,8 @@ onUnmounted(() => revealObserver?.disconnect())
           <h1>{{ weddingLanding.heading }}</h1>
           <p class="hero-intro">{{ weddingLanding.intro }}</p>
           <div class="hero-actions">
-            <a href="#contacto-bodas" class="wedding-button">{{ weddingLanding.labels.contact }} <span aria-hidden="true">↗</span></a>
-            <a href="#que-incluye" class="underlined-link">{{ weddingLanding.labels.discover }} <span aria-hidden="true">↓</span></a>
+            <a href="#contacto-bodas" class="wedding-button">{{ weddingLanding.labels.contact }} <span aria-hidden="true"><ArrowUpRight :size="18" :stroke-width="1.7" /></span></a>
+            <a href="#que-incluye" class="underlined-link">{{ weddingLanding.labels.discover }} <span aria-hidden="true"><ArrowDown :size="18" :stroke-width="1.7" /></span></a>
           </div>
         </div>
       </div>
@@ -84,12 +85,12 @@ onUnmounted(() => revealObserver?.disconnect())
           <span class="section-index">{{ weddingLanding.labels.exampleIndex }}</span>
           <h2 id="example-title">{{ weddingLanding.example.title }}</h2>
           <p>{{ weddingLanding.example.description }}</p>
-          <a :href="weddingLanding.example.url" class="underlined-link" target="_blank" rel="noopener noreferrer" :aria-label="weddingLanding.labels.exampleLinkLabel">{{ weddingLanding.labels.exampleLink }} <span aria-hidden="true">↗</span></a>
+          <a :href="weddingLanding.example.url" class="underlined-link" target="_blank" rel="noopener noreferrer" :aria-label="weddingLanding.labels.exampleLinkLabel">{{ weddingLanding.labels.exampleLink }} <span aria-hidden="true"><ArrowUpRight :size="18" :stroke-width="1.7" /></span></a>
           <small>{{ weddingLanding.example.note }}</small>
         </div>
         <a :href="weddingLanding.example.url" class="example-preview" target="_blank" rel="noopener noreferrer" :aria-label="weddingLanding.labels.exampleImageLabel">
           <img src="/images/wedding-demo-clara-mateo.jpg" :alt="weddingLanding.labels.exampleImageAlt" width="1500" height="937" loading="lazy" decoding="async">
-          <span aria-hidden="true">CLARA &amp; MATEO <span>↗</span></span>
+          <span aria-hidden="true">CLARA &amp; MATEO <ArrowUpRight :size="16" :stroke-width="1.7" /></span>
         </a>
       </div>
     </section>
@@ -101,7 +102,7 @@ onUnmounted(() => revealObserver?.disconnect())
           <span class="section-index">{{ weddingLanding.labels.storyIndex }}</span>
           <h2>{{ weddingLanding.labels.storyTitle }}</h2>
           <p>{{ weddingLanding.labels.storyText }}</p>
-          <a href="#contacto-bodas" class="underlined-link">{{ weddingLanding.labels.storyLink }} <span aria-hidden="true">↗</span></a>
+          <a href="#contacto-bodas" class="underlined-link">{{ weddingLanding.labels.storyLink }} <span aria-hidden="true"><ArrowUpRight :size="18" :stroke-width="1.7" /></span></a>
         </div>
       </div>
     </section>
@@ -199,7 +200,7 @@ onUnmounted(() => revealObserver?.disconnect())
 .wedding-button:hover { background: #44463f; color: #fff; }
 .wedding-hero .wedding-button { background: #f5efe5; color: #272925; }
 .wedding-hero .wedding-button:hover { background: #fff; color: #272925; }
-.wedding-button span, .underlined-link span { transition: transform .5s ease; }
+.wedding-button span, .underlined-link span { display: inline-flex; transition: transform .5s ease; }
 .wedding-button:hover span, .underlined-link:hover span { transform: translate(3px, -3px); }
 .underlined-link { display: inline-flex; align-items: center; gap: 12px; padding-block: 9px; border-bottom: 1px solid currentColor; color: var(--wedding-ink); font-size: .8rem; font-weight: 600; }
 .wedding-hero .underlined-link { color: #fff; }
