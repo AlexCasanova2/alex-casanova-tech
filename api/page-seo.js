@@ -27,7 +27,7 @@ export function renderSeoHtml(html, path, basePrice = 700) {
   const weddingContent = page.wedding
     ? `<section><h2>Una invitación digital para vuestra boda</h2><p>${escapeHtml(page.body)}</p></section><section><h2>¿Qué puede incluir vuestra web de boda?</h2>${weddingLanding.features.map(feature => `<article><h3>${escapeHtml(feature.title)}</h3><p>${escapeHtml(feature.text)}</p></article>`).join('')}</section><section><h2>Preguntas frecuentes sobre webs para bodas</h2>${weddingLanding.faqs.map(faq => `<article><h3>${escapeHtml(faq.question)}</h3><p>${escapeHtml(faq.answer)}</p></article>`).join('')}</section><p><a href="/contact?utm_source=web-bodas">Hablemos de vuestra boda</a></p>`
     : `<p>${escapeHtml(body)}</p>`
-  return html.replace('<html lang="es">', `<html lang="${page.lang}">`)
+  return html.replace('<html lang="es">', `<html lang="${page.lang}"${page.wedding ? ' data-theme="light"' : ''}>`)
     .replace(/<title>.*?<\/title>/, `<title>${escapeHtml(page.title)}</title>`)
     .replace(/(<meta name="title"\s+content=")([^"]*)("\s*\/?>)/i, `$1${escapeHtml(page.title)}$3`)
     .replace(/(<meta name="description"\s+content=")([^"]*)("\s*\/?>)/i, `$1${escapeHtml(description)}$3`)

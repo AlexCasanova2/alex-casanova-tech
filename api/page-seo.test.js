@@ -13,6 +13,7 @@ describe('commercial page SEO', () => {
   it('renders the wedding landing with a canonical, description, full crawlable content and service schema', () => {
     const result = renderSeoHtml(html, '/es/web-para-bodas')
     expect(result).toContain(`<title>${weddingLanding.title}</title>`)
+    expect(result).toContain('<html lang="es" data-theme="light">')
     expect(result).toContain(`content="${weddingLanding.description}"`)
     expect(result).toContain('rel="canonical" href="https://alexcasanova.es/es/web-para-bodas"')
     expect(result).toContain(`property="og:url" content="https://alexcasanova.es/es/web-para-bodas"`)

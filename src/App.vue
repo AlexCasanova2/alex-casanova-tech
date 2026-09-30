@@ -15,6 +15,10 @@ const menuOpen = ref(false)
 const menuButton = ref(null)
 const isScrolled = ref(false)
 const isHome = computed(() => route.name === 'home')
+const isWeddingPage = computed(() => route.name === 'wedding-web-es')
+watch([isWeddingPage, isDarkMode], () => {
+  document.documentElement.setAttribute('data-theme', isWeddingPage.value ? 'light' : isDarkMode.value ? 'dark' : 'light')
+}, { immediate:true })
 const updateHeader = () => { isScrolled.value = window.scrollY > Math.max(80, window.innerHeight * .72) }
 const closeMenu = () => {
   if (!menuOpen.value) return
@@ -25,7 +29,6 @@ const closeMenu = () => {
 const toggleTheme = () => {
   isDarkMode.value = !isDarkMode.value
   const theme = isDarkMode.value ? 'dark' : 'light'
-  document.documentElement.setAttribute('data-theme', theme)
   localStorage.setItem('theme', theme)
 }
 
@@ -117,15 +120,9 @@ onMounted(() => {
   const savedTheme = localStorage.getItem('theme')
   if (savedTheme) {
     isDarkMode.value = savedTheme === 'dark'
-    document.documentElement.setAttribute('data-theme', savedTheme)
   } else {
-    // Set initial html lang attribute
-  document.documentElement.lang = locale.value
-
-  // Check system preference
     const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches
     isDarkMode.value = prefersDark
-    document.documentElement.setAttribute('data-theme', prefersDark ? 'dark' : 'light')
   }
 
   // Auth State Listener
@@ -181,7 +178,7 @@ onUnmounted(() => {
             </button>
 
             <!-- Theme Toggle -->
-            <button @click="toggleTheme" class="theme-toggle" :aria-label="isDarkMode ? 'Switch to light mode' : 'Switch to dark mode'">
+            <button v-if="!isWeddingPage" @click="toggleTheme" class="theme-toggle" :aria-label="isDarkMode ? 'Switch to light mode' : 'Switch to dark mode'">
               <svg v-if="isDarkMode" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.2 4.2l1.4 1.4M18.4 18.4l1.4 1.4M1 12h2M21 12h2M4.2 19.8l1.4-1.4M18.4 5.6l1.4-1.4"/></svg>
               <svg v-else xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
             </button>
