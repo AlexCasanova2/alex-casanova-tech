@@ -81,7 +81,7 @@ const updateGlobalSEO = () => {
       document.head.appendChild(metaDesc)
     }
     metaDesc.content = desc
-    const canonicalUrl = `https://alexcasanova.tech${route.path}`
+    const canonicalUrl = `https://alexcasanova.es${route.path}`
     const setMeta = (selector, attribute, content) => {
       const element = document.querySelector(selector)
       if (element) element.setAttribute(attribute, content)

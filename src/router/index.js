@@ -64,13 +64,13 @@ const router = createRouter({
             path: '/es/privacidad',
             name: 'privacy-es',
             component: () => import('../views/PrivacyView.vue'),
-            meta: { locale:'es', title:'Privacidad', description:'Información de privacidad de los formularios de alexcasanova.tech.', alternate:'/ca/privacitat' }
+            meta: { locale:'es', title:'Privacidad', description:'Información de privacidad de los formularios de alexcasanova.es.', alternate:'/ca/privacitat' }
         },
         {
             path: '/ca/privacitat',
             name: 'privacy-ca',
             component: () => import('../views/PrivacyView.vue'),
-            meta: { locale:'ca', title:'Privacitat', description:'Informació de privacitat dels formularis d’alexcasanova.tech.', alternate:'/es/privacidad' }
+            meta: { locale:'ca', title:'Privacitat', description:'Informació de privacitat dels formularis d’alexcasanova.es.', alternate:'/es/privacidad' }
         },
         {
             path: '/project/:id',

@@ -51,10 +51,14 @@ function rateLimited(req) {
   return recent.length > 8
 }
 
+export function isAllowedOrigin(origin) {
+  return !origin || /^https:\/\/(www\.)?alexcasanova\.es$/.test(origin) || /^https:\/\/[a-z0-9-]+\.vercel\.app$/.test(origin) || /^http:\/\/localhost:\d+$/.test(origin) || /^http:\/\/127\.0\.0\.1:\d+$/.test(origin)
+}
+
 async function sendNotification(lead, estimate) {
   if (!process.env.RESEND_API_KEY) return
-  const from = process.env.LEADS_FROM_EMAIL || 'Portfolio <leads@alexcasanova.tech>'
-  const ownerEmail = process.env.LEADS_NOTIFICATION_EMAIL || 'hola@alexcasanova.tech'
+  const from = process.env.LEADS_FROM_EMAIL || 'Portfolio <leads@alexcasanova.es>'
+  const ownerEmail = process.env.LEADS_NOTIFICATION_EMAIL || 'hola@alexcasanova.es'
   const amount = estimate.custom ? 'Valoración personalizada' : `${estimate.netMin}–${estimate.netMax} EUR + IVA`
   const text = `Nuevo lead: ${lead.name}\nEmail: ${lead.email}\nOrigen: ${lead.source}\nEstimación: ${amount}\n\n${lead.message || 'Sin mensaje adicional.'}`
   const confirmation = lead.language === 'ca'
@@ -73,7 +77,7 @@ export default async function handler(req, res) {
   res.setHeader('Cache-Control', 'no-store')
   try {
     const origin = req.headers.origin
-    if (origin && !/^https:\/\/(www\.)?alexcasanova\.tech$/.test(origin) && !/^https:\/\/[a-z0-9-]+\.vercel\.app$/.test(origin) && !/^http:\/\/localhost:\d+$/.test(origin) && !/^http:\/\/127\.0\.0\.1:\d+$/.test(origin)) return res.status(403).json({ error:'Origin not allowed' })
+    if (!isAllowedOrigin(origin)) return res.status(403).json({ error:'Origin not allowed' })
     const client = getServerClient()
     const ownerId = await resolveOwnerId(client)
     if (req.method === 'GET') {

@@ -29,8 +29,8 @@ export default async function handler(req, res) {
     const localizedPrice = new Intl.NumberFormat(page.lang === 'ca' ? 'ca-ES' : 'es-ES', { style:'currency', currency:'EUR', maximumFractionDigits:0 }).format(basePrice)
     const description = page.description.replace('700 €', localizedPrice)
     const body = page.body.replace('700 €', localizedPrice)
-    const canonical = `https://alexcasanova.tech${path}`
-    const alternate = `https://alexcasanova.tech${page.alternate}`
+    const canonical = `https://alexcasanova.es${path}`
+    const alternate = `https://alexcasanova.es${page.alternate}`
     html = html.replace('<html lang="es">', `<html lang="${page.lang}">`)
       .replace(/<title>.*?<\/title>/, `<title>${escapeHtml(page.title)}</title>`)
       .replace(/(<meta name="description"\s+content=")([^"]*)("\s*\/?>)/i, `$1${escapeHtml(description)}$3`)
