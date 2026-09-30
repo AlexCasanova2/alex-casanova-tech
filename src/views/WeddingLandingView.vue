@@ -1,11 +1,34 @@
 <script setup>
+import { onMounted, onUnmounted, ref } from 'vue'
 import { weddingLanding } from '../config/weddingLanding'
 
 const contactPath = '/contact?utm_source=web-bodas'
+const page = ref(null)
+let revealObserver
+
+onMounted(() => {
+  if (!('IntersectionObserver' in window) || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
+
+  revealObserver = new IntersectionObserver((entries) => {
+    entries.forEach((entry) => {
+      if (!entry.isIntersecting) return
+      entry.target.classList.add('is-visible')
+      revealObserver.unobserve(entry.target)
+    })
+  }, { threshold: .08, rootMargin: '0px 0px 40px 0px' })
+
+  page.value?.querySelectorAll('[data-reveal]').forEach((element) => {
+    if (element.getBoundingClientRect().top < window.innerHeight) return
+    element.classList.add('reveal-ready')
+    revealObserver.observe(element)
+  })
+})
+
+onUnmounted(() => revealObserver?.disconnect())
 </script>
 
 <template>
-  <main class="wedding-page">
+  <main ref="page" class="wedding-page">
     <section class="wedding-hero container">
       <div class="hero-copy">
         <span class="eyebrow">WEBS PARA BODAS · INVITACIONES DIGITALES</span>
@@ -30,7 +53,7 @@ const contactPath = '/contact?utm_source=web-bodas'
     </section>
 
     <section class="intro-band">
-      <div class="container intro-layout">
+      <div class="container intro-layout" data-reveal>
         <span class="section-index">01 / LA IDEA</span>
         <div>
           <h2>Una invitación digital que también es el lugar donde empieza vuestra boda.</h2>
@@ -40,13 +63,13 @@ const contactPath = '/contact?utm_source=web-bodas'
     </section>
 
     <section id="que-incluye" class="features-section container" aria-labelledby="features-title">
-      <div class="section-heading">
+      <div class="section-heading" data-reveal>
         <span class="section-index">02 / CADA DETALLE CUENTA</span>
         <h2 id="features-title">¿Qué puede incluir vuestra web de boda?</h2>
         <p>Una experiencia hecha a medida para acompañar a los invitados antes y durante la celebración.</p>
       </div>
       <div class="features-grid">
-        <article v-for="feature in weddingLanding.features" :key="feature.number" class="feature-card">
+        <article v-for="feature in weddingLanding.features" :key="feature.number" class="feature-card" data-reveal>
           <span class="feature-number">{{ feature.number }} / 06</span>
           <h3>{{ feature.title }}</h3>
           <p>{{ feature.text }}</p>
@@ -57,7 +80,7 @@ const contactPath = '/contact?utm_source=web-bodas'
     <section class="story-section">
       <div class="container story-layout">
         <div class="story-visual" aria-hidden="true"><span class="story-visual-label">ANTES DEL «SÍ, QUIERO»</span><span class="story-visual-quote">El día es vuestro.<br>La historia, de todos.</span></div>
-        <div class="story-copy">
+        <div class="story-copy" data-reveal>
           <span class="section-index">03 / DISEÑO A VUESTRA MEDIDA</span>
           <h2>Tan personal como vuestra historia.</h2>
           <p>Desde el primer mensaje hasta la última foto compartida, cada elemento puede adaptarse al estilo de vuestra celebración. Sin plantillas que os obliguen a encajar: primero escuchamos vuestra idea y después diseñamos la experiencia.</p>
@@ -67,11 +90,11 @@ const contactPath = '/contact?utm_source=web-bodas'
     </section>
 
     <section class="faq-section container" aria-labelledby="faq-title">
-      <div class="section-heading">
+      <div class="section-heading" data-reveal>
         <span class="section-index">04 / DUDAS HABITUALES</span>
         <h2 id="faq-title">Preguntas frecuentes sobre webs para bodas</h2>
       </div>
-      <div class="faq-list">
+      <div class="faq-list" data-reveal>
         <details v-for="faq in weddingLanding.faqs" :key="faq.question">
           <summary>{{ faq.question }} <span aria-hidden="true">+</span></summary>
           <p>{{ faq.answer }}</p>
@@ -80,7 +103,7 @@ const contactPath = '/contact?utm_source=web-bodas'
     </section>
 
     <section class="closing-section">
-      <div class="container closing-inner">
+      <div class="container closing-inner" data-reveal>
         <span class="section-index">VUESTRA HISTORIA EMPIEZA AQUÍ</span>
         <h2>Una web para compartir lo que viene.</h2>
         <p>Contadme cómo imagináis vuestra boda y diseñemos una invitación digital a la altura del momento.</p>
@@ -95,9 +118,9 @@ const contactPath = '/contact?utm_source=web-bodas'
   --wedding-ink: #272925;
   --wedding-muted: #686a64;
   --wedding-line: #d8d7d0;
-  --wedding-paper: #eeece6;
-  --wedding-background: #f9f8f5;
-  background: var(--wedding-background);
+  --wedding-paper: #eee9df;
+  --wedding-background: #faf8f3;
+  background: url('/images/paper-grain.svg') repeat, var(--wedding-background);
   color: var(--wedding-ink);
 }
 .wedding-page .container { max-width: 1200px; }
@@ -117,6 +140,7 @@ const contactPath = '/contact?utm_source=web-bodas'
   min-height: 740px;
   padding-block: clamp(76px, 8vw, 120px);
 }
+.hero-copy { animation: wedding-enter .85s ease-out both; }
 .hero-copy h1 {
   max-width: 750px;
   font: normal clamp(3.15rem, 5.1vw, 5.2rem)/1.07 Georgia, 'Times New Roman', serif;
@@ -141,8 +165,10 @@ const contactPath = '/contact?utm_source=web-bodas'
   border-radius: 0;
 }
 .wedding-button:hover { background: #44463f; color: #fff; }
+.wedding-button span, .underlined-link span { transition: transform .25s ease; }
+.wedding-button:hover span, .underlined-link:hover span { transform: translate(3px, -3px); }
 .underlined-link { display: inline-flex; align-items: center; gap: 12px; padding-block: 9px; border-bottom: 1px solid currentColor; color: var(--wedding-ink); font-size: .8rem; font-weight: 600; }
-.invitation-preview { position: relative; padding: 14px; border: 1px solid var(--wedding-line); background: #f4f2ed; }
+.invitation-preview { position: relative; padding: 14px; border: 1px solid var(--wedding-line); background: url('/images/paper-grain.svg') repeat, #f4f0e8; box-shadow: 0 28px 65px -46px #615a50; animation: wedding-enter .95s .15s ease-out both; }
 .invitation-sheet {
   display: flex;
   flex-direction: column;
@@ -150,7 +176,7 @@ const contactPath = '/contact?utm_source=web-bodas'
   min-height: 495px;
   padding: clamp(30px, 4vw, 48px);
   border: 1px solid var(--wedding-line);
-  background: var(--wedding-background);
+  background: url('/images/paper-grain.svg') repeat, var(--wedding-background);
   color: var(--wedding-ink);
   text-align: left;
 }
@@ -161,7 +187,10 @@ const contactPath = '/contact?utm_source=web-bodas'
 .invitation-rule { width: 100%; height: 1px; margin: 33px 0 17px; background: var(--wedding-line); }
 .invitation-caption { color: var(--wedding-muted); }
 .preview-label { position: absolute; right: 0; bottom: -24px; color: var(--wedding-muted); font-size: .56rem; }
-.intro-band { padding-block: clamp(68px, 9vw, 125px); background: var(--wedding-paper); }
+.intro-band {
+  padding-block: clamp(68px, 9vw, 125px);
+  background: linear-gradient(90deg, #eee9df 0%, rgb(238 233 223 / 95%) 58%, rgb(238 233 223 / 69%) 100%), url('/images/wedding-details.jpg') right 44% / auto 115% no-repeat, var(--wedding-paper);
+}
 .intro-layout { display: grid; grid-template-columns: minmax(150px, .32fr) minmax(0, 1fr); gap: 48px; }
 .intro-layout h2, .section-heading h2, .story-copy h2, .closing-inner h2 { font: normal clamp(2.15rem, 3.8vw, 3.8rem)/1.16 Georgia, 'Times New Roman', serif; letter-spacing: -.045em; text-wrap: balance; }
 .intro-layout h2 { max-width: 790px; }
@@ -172,16 +201,24 @@ const contactPath = '/contact?utm_source=web-bodas'
 .section-heading > p { max-width: 580px; margin-top: 20px; color: var(--wedding-muted); line-height: 1.7; font-size: .96rem; }
 .features-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); border-top: 1px solid var(--wedding-line); }
 .feature-card { display: flex; flex-direction: column; min-height: 245px; padding: 24px 26px 30px 0; border-bottom: 1px solid var(--wedding-line); }
+.feature-card:hover .feature-number { color: #8c695c; }
 .feature-card:not(:nth-child(3n)) { border-right: 1px solid var(--wedding-line); }
 .feature-card:nth-child(3n+2), .feature-card:nth-child(3n+3) { padding-left: 26px; }
 .feature-card h3 { margin: 34px 0 12px; font: normal clamp(1.38rem, 1.9vw, 1.8rem)/1.25 Georgia, 'Times New Roman', serif; }
 .feature-card p { color: var(--wedding-muted); font-size: .87rem; line-height: 1.75; }
 .story-section { background: var(--wedding-paper); }
 .story-layout { display: grid; grid-template-columns: 1fr 1fr; min-height: 510px; }
-.story-visual { display: flex; flex-direction: column; justify-content: space-between; padding: clamp(30px, 5vw, 65px); border: 1px solid var(--wedding-line); background: var(--wedding-background); color: var(--wedding-ink); }
-.story-visual-label { color: var(--wedding-muted); font-size: .63rem; font-weight: 600; letter-spacing: .16em; }
+.story-visual {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: clamp(30px, 5vw, 65px);
+  background: linear-gradient(180deg, rgb(18 21 18 / 36%) 0%, rgb(18 21 18 / 6%) 45%, rgb(18 21 18 / 70%) 100%), url('/images/wedding-celebration.jpg') center / cover no-repeat;
+  color: #fff;
+}
+.story-visual-label { color: #fff; font-size: .63rem; font-weight: 600; letter-spacing: .16em; }
 .story-visual-quote { font: italic clamp(2.4rem, 4.2vw, 4.7rem)/1.1 Georgia, serif; letter-spacing: -.05em; }
-.story-copy { display: flex; flex-direction: column; align-items: flex-start; justify-content: center; padding: clamp(36px, 6vw, 90px); }
+.story-copy { display: flex; flex-direction: column; align-items: flex-start; justify-content: center; padding: clamp(36px, 6vw, 90px); background: url('/images/paper-grain.svg') repeat, var(--wedding-paper); }
 .story-copy h2 { margin: 18px 0 22px; }
 .story-copy p { max-width: 480px; color: var(--wedding-muted); font-size: .96rem; line-height: 1.85; }
 .story-copy .underlined-link { margin-top: 25px; }
@@ -193,12 +230,23 @@ const contactPath = '/contact?utm_source=web-bodas'
 .faq-list summary span { color: var(--wedding-muted); font-size: 1.5rem; font-weight: 400; }
 .faq-list details[open] summary span { transform: rotate(45deg); }
 .faq-list details p { max-width: 740px; padding: 0 36px 26px 0; color: var(--wedding-muted); font-size: .96rem; line-height: 1.8; }
-.closing-section { padding-block: clamp(80px, 10vw, 135px); border-top: 1px solid var(--wedding-line); background: var(--wedding-background); color: var(--wedding-ink); }
+.closing-section { padding-block: clamp(80px, 10vw, 135px); border-top: 1px solid var(--wedding-line); background: url('/images/paper-grain.svg') repeat, var(--wedding-background); color: var(--wedding-ink); }
 .closing-inner { display: flex; flex-direction: column; align-items: flex-start; }
 .closing-inner .section-index, .closing-inner p { color: var(--wedding-muted); }
 .closing-inner h2 { max-width: 790px; margin: 22px 0; }
 .closing-inner p { max-width: 600px; line-height: 1.7; }
 .closing-inner .wedding-button { margin-top: 32px; }
+.reveal-ready { opacity: 0; transform: translateY(22px); }
+.reveal-ready.is-visible { opacity: 1; transform: translateY(0); transition: opacity .65s ease, transform .65s ease; }
+@keyframes wedding-enter {
+  from { opacity: 0; transform: translateY(18px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .hero-copy, .invitation-preview { animation: none; }
+  .wedding-button span, .underlined-link span, .reveal-ready.is-visible { transition: none; }
+  .reveal-ready { opacity: 1; transform: none; }
+}
 @media (max-width: 900px) {
   .wedding-hero { grid-template-columns: 1fr; min-height: auto; }
   .invitation-preview { max-width: 600px; width: 100%; margin-inline: auto; }
@@ -211,6 +259,7 @@ const contactPath = '/contact?utm_source=web-bodas'
   .story-visual { min-height: 320px; }
 }
 @media (max-width: 600px) {
+  .intro-band { background: linear-gradient(90deg, rgb(238 233 223 / 94%), rgb(238 233 223 / 85%)), url('/images/wedding-details.jpg') center / cover no-repeat; }
   .wedding-hero { padding-block: 60px 80px; gap: 55px; }
   .hero-copy h1 { font-size: clamp(2.85rem, 12vw, 4.5rem); }
   .hero-actions { align-items: stretch; flex-direction: column; }
