@@ -75,11 +75,27 @@ onUnmounted(() => revealObserver?.disconnect())
       </div>
     </section>
 
+    <section id="ejemplo-boda" class="example-section" aria-labelledby="example-title">
+      <div class="container example-layout">
+        <div class="example-copy" data-reveal>
+          <span class="section-index">03 / UNA INVITACIÓN DE MUESTRA</span>
+          <h2 id="example-title">{{ weddingLanding.example.title }}</h2>
+          <p>{{ weddingLanding.example.description }}</p>
+          <a :href="weddingLanding.example.url" class="underlined-link" target="_blank" rel="noopener noreferrer" aria-label="Ver la invitación de muestra de Clara y Mateo (se abre en una nueva pestaña)">Ver la invitación de muestra <span aria-hidden="true">↗</span></a>
+          <small>{{ weddingLanding.example.note }}</small>
+        </div>
+        <a :href="weddingLanding.example.url" class="example-preview" target="_blank" rel="noopener noreferrer" aria-label="Abrir la invitación de muestra de Clara y Mateo en una nueva pestaña">
+          <img src="/images/wedding-demo-clara-mateo.jpg" alt="Portada de la invitación de muestra de Clara y Mateo" width="1500" height="937" loading="lazy" decoding="async">
+          <span aria-hidden="true">CLARA &amp; MATEO <span>↗</span></span>
+        </a>
+      </div>
+    </section>
+
     <section class="story-section">
       <div class="container story-layout">
         <div class="story-visual" aria-hidden="true"><span class="story-visual-label">ANTES DEL «SÍ, QUIERO»</span><span class="story-visual-quote">El día es vuestro.<br>La historia, de todos.</span></div>
         <div class="story-copy" data-reveal>
-          <span class="section-index">03 / DISEÑO A VUESTRA MEDIDA</span>
+          <span class="section-index">04 / DISEÑO A VUESTRA MEDIDA</span>
           <h2>Tan personal como vuestra historia.</h2>
           <p>Desde el primer mensaje hasta la última foto compartida, cada elemento puede adaptarse al estilo de vuestra celebración. Sin plantillas que os obliguen a encajar: primero escuchamos vuestra idea y después diseñamos la experiencia.</p>
           <router-link :to="contactPath" class="underlined-link">Contadme vuestra idea <span aria-hidden="true">↗</span></router-link>
@@ -89,7 +105,7 @@ onUnmounted(() => revealObserver?.disconnect())
 
     <section class="faq-section container" aria-labelledby="faq-title">
       <div class="section-heading" data-reveal>
-        <span class="section-index">04 / DUDAS HABITUALES</span>
+        <span class="section-index">05 / DUDAS HABITUALES</span>
         <h2 id="faq-title">Preguntas frecuentes sobre webs para bodas</h2>
       </div>
       <div class="faq-list" data-reveal>
@@ -187,7 +203,7 @@ onUnmounted(() => revealObserver?.disconnect())
   background: linear-gradient(90deg, #eee9df 0%, rgb(238 233 223 / 95%) 58%, rgb(238 233 223 / 69%) 100%), url('/images/wedding-details.jpg') right 44% / auto 115% no-repeat, var(--wedding-paper);
 }
 .intro-layout { display: grid; grid-template-columns: minmax(150px, .32fr) minmax(0, 1fr); gap: 48px; }
-.intro-layout h2, .section-heading h2, .story-copy h2, .closing-inner h2 { font: normal clamp(2.15rem, 3.8vw, 3.8rem)/1.16 Georgia, 'Times New Roman', serif; letter-spacing: -.045em; text-wrap: balance; }
+.intro-layout h2, .section-heading h2, .example-copy h2, .story-copy h2, .closing-inner h2 { font: normal clamp(2.15rem, 3.8vw, 3.8rem)/1.16 Georgia, 'Times New Roman', serif; letter-spacing: -.045em; text-wrap: balance; }
 .intro-layout h2 { max-width: 790px; }
 .intro-layout p { max-width: 620px; margin-top: 28px; color: var(--wedding-muted); line-height: 1.8; font-size: 1rem; }
 .features-section { padding-block: clamp(82px, 10vw, 145px); scroll-margin-top: 90px; }
@@ -201,6 +217,16 @@ onUnmounted(() => revealObserver?.disconnect())
 .feature-card:nth-child(3n+2), .feature-card:nth-child(3n+3) { padding-left: 26px; }
 .feature-card h3 { margin: 34px 0 12px; font: normal clamp(1.38rem, 1.9vw, 1.8rem)/1.25 Georgia, 'Times New Roman', serif; }
 .feature-card p { color: var(--wedding-muted); font-size: .87rem; line-height: 1.75; }
+.example-section { padding-block: clamp(75px, 9vw, 135px); background: url('/images/paper-grain.svg') repeat, var(--wedding-paper); scroll-margin-top: 90px; }
+.example-layout { display: grid; grid-template-columns: minmax(0, .85fr) minmax(0, 1.15fr); align-items: center; gap: clamp(42px, 7vw, 105px); }
+.example-copy h2 { margin: 20px 0 25px; }
+.example-copy p { max-width: 470px; color: var(--wedding-muted); line-height: 1.8; }
+.example-copy .underlined-link { margin-top: 27px; }
+.example-copy small { display: block; max-width: 430px; margin-top: 25px; color: var(--wedding-muted); font-size: .75rem; line-height: 1.6; }
+.example-preview { display: block; padding: 10px; border: 1px solid var(--wedding-line); background: #faf8f3; box-shadow: 0 26px 50px -38px #605951; transition: transform .3s ease, box-shadow .3s ease; }
+.example-preview:hover { transform: translateY(-5px); box-shadow: 0 32px 58px -36px #605951; }
+.example-preview img { display: block; width: 100%; height: auto; border: 1px solid var(--wedding-line); }
+.example-preview > span { display: flex; justify-content: space-between; padding: 13px 4px 3px; color: var(--wedding-muted); font-size: .64rem; font-weight: 600; letter-spacing: .16em; }
 .story-section { background: var(--wedding-paper); }
 .story-layout { display: grid; grid-template-columns: 1fr 1fr; min-height: 510px; }
 .story-visual {
@@ -239,13 +265,14 @@ onUnmounted(() => revealObserver?.disconnect())
 }
 @media (prefers-reduced-motion: reduce) {
   .hero-copy { animation: none; }
-  .wedding-button span, .underlined-link span, .reveal-ready.is-visible { transition: none; }
+  .wedding-button span, .underlined-link span, .example-preview, .reveal-ready.is-visible { transition: none; }
   .reveal-ready { opacity: 1; transform: none; }
 }
 @media (max-width: 900px) {
   .wedding-hero { min-height: 730px; }
   .hero-media img { object-position: 57% center; }
   .intro-layout { grid-template-columns: 1fr; gap: 20px; }
+  .example-layout { grid-template-columns: 1fr; }
   .features-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .feature-card { padding-left: 0 !important; padding-right: 20px; border-right: 0 !important; }
   .feature-card:nth-child(odd) { border-right: 1px solid var(--wedding-line) !important; }

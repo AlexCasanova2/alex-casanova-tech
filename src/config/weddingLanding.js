@@ -3,6 +3,12 @@ export const weddingLanding = {
   description: 'Diseño de webs para bodas e invitaciones digitales personalizadas: vuestra historia, programa, ubicación, confirmación de asistencia, alergias, música y fotos en una web adaptable a móvil.',
   heading: 'Vuestra boda empieza mucho antes del «sí, quiero».',
   intro: 'Compartid cada detalle y haced que vuestros invitados formen parte de la historia.',
+  example: {
+    title: 'Así podría empezar vuestra historia.',
+    description: 'Explorad la invitación de muestra de Clara y Mateo: una forma de reunir vuestra historia, los detalles del gran día y la participación de los invitados en un mismo lugar.',
+    note: 'Es una demostración: las respuestas no se envían a la pareja y las fotos no se suben.',
+    url: 'https://boda-clara-mateo.vercel.app/'
+  },
   features: [
     { number:'01', title:'Una invitación que habla de vosotros', text:'Vuestra historia, la fecha y el lugar en una presentación personalizada que marca el comienzo de la celebración.' },
     { number:'02', title:'Todo lo que necesitan saber', text:'Ceremonia, celebración, horarios y programa reunidos en un solo lugar, siempre fácil de consultar.' },
