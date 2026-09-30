@@ -21,6 +21,7 @@ const errorMessage = ref('')
 const activeTab = ref('manage') // 'add' | 'manage' | 'trash'
 const activeModule = ref('projects')
 const projectsList = ref([])
+const MAX_HOME_SLIDES = 4
 const activeProjects = computed(() => projectsList.value.filter(project => !project.is_deleted).sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0)))
 const homepageProjects = computed(() => activeProjects.value.filter(project => project.show_on_homepage))
 const availableHomepageProjects = computed(() => activeProjects.value.filter(project => !project.show_on_homepage))
@@ -35,9 +36,9 @@ const moduleCopy = {
 }
 const modules = computed(() => moduleCopy[locale.value] || moduleCopy.es)
 const homepageCopy = computed(() => ({
-  es: { tab:'Portada', title:'Slider principal', intro:'Elige hasta 8 proyectos y ordénalos tal como quieres que se reproduzcan.', selected:'En el slider', available:'Proyectos disponibles', empty:'Todavía no hay proyectos en el slider.', allSelected:'Todos los proyectos publicados están en el slider.', add:'Añadir', remove:'Quitar', saved:'Portada actualizada.', error:'No se ha podido actualizar la portada.', limit:'El slider admite un máximo de 8 proyectos.', position:'Posición' },
-  ca: { tab:'Portada', title:'Slider principal', intro:'Tria fins a 8 projectes i ordena’ls tal com vols que es reprodueixin.', selected:'Al slider', available:'Projectes disponibles', empty:'Encara no hi ha projectes al slider.', allSelected:'Tots els projectes publicats són al slider.', add:'Afegir', remove:'Treure', saved:'Portada actualitzada.', error:'No s’ha pogut actualitzar la portada.', limit:'El slider admet un màxim de 8 projectes.', position:'Posició' },
-  en: { tab:'Homepage', title:'Main slider', intro:'Choose up to 8 projects and arrange their playback order.', selected:'In the slider', available:'Available projects', empty:'There are no projects in the slider yet.', allSelected:'Every published project is in the slider.', add:'Add', remove:'Remove', saved:'Homepage updated.', error:'The homepage could not be updated.', limit:'The slider supports up to 8 projects.', position:'Position' }
+  es: { tab:'Portada', title:'Slider principal', intro:'Elige hasta 4 proyectos y ordénalos tal como quieres que se reproduzcan.', selected:'En el slider', available:'Proyectos disponibles', empty:'Todavía no hay proyectos en el slider.', allSelected:'Todos los proyectos publicados están en el slider.', add:'Añadir', remove:'Quitar', saved:'Portada actualizada.', error:'No se ha podido actualizar la portada.', limit:'El slider admite un máximo de 4 proyectos.', position:'Posición' },
+  ca: { tab:'Portada', title:'Slider principal', intro:'Tria fins a 4 projectes i ordena’ls tal com vols que es reprodueixin.', selected:'Al slider', available:'Projectes disponibles', empty:'Encara no hi ha projectes al slider.', allSelected:'Tots els projectes publicats són al slider.', add:'Afegir', remove:'Treure', saved:'Portada actualitzada.', error:'No s’ha pogut actualitzar la portada.', limit:'El slider admet un màxim de 4 projectes.', position:'Posició' },
+  en: { tab:'Homepage', title:'Main slider', intro:'Choose up to 4 projects and arrange their playback order.', selected:'In the slider', available:'Available projects', empty:'There are no projects in the slider yet.', allSelected:'Every published project is in the slider.', add:'Add', remove:'Remove', saved:'Homepage updated.', error:'The homepage could not be updated.', limit:'The slider supports up to 4 projects.', position:'Position' }
 }[locale.value] || {}) )
 const syncClientWithQuotes = client => quotesAdmin.value?.upsertClient(client)
 
@@ -250,6 +251,11 @@ const deleteProject = async () => {
 }
 
 const restoreProject = async (id) => {
+  const project = projectsList.value.find(item => item.id === id)
+  if (project?.show_on_homepage && homepageProjects.value.length >= MAX_HOME_SLIDES) {
+    alert(homepageCopy.value.limit)
+    return
+  }
   const { error } = await supabase.from('projects').update({ is_deleted: false }).eq('id', id)
   if (error) {
     alert('Error restoring project: ' + error.message)
@@ -298,7 +304,7 @@ const moveProject = async (index, direction) => {
 
 const setHomepageVisibility = async (project, visible) => {
   if (homepageBusy.value.includes(project.id)) return
-  if (visible && homepageProjects.value.length >= 8) {
+  if (visible && homepageProjects.value.length >= MAX_HOME_SLIDES) {
     homepageError.value = homepageCopy.value.limit
     return
   }
@@ -350,6 +356,10 @@ const submitProject = async () => {
   errorMessage.value = ''
 
   try {
+    const alreadyOnHomepage = isEditing.value && projectsList.value.some(project => project.id === editingId.value && !project.is_deleted && project.show_on_homepage)
+    if (newProject.value.show_on_homepage && !alreadyOnHomepage && homepageProjects.value.length >= MAX_HOME_SLIDES) {
+      throw new Error(homepageCopy.value.limit)
+    }
     let coverUrl = coverImagePreview.value
     
     // Si hay un archivo nuevo, lo subimos
@@ -591,7 +601,7 @@ const submitProject = async () => {
       <section v-if="activeTab === 'homepage'" class="homepage-admin fade-in">
         <header class="homepage-admin-head">
           <div><span class="admin-eyebrow">HOME / SLIDER</span><h2>{{ homepageCopy.title }}</h2><p>{{ homepageCopy.intro }}</p></div>
-          <strong>{{ String(homepageProjects.length).padStart(2, '0') }}<small>/08</small></strong>
+          <strong>{{ String(homepageProjects.length).padStart(2, '0') }}<small>/{{ String(MAX_HOME_SLIDES).padStart(2, '0') }}</small></strong>
         </header>
         <p v-if="homepageNotice" class="success-msg" role="status">{{ homepageNotice }}</p>
         <p v-if="homepageError" class="error-msg" role="alert">{{ homepageError }}</p>
@@ -623,7 +633,7 @@ const submitProject = async () => {
               <div v-for="project in availableHomepageProjects" :key="project.id" class="available-project-row">
                 <img :src="project.image" :alt="project.title">
                 <div class="list-info"><h4>{{ project.title }}</h4><span>{{ project.category }}</span></div>
-                <button type="button" class="btn-small" :disabled="homepageBusy.includes(project.id) || homepageProjects.length >= 8" @click="setHomepageVisibility(project, true)">+ {{ homepageCopy.add }}</button>
+                <button type="button" class="btn-small" :disabled="homepageBusy.includes(project.id) || homepageProjects.length >= MAX_HOME_SLIDES" @click="setHomepageVisibility(project, true)">+ {{ homepageCopy.add }}</button>
               </div>
             </div>
           </div>

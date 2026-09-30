@@ -48,7 +48,7 @@ function onTouchEnd(event) {
 async function fetchProjects() {
   loading.value = true; failed.value = false
   try {
-    const { data, error } = await supabase.from('projects').select('id,slug,title,description,category,tags,image').eq('show_on_homepage', true).or('is_deleted.is.null,is_deleted.eq.false').order('sort_order', { ascending:true }).order('id').limit(8)
+    const { data, error } = await supabase.from('projects').select('id,slug,title,description,category,tags,image').eq('show_on_homepage', true).or('is_deleted.is.null,is_deleted.eq.false').order('sort_order', { ascending:true }).order('id').limit(4)
     if (error) throw error
     projects.value = data || []
     active.value = 0
