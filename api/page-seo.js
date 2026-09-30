@@ -1,5 +1,5 @@
 import { createClient } from '@supabase/supabase-js'
-import { weddingLanding } from '../src/config/weddingLanding.js'
+import { weddingLandings } from '../src/config/weddingLanding.js'
 
 const pages = {
   '/es/diseno-web-empresas': { lang:'es', alternate:'/ca/disseny-web-empreses', title:'Diseño web para empresas | Àlex Casanova', description:'Diseño y desarrollo de webs corporativas a medida para empresas. Proyectos desde 700 € antes de IVA.', heading:'Una web corporativa que trabaja tan bien como tu negocio.', body:'Diseño web a medida, rápido y preparado para convertir visitas en oportunidades.' },
@@ -8,7 +8,7 @@ const pages = {
   '/ca/preu-pagina-web': { lang:'ca', alternate:'/es/precio-pagina-web', title:'Preu d’una pàgina web corporativa | Àlex Casanova', description:'Descobreix quant costa una web corporativa i calcula una estimació segons pàgines, idiomes i funcionalitats.', heading:'Quant costa una web corporativa?', body:'Una web senzilla parteix de 700 € abans d’IVA. Calcula una forquilla segons l’abast.' },
   '/es/presupuesto-web': { lang:'es', alternate:'/ca/pressupost-web', title:'Calcula el presupuesto de tu página web | Àlex Casanova', description:'Configura tu web corporativa y obtén al momento una estimación orientativa antes de IVA.', heading:'Ponle números a tu próxima web.', body:'Configura el alcance y obtén una estimación orientativa al momento.' },
   '/ca/pressupost-web': { lang:'ca', alternate:'/es/presupuesto-web', title:'Calcula el pressupost de la teva pàgina web | Àlex Casanova', description:'Configura la teva web corporativa i obtén al moment una estimació orientativa abans d’IVA.', heading:'Posa números a la teva pròxima web.', body:'Configura l’abast i obtén una estimació orientativa al moment.' },
-  '/es/web-para-bodas': { lang:'es', title:weddingLanding.title, description:weddingLanding.description, heading:weddingLanding.heading, body:weddingLanding.intro, wedding:true }
+  ...Object.fromEntries(Object.entries(weddingLandings).map(([lang, copy]) => [copy.path, { lang, title:copy.title, description:copy.description, heading:copy.heading, body:copy.intro, wedding:true }]))
 }
 
 const escapeHtml = value => String(value).replace(/[&<>'"]/g, char => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', "'":'&#39;', '"':'&quot;' }[char]))
@@ -20,17 +20,20 @@ export function renderSeoHtml(html, path, basePrice = 700) {
   const description = page.description.replace('700 €', localizedPrice)
   const body = page.body.replace('700 €', localizedPrice)
   const canonical = `https://alexcasanova.es${path}`
+  const copy = page.wedding ? weddingLandings[page.lang] : null
   const structuredData = page.wedding
-    ? { '@context':'https://schema.org', '@type':'Service', name:'Diseño de webs para bodas e invitaciones digitales', serviceType:'Diseño web para bodas', description:page.description, url:canonical, provider:{ '@type':'ProfessionalService', name:'Casanova studio', url:'https://alexcasanova.es/' }, areaServed:{ '@type':'Country', name:'España' } }
+    ? { '@context':'https://schema.org', '@type':'Service', name:copy.labels.serviceName, serviceType:copy.labels.serviceType, description:page.description, url:canonical, provider:{ '@type':'ProfessionalService', name:'Casanova studio', url:'https://alexcasanova.es/' }, areaServed:{ '@type':'Country', name:'España' } }
     : { '@context':'https://schema.org', '@type':'ProfessionalService', name:'Àlex Casanova · Diseño web', url:canonical, areaServed:['ES','Catalunya'], priceRange:'€€' }
-  const alternate = page.alternate ? `<link rel="alternate" hreflang="${page.lang === 'es' ? 'ca' : 'es'}" href="https://alexcasanova.es${page.alternate}">` : ''
+  const alternate = copy
+    ? Object.entries(weddingLandings).filter(([lang]) => lang !== page.lang).map(([lang, variant]) => `<link rel="alternate" hreflang="${lang}" href="https://alexcasanova.es${variant.path}">`).join('')
+    : page.alternate ? `<link rel="alternate" hreflang="${page.lang === 'es' ? 'ca' : 'es'}" href="https://alexcasanova.es${page.alternate}">` : ''
   const weddingContent = page.wedding
     ? [
-        `<section><h2>Una invitación digital para vuestra boda</h2><p>${escapeHtml(page.body)}</p></section>`,
-        `<section><h2>¿Qué puede incluir vuestra web de boda?</h2>${weddingLanding.features.map(feature => `<article><h3>${escapeHtml(feature.title)}</h3><p>${escapeHtml(feature.text)}</p></article>`).join('')}</section>`,
-        `<section><h2>${escapeHtml(weddingLanding.example.title)}</h2><p>${escapeHtml(weddingLanding.example.description)}</p><p>${escapeHtml(weddingLanding.example.note)}</p><a href="${escapeHtml(weddingLanding.example.url)}" target="_blank" rel="noopener noreferrer">Ver la invitación de muestra de Clara y Mateo</a></section>`,
-        `<section><h2>Preguntas frecuentes sobre webs para bodas</h2>${weddingLanding.faqs.map(faq => `<article><h3>${escapeHtml(faq.question)}</h3><p>${escapeHtml(faq.answer)}</p></article>`).join('')}</section>`,
-        '<section id="contacto-bodas"><h2>Una web para compartir lo que viene.</h2><p>Contadme cómo imagináis vuestra boda y diseñemos una invitación digital a la altura del momento.</p><a href="#contacto-bodas">Hablemos de vuestra boda</a></section>'
+        `<section><h2>${escapeHtml(copy.labels.ideaTitle)}</h2><p>${escapeHtml(copy.labels.ideaText)}</p></section>`,
+        `<section><h2>${escapeHtml(copy.labels.featuresTitle)}</h2>${copy.features.map(feature => `<article><h3>${escapeHtml(feature.title)}</h3><p>${escapeHtml(feature.text)}</p></article>`).join('')}</section>`,
+        `<section><h2>${escapeHtml(copy.example.title)}</h2><p>${escapeHtml(copy.example.description)}</p><p>${escapeHtml(copy.example.note)}</p><a href="${escapeHtml(copy.example.url)}" target="_blank" rel="noopener noreferrer">${escapeHtml(copy.labels.exampleLink)}</a></section>`,
+        `<section><h2>${escapeHtml(copy.labels.faqTitle)}</h2>${copy.faqs.map(faq => `<article><h3>${escapeHtml(faq.question)}</h3><p>${escapeHtml(faq.answer)}</p></article>`).join('')}</section>`,
+        `<section id="contacto-bodas"><h2>${escapeHtml(copy.labels.closingTitle)}</h2><p>${escapeHtml(copy.labels.closingText)}</p><a href="#contacto-bodas">${escapeHtml(copy.labels.contact)}</a></section>`
       ].join('')
     : `<p>${escapeHtml(body)}</p>`
   return html.replace('<html lang="es">', `<html lang="${page.lang}"${page.wedding ? ' data-theme="light"' : ''}>`)

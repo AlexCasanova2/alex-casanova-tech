@@ -4,6 +4,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { userData } from './config/userData'
 import { supabase } from './config/supabase'
+import { weddingLandings } from './config/weddingLanding'
 
 const route = useRoute()
 const router = useRouter()
@@ -15,7 +16,7 @@ const menuOpen = ref(false)
 const menuButton = ref(null)
 const isScrolled = ref(false)
 const isHome = computed(() => route.name === 'home')
-const isWeddingPage = computed(() => route.name === 'wedding-web-es')
+const isWeddingPage = computed(() => ['wedding-web-es', 'wedding-web-ca', 'wedding-web-en'].includes(route.name))
 watch([isWeddingPage, isDarkMode], () => {
   document.documentElement.setAttribute('data-theme', isWeddingPage.value ? 'light' : isDarkMode.value ? 'dark' : 'light')
 }, { immediate:true })
@@ -36,6 +37,14 @@ const switchLanguage = (lang) => {
   locale.value = lang
   localStorage.setItem('locale', lang)
   document.documentElement.lang = lang
+  if (isWeddingPage.value) {
+    router.push(weddingLandings[lang].path)
+    return
+  }
+  if (['privacy-es', 'privacy-ca', 'privacy-en'].includes(route.name)) {
+    router.push({ es:'/es/privacidad', ca:'/ca/privacitat', en:'/en/privacy' }[lang])
+    return
+  }
   if (route.meta.locale && lang === 'en') {
     router.push('/')
     return
@@ -50,7 +59,8 @@ const switchLanguage = (lang) => {
 const commercialLocale = computed(() => ['ca', 'es'].includes(locale.value) ? locale.value : 'es')
 const servicePath = computed(() => commercialLocale.value === 'ca' ? '/ca/disseny-web-empreses' : '/es/diseno-web-empresas')
 const budgetPath = computed(() => commercialLocale.value === 'ca' ? '/ca/pressupost-web' : '/es/presupuesto-web')
-const commercialLabels = computed(() => commercialLocale.value === 'ca' ? { service:'Disseny web', budget:'Pressupost' } : { service:'Diseño web', budget:'Presupuesto' })
+const commercialLabels = computed(() => locale.value === 'en' ? { service:'Web design', budget:'Estimate' } : commercialLocale.value === 'ca' ? { service:'Disseny web', budget:'Pressupost' } : { service:'Diseño web', budget:'Presupuesto' })
+const weddingFooter = computed(() => weddingLandings[locale.value] || weddingLandings.es)
 
 const handleLogout = async () => {
   await supabase.auth.signOut()
@@ -97,6 +107,17 @@ const updateGlobalSEO = () => {
     setMeta('meta[property="twitter:description"]', 'content', desc)
     setMeta('meta[property="twitter:url"]', 'content', canonicalUrl)
     setMeta('link[rel="canonical"]', 'href', canonicalUrl)
+    document.querySelectorAll('link[rel="alternate"][hreflang]').forEach(link => link.remove())
+    const alternates = isWeddingPage.value
+      ? Object.entries(weddingLandings).filter(([lang]) => lang !== route.meta.locale).map(([lang, copy]) => [lang, copy.path])
+      : route.meta.alternate ? [[route.meta.locale === 'es' ? 'ca' : 'es', route.meta.alternate]] : []
+    alternates.forEach(([lang, path]) => {
+      const link = document.createElement('link')
+      link.rel = 'alternate'
+      link.hreflang = lang
+      link.href = `https://alexcasanova.es${path}`
+      document.head.appendChild(link)
+    })
   }
 }
 
@@ -195,8 +216,8 @@ onUnmounted(() => {
       <div class="container footer-content">
         <p>© {{ new Date().getFullYear() }} {{ userData.name }}. All rights reserved.</p>
         <div class="social-links">
-          <router-link to="/es/web-para-bodas">Webs para bodas</router-link>
-          <router-link :to="commercialLocale === 'ca' ? '/ca/privacitat' : '/es/privacidad'">{{ commercialLocale === 'ca' ? 'Privacitat' : 'Privacidad' }}</router-link>
+          <router-link :to="weddingFooter.path">{{ weddingFooter.labels.footer }}</router-link>
+          <router-link :to="locale === 'en' ? '/en/privacy' : commercialLocale === 'ca' ? '/ca/privacitat' : '/es/privacidad'">{{ locale === 'en' ? 'Privacy' : commercialLocale === 'ca' ? 'Privacitat' : 'Privacidad' }}</router-link>
           <a :href="userData.linkedin" target="_blank" rel="noopener noreferrer">LinkedIn</a>
           <a :href="userData.github" target="_blank" rel="noopener noreferrer">GitHub</a>
         </div>

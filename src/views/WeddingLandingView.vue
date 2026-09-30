@@ -1,8 +1,11 @@
 <script setup>
-import { onMounted, onUnmounted, ref } from 'vue'
+import { computed, onMounted, onUnmounted, ref } from 'vue'
+import { useRoute } from 'vue-router'
 import LeadContactForm from '../components/LeadContactForm.vue'
-import { weddingLanding } from '../config/weddingLanding'
+import { weddingLandings } from '../config/weddingLanding'
 
+const route = useRoute()
+const weddingLanding = computed(() => weddingLandings[route.meta.locale] || weddingLandings.es)
 const page = ref(null)
 let revealObserver
 
@@ -35,36 +38,36 @@ onUnmounted(() => revealObserver?.disconnect())
       </div>
       <div class="container hero-layout">
         <div class="hero-copy">
-          <span class="eyebrow">CASANOVA STUDIO / WEBS PARA BODAS</span>
+          <span class="eyebrow">{{ weddingLanding.labels.heroEyebrow }}</span>
           <h1>{{ weddingLanding.heading }}</h1>
           <p class="hero-intro">{{ weddingLanding.intro }}</p>
           <div class="hero-actions">
-            <a href="#contacto-bodas" class="wedding-button">Hablemos de vuestra boda <span aria-hidden="true">↗</span></a>
-            <a href="#que-incluye" class="underlined-link">Descubrid la experiencia <span aria-hidden="true">↓</span></a>
+            <a href="#contacto-bodas" class="wedding-button">{{ weddingLanding.labels.contact }} <span aria-hidden="true">↗</span></a>
+            <a href="#que-incluye" class="underlined-link">{{ weddingLanding.labels.discover }} <span aria-hidden="true">↓</span></a>
           </div>
         </div>
       </div>
       <div class="container hero-footer" aria-hidden="true">
-        <span>VUESTRA HISTORIA, EN UNA WEB ÚNICA</span>
-        <span>01 / INVITACIONES DIGITALES</span>
+        <span>{{ weddingLanding.labels.heroFoot }}</span>
+        <span>{{ weddingLanding.labels.heroIndex }}</span>
       </div>
     </section>
 
     <section class="intro-band">
       <div class="container intro-layout" data-reveal>
-        <span class="section-index">01 / LA IDEA</span>
+        <span class="section-index">{{ weddingLanding.labels.ideaIndex }}</span>
         <div>
-          <h2>Una invitación digital que también es el lugar donde empieza vuestra boda.</h2>
-          <p>Mucho más que anunciar una fecha: una web para bodas permite compartir los detalles importantes con claridad y dejar espacio para que vuestros invitados participen. Todo con un diseño que se sienta vuestro.</p>
+          <h2>{{ weddingLanding.labels.ideaTitle }}</h2>
+          <p>{{ weddingLanding.labels.ideaText }}</p>
         </div>
       </div>
     </section>
 
     <section id="que-incluye" class="features-section container" aria-labelledby="features-title">
       <div class="section-heading" data-reveal>
-        <span class="section-index">02 / CADA DETALLE CUENTA</span>
-        <h2 id="features-title">¿Qué puede incluir vuestra web de boda?</h2>
-        <p>Una experiencia hecha a medida para acompañar a los invitados antes y durante la celebración.</p>
+        <span class="section-index">{{ weddingLanding.labels.featuresIndex }}</span>
+        <h2 id="features-title">{{ weddingLanding.labels.featuresTitle }}</h2>
+        <p>{{ weddingLanding.labels.featuresIntro }}</p>
       </div>
       <div class="features-grid">
         <article v-for="feature in weddingLanding.features" :key="feature.number" class="feature-card" data-reveal>
@@ -78,14 +81,14 @@ onUnmounted(() => revealObserver?.disconnect())
     <section id="ejemplo-boda" class="example-section" aria-labelledby="example-title">
       <div class="container example-layout">
         <div class="example-copy" data-reveal>
-          <span class="section-index">03 / UNA INVITACIÓN DE MUESTRA</span>
+          <span class="section-index">{{ weddingLanding.labels.exampleIndex }}</span>
           <h2 id="example-title">{{ weddingLanding.example.title }}</h2>
           <p>{{ weddingLanding.example.description }}</p>
-          <a :href="weddingLanding.example.url" class="underlined-link" target="_blank" rel="noopener noreferrer" aria-label="Ver la invitación de muestra de Clara y Mateo (se abre en una nueva pestaña)">Ver la invitación de muestra <span aria-hidden="true">↗</span></a>
+          <a :href="weddingLanding.example.url" class="underlined-link" target="_blank" rel="noopener noreferrer" :aria-label="weddingLanding.labels.exampleLinkLabel">{{ weddingLanding.labels.exampleLink }} <span aria-hidden="true">↗</span></a>
           <small>{{ weddingLanding.example.note }}</small>
         </div>
-        <a :href="weddingLanding.example.url" class="example-preview" target="_blank" rel="noopener noreferrer" aria-label="Abrir la invitación de muestra de Clara y Mateo en una nueva pestaña">
-          <img src="/images/wedding-demo-clara-mateo.jpg" alt="Portada de la invitación de muestra de Clara y Mateo" width="1500" height="937" loading="lazy" decoding="async">
+        <a :href="weddingLanding.example.url" class="example-preview" target="_blank" rel="noopener noreferrer" :aria-label="weddingLanding.labels.exampleImageLabel">
+          <img src="/images/wedding-demo-clara-mateo.jpg" :alt="weddingLanding.labels.exampleImageAlt" width="1500" height="937" loading="lazy" decoding="async">
           <span aria-hidden="true">CLARA &amp; MATEO <span>↗</span></span>
         </a>
       </div>
@@ -93,20 +96,20 @@ onUnmounted(() => revealObserver?.disconnect())
 
     <section class="story-section">
       <div class="container story-layout">
-        <div class="story-visual" aria-hidden="true"><span class="story-visual-label">ANTES DEL «SÍ, QUIERO»</span><span class="story-visual-quote">El día es vuestro.<br>La historia, de todos.</span></div>
+        <div class="story-visual" aria-hidden="true"><span class="story-visual-label">{{ weddingLanding.labels.storyImageLabel }}</span><span class="story-visual-quote">{{ weddingLanding.labels.storyQuote }}</span></div>
         <div class="story-copy" data-reveal>
-          <span class="section-index">04 / DISEÑO A VUESTRA MEDIDA</span>
-          <h2>Tan personal como vuestra historia.</h2>
-          <p>Desde el primer mensaje hasta la última foto compartida, cada elemento puede adaptarse al estilo de vuestra celebración. Sin plantillas que os obliguen a encajar: primero escuchamos vuestra idea y después diseñamos la experiencia.</p>
-          <a href="#contacto-bodas" class="underlined-link">Contadme vuestra idea <span aria-hidden="true">↗</span></a>
+          <span class="section-index">{{ weddingLanding.labels.storyIndex }}</span>
+          <h2>{{ weddingLanding.labels.storyTitle }}</h2>
+          <p>{{ weddingLanding.labels.storyText }}</p>
+          <a href="#contacto-bodas" class="underlined-link">{{ weddingLanding.labels.storyLink }} <span aria-hidden="true">↗</span></a>
         </div>
       </div>
     </section>
 
     <section class="faq-section container" aria-labelledby="faq-title">
       <div class="section-heading" data-reveal>
-        <span class="section-index">05 / DUDAS HABITUALES</span>
-        <h2 id="faq-title">Preguntas frecuentes sobre webs para bodas</h2>
+        <span class="section-index">{{ weddingLanding.labels.faqIndex }}</span>
+        <h2 id="faq-title">{{ weddingLanding.labels.faqTitle }}</h2>
       </div>
       <div class="faq-list" data-reveal>
         <details v-for="faq in weddingLanding.faqs" :key="faq.question">
@@ -119,9 +122,9 @@ onUnmounted(() => revealObserver?.disconnect())
     <section id="contacto-bodas" class="closing-section" aria-labelledby="wedding-contact-title">
       <div class="container closing-layout">
         <div class="closing-inner" data-reveal>
-          <span class="section-index">VUESTRA HISTORIA EMPIEZA AQUÍ</span>
-          <h2 id="wedding-contact-title">Una web para compartir lo que viene.</h2>
-          <p>Contadme cómo imagináis vuestra boda y diseñemos una invitación digital a la altura del momento.</p>
+          <span class="section-index">{{ weddingLanding.labels.closingIndex }}</span>
+          <h2 id="wedding-contact-title">{{ weddingLanding.labels.closingTitle }}</h2>
+          <p>{{ weddingLanding.labels.closingText }}</p>
         </div>
         <div class="closing-form"><LeadContactForm context="wedding-landing" /></div>
       </div>
@@ -168,7 +171,7 @@ onUnmounted(() => revealObserver?.disconnect())
   background: linear-gradient(90deg, rgb(20 27 24 / 88%) 0%, rgb(20 27 24 / 71%) 36%, rgb(20 27 24 / 32%) 70%, rgb(20 27 24 / 10%) 100%), linear-gradient(0deg, rgb(20 27 24 / 35%), transparent 35%);
 }
 .hero-layout { display: flex; align-items: center; width: 100%; flex: 1; padding-block: clamp(72px, 10vw, 125px); }
-.hero-copy { animation: wedding-enter .85s ease-out both; }
+.hero-copy { animation: wedding-enter 1.6s ease-out both; }
 .hero-copy .eyebrow { color: #e9e3d7; }
 .hero-copy h1 {
   max-width: 720px;
@@ -196,7 +199,7 @@ onUnmounted(() => revealObserver?.disconnect())
 .wedding-button:hover { background: #44463f; color: #fff; }
 .wedding-hero .wedding-button { background: #f5efe5; color: #272925; }
 .wedding-hero .wedding-button:hover { background: #fff; color: #272925; }
-.wedding-button span, .underlined-link span { transition: transform .25s ease; }
+.wedding-button span, .underlined-link span { transition: transform .5s ease; }
 .wedding-button:hover span, .underlined-link:hover span { transform: translate(3px, -3px); }
 .underlined-link { display: inline-flex; align-items: center; gap: 12px; padding-block: 9px; border-bottom: 1px solid currentColor; color: var(--wedding-ink); font-size: .8rem; font-weight: 600; }
 .wedding-hero .underlined-link { color: #fff; }
@@ -225,7 +228,7 @@ onUnmounted(() => revealObserver?.disconnect())
 .example-copy p { max-width: 470px; color: var(--wedding-muted); line-height: 1.8; }
 .example-copy .underlined-link { margin-top: 27px; }
 .example-copy small { display: block; max-width: 430px; margin-top: 25px; color: var(--wedding-muted); font-size: .75rem; line-height: 1.6; }
-.example-preview { display: block; padding: 10px; border: 1px solid var(--wedding-line); background: #faf8f3; box-shadow: 0 26px 50px -38px #605951; transition: transform .3s ease, box-shadow .3s ease; }
+.example-preview { display: block; padding: 10px; border: 1px solid var(--wedding-line); background: #faf8f3; box-shadow: 0 26px 50px -38px #605951; transition: transform .6s ease, box-shadow .6s ease; }
 .example-preview:hover { transform: translateY(-5px); box-shadow: 0 32px 58px -36px #605951; }
 .example-preview img { display: block; width: 100%; height: auto; border: 1px solid var(--wedding-line); }
 .example-preview > span { display: flex; justify-content: space-between; padding: 13px 4px 3px; color: var(--wedding-muted); font-size: .64rem; font-weight: 600; letter-spacing: .16em; }
@@ -240,7 +243,7 @@ onUnmounted(() => revealObserver?.disconnect())
   color: #fff;
 }
 .story-visual-label { color: #fff; font-size: .63rem; font-weight: 600; letter-spacing: .16em; }
-.story-visual-quote { font: italic clamp(2.4rem, 4.2vw, 4.7rem)/1.1 Georgia, serif; letter-spacing: -.05em; }
+.story-visual-quote { font: italic clamp(2.4rem, 4.2vw, 4.7rem)/1.1 Georgia, serif; letter-spacing: -.05em; white-space: pre-line; }
 .story-copy { display: flex; flex-direction: column; align-items: flex-start; justify-content: center; padding: clamp(36px, 6vw, 90px); }
 .story-copy h2 { margin: 18px 0 22px; }
 .story-copy p { max-width: 480px; color: var(--wedding-muted); font-size: .96rem; line-height: 1.85; }
@@ -261,7 +264,7 @@ onUnmounted(() => revealObserver?.disconnect())
 .closing-inner p { max-width: 600px; line-height: 1.7; }
 .closing-form { min-width:0; }
 .reveal-ready { opacity: 0; transform: translateY(22px); }
-.reveal-ready.is-visible { opacity: 1; transform: translateY(0); transition: opacity .65s ease, transform .65s ease; }
+.reveal-ready.is-visible { opacity: 1; transform: translateY(0); transition: opacity 1.25s ease, transform 1.25s ease; }
 @keyframes wedding-enter {
   from { opacity: 0; transform: translateY(18px); }
   to { opacity: 1; transform: translateY(0); }

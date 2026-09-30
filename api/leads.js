@@ -4,7 +4,7 @@ import { defaultLeadPricing, normalizePricing } from '../src/config/leadPricing.
 import { calculateLeadEstimate } from '../src/utils/leadEstimate.js'
 
 const attempts = new Map()
-const allowedLanguages = new Set(['es', 'ca'])
+const allowedLanguages = new Set(['es', 'ca', 'en'])
 const allowedStatuses = new Set(['contact', 'configurator'])
 const allowedProjectTypes = new Set(['new', 'redesign', 'other'])
 const allowedPages = new Set(['one', 'small', 'medium', 'custom'])
@@ -71,14 +71,16 @@ export async function sendNotification(lead, estimate, settings) {
   const transporter = nodemailer.createTransport(settings)
   const from = process.env.LEADS_FROM_EMAIL || settings.auth.user
   const ownerEmail = process.env.LEADS_NOTIFICATION_EMAIL || 'hola@alexcasanova.es'
-  const amount = estimate.custom ? 'Valoración personalizada' : `${estimate.netMin}–${estimate.netMax} EUR + IVA`
+  const amount = estimate.custom ? lead.language === 'en' ? 'Personalised estimate' : 'Valoración personalizada' : `${estimate.netMin}–${estimate.netMax} EUR + IVA`
   const text = `Nuevo lead: ${lead.name}\nEmail: ${lead.email}\nOrigen: ${lead.source}\nEstimación: ${amount}\n\n${lead.message || 'Sin mensaje adicional.'}`
   const confirmation = lead.language === 'ca'
     ? `Hola ${lead.name},\n\nHe rebut la teva sol·licitud. La revisaré personalment i et respondré al més aviat possible.\n\nEstimació orientativa: ${amount}.\n\nÀlex Casanova`
+    : lead.language === 'en'
+      ? `Hello ${lead.name},\n\nI have received your enquiry. I will review it personally and reply as soon as possible.\n\nIndicative estimate: ${amount}.\n\nÀlex Casanova`
     : `Hola ${lead.name},\n\nHe recibido tu solicitud. La revisaré personalmente y te responderé lo antes posible.\n\nEstimación orientativa: ${amount}.\n\nÀlex Casanova`
   const messages = [
     { from, to:[ownerEmail], replyTo:lead.email, subject:`Nuevo lead web: ${lead.name}`, text },
-    { from, to:[lead.email], subject:lead.language === 'ca' ? 'He rebut la teva sol·licitud' : 'He recibido tu solicitud', text:confirmation }
+    { from, to:[lead.email], subject:lead.language === 'ca' ? 'He rebut la teva sol·licitud' : lead.language === 'en' ? 'I have received your enquiry' : 'He recibido tu solicitud', text:confirmation }
   ]
   await Promise.all(messages.map(message => transporter.sendMail(message)))
 }

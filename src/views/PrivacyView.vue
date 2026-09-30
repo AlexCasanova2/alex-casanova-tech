@@ -1,19 +1,40 @@
 <script setup>
 import { computed } from 'vue'
 import { useRoute } from 'vue-router'
+
 const route = useRoute()
-const ca = computed(() => route.meta.locale === 'ca')
+const privacyCopy = {
+  es: {
+    eyebrow:'PRIVACIDAD', title:'Privacidad de las solicitudes', intro:'Información sobre el tratamiento de los datos que envías mediante los formularios de esta web.',
+    purpose:'Finalidad y base jurídica', purposeText:'Los datos se utilizan exclusivamente para valorar el proyecto, responder la solicitud y realizar su seguimiento precontractual. La base jurídica es tu petición y el consentimiento expresado en el formulario.',
+    retention:'Conservación y destinatarios', retentionText:'Se conservarán mientras la solicitud esté activa y durante los plazos necesarios para atender responsabilidades legales. Los proveedores técnicos de alojamiento, base de datos y correo solo tratan los datos para prestar esos servicios.',
+    contact:'Responsable y contacto', rights:'Tus derechos', rightsText:'Puedes solicitar el acceso, rectificación, supresión, oposición, limitación o portabilidad escribiendo a la dirección indicada.'
+  },
+  ca: {
+    eyebrow:'PRIVACITAT', title:'Privacitat de les sol·licituds', intro:'Informació sobre el tractament de les dades que envies mitjançant els formularis d’aquesta web.',
+    purpose:'Finalitat i base jurídica', purposeText:'Les dades s’utilitzen exclusivament per valorar el projecte, respondre la sol·licitud i fer-ne el seguiment precontractual. La base jurídica és la teva petició i el consentiment expressat al formulari.',
+    retention:'Conservació i destinataris', retentionText:'Es conservaran mentre la sol·licitud estigui activa i durant els terminis necessaris per atendre responsabilitats legals. Els proveïdors tècnics d’allotjament, base de dades i correu només tracten les dades per prestar aquests serveis.',
+    contact:'Responsable i contacte', rights:'Els teus drets', rightsText:'Pots sol·licitar l’accés, rectificació, supressió, oposició, limitació o portabilitat escrivint a l’adreça indicada.'
+  },
+  en: {
+    eyebrow:'PRIVACY', title:'Privacy of enquiries', intro:'How we handle the information you send through this website’s forms.',
+    purpose:'Purpose and legal basis', purposeText:'We use your information only to assess your project, respond to your enquiry and follow up before a potential contract. The legal basis is your request and the consent you give in the form.',
+    retention:'Retention and recipients', retentionText:'We keep your information while your enquiry is active and for as long as needed to meet legal obligations. Hosting, database and email providers process it only to provide those services.',
+    contact:'Data controller and contact', rights:'Your rights', rightsText:'You can request access, correction, deletion, objection, restriction or portability by writing to the address above.'
+  }
+}
+const copy = computed(() => privacyCopy[route.meta.locale] || privacyCopy.es)
 </script>
 
 <template>
   <main class="privacy page-wrapper container fade-in">
-    <span class="eyebrow">LEGAL / {{ ca ? 'PRIVACITAT' : 'PRIVACIDAD' }}</span>
-    <h1>{{ ca ? 'Privacitat de les sol·licituds' : 'Privacidad de las solicitudes' }}</h1>
-    <p class="intro">{{ ca ? 'Informació sobre el tractament de les dades que envies mitjançant els formularis d’aquesta web.' : 'Información sobre el tratamiento de los datos que envías mediante los formularios de esta web.' }}</p>
-    <section><h2>{{ ca ? 'Responsable i contacte' : 'Responsable y contacto' }}</h2><p>Àlex Casanova · <a href="mailto:hola@alexcasanova.es">hola@alexcasanova.es</a></p></section>
-    <section><h2>{{ ca ? 'Finalitat i base jurídica' : 'Finalidad y base jurídica' }}</h2><p>{{ ca ? 'Les dades s’utilitzen exclusivament per valorar el projecte, respondre la sol·licitud i fer-ne el seguiment precontractual. La base jurídica és la teva petició i el consentiment expressat al formulari.' : 'Los datos se utilizan exclusivamente para valorar el proyecto, responder la solicitud y realizar su seguimiento precontractual. La base jurídica es tu petición y el consentimiento expresado en el formulario.' }}</p></section>
-    <section><h2>{{ ca ? 'Conservació i destinataris' : 'Conservación y destinatarios' }}</h2><p>{{ ca ? 'Es conservaran mentre la sol·licitud estigui activa i durant els terminis necessaris per atendre responsabilitats legals. Els proveïdors tècnics d’allotjament, base de dades i correu només tracten les dades per prestar aquests serveis.' : 'Se conservarán mientras la solicitud esté activa y durante los plazos necesarios para atender responsabilidades legales. Los proveedores técnicos de alojamiento, base de datos y correo solo tratan los datos para prestar esos servicios.' }}</p></section>
-    <section><h2>{{ ca ? 'Els teus drets' : 'Tus derechos' }}</h2><p>{{ ca ? 'Pots sol·licitar l’accés, rectificació, supressió, oposició, limitació o portabilitat escrivint a l’adreça indicada.' : 'Puedes solicitar el acceso, rectificación, supresión, oposición, limitación o portabilidad escribiendo a la dirección indicada.' }}</p></section>
+    <span class="eyebrow">LEGAL / {{ copy.eyebrow }}</span>
+    <h1>{{ copy.title }}</h1>
+    <p class="intro">{{ copy.intro }}</p>
+    <section><h2>{{ copy.contact }}</h2><p>Àlex Casanova · <a href="mailto:hola@alexcasanova.es">hola@alexcasanova.es</a></p></section>
+    <section><h2>{{ copy.purpose }}</h2><p>{{ copy.purposeText }}</p></section>
+    <section><h2>{{ copy.retention }}</h2><p>{{ copy.retentionText }}</p></section>
+    <section><h2>{{ copy.rights }}</h2><p>{{ copy.rightsText }}</p></section>
   </main>
 </template>
 

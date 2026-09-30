@@ -48,4 +48,13 @@ describe('SMTP configuration', () => {
     expect(sendMail).toHaveBeenCalledWith(expect.objectContaining({ to:['hola@alexcasanova.es'], replyTo:'ana@example.com' }))
     expect(sendMail).toHaveBeenCalledWith(expect.objectContaining({ to:['ana@example.com'] }))
   })
+
+  it('sends English enquiries an English confirmation', async () => {
+    const sendMail = vi.fn().mockResolvedValue({ accepted:['guest@example.com'] })
+    vi.mocked(nodemailer.createTransport).mockReturnValue({ sendMail })
+    await sendNotification({ name:'Sam', email:'guest@example.com', source:'contact', language:'en', message:'Wedding website' }, { custom:true }, smtpSettings({ SMTP_HOST:'smtp.example.com', SMTP_USER:'test@example.com', SMTP_PASSWORD:'secret' }))
+    expect(sendMail).toHaveBeenCalledWith(expect.objectContaining({
+      to:['guest@example.com'], subject:'I have received your enquiry', text:expect.stringContaining('Personalised estimate')
+    }))
+  })
 })

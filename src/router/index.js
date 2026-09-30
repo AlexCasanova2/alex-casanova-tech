@@ -5,7 +5,7 @@ import ProjectDetailView from '../views/ProjectDetailView.vue'
 import ContactView from '../views/ContactView.vue'
 import LeadLandingView from '../views/LeadLandingView.vue'
 import ConfiguratorView from '../views/ConfiguratorView.vue'
-import { weddingLanding } from '../config/weddingLanding'
+import { weddingLandings } from '../config/weddingLanding'
 
 const router = createRouter({
     history: createWebHistory(import.meta.env.BASE_URL),
@@ -59,7 +59,19 @@ const router = createRouter({
             path: '/es/web-para-bodas',
             name: 'wedding-web-es',
             component: () => import('../views/WeddingLandingView.vue'),
-            meta: { locale:'es', title:'Web para bodas e invitaciones digitales', brand:'Casanova studio', description:weddingLanding.description }
+            meta: { locale:'es', title:weddingLandings.es.title.split(' | ')[0], brand:'Casanova studio', description:weddingLandings.es.description }
+        },
+        {
+            path: '/ca/webs-per-a-casaments',
+            name: 'wedding-web-ca',
+            component: () => import('../views/WeddingLandingView.vue'),
+            meta: { locale:'ca', title:weddingLandings.ca.title.split(' | ')[0], brand:'Casanova studio', description:weddingLandings.ca.description }
+        },
+        {
+            path: '/en/wedding-websites',
+            name: 'wedding-web-en',
+            component: () => import('../views/WeddingLandingView.vue'),
+            meta: { locale:'en', title:weddingLandings.en.title.split(' | ')[0], brand:'Casanova studio', description:weddingLandings.en.description }
         },
         {
             path: '/ca/pressupost-web',
@@ -78,6 +90,12 @@ const router = createRouter({
             name: 'privacy-ca',
             component: () => import('../views/PrivacyView.vue'),
             meta: { locale:'ca', title:'Privacitat', description:'Informació de privacitat dels formularis d’alexcasanova.es.', alternate:'/es/privacidad' }
+        },
+        {
+            path: '/en/privacy',
+            name: 'privacy-en',
+            component: () => import('../views/PrivacyView.vue'),
+            meta: { locale:'en', title:'Privacy', description:'How enquiries submitted through alexcasanova.es are handled.' }
         },
         {
             path: '/project/:id',

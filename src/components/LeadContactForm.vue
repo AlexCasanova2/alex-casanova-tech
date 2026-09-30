@@ -1,10 +1,12 @@
 <script setup>
-import { onUnmounted, ref } from 'vue'
+import { computed, onUnmounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
+import { weddingLandings } from '../config/weddingLanding'
 import { leadAttribution, submissionKey, submitLead, trackLeadEvent } from '../utils/leadCapture'
 
 const props = defineProps({ context: { type:String, default:'contact' } })
 const { t, locale } = useI18n()
+const weddingLabels = computed(() => (weddingLandings[locale.value] || weddingLandings.es).labels)
 const form = ref({ name:'', email:'', message:'', privacyAccepted:false, companyName:'' })
 const startedAt = Date.now()
 let currentSubmissionKey = submissionKey()
@@ -19,7 +21,7 @@ async function submitForm() {
   errorMessage.value = ''
 
   try {
-    await submitLead({ ...form.value, source:'contact', language:['es','ca'].includes(locale.value) ? locale.value : 'es', startedAt, submissionKey:currentSubmissionKey, attribution:leadAttribution() })
+    await submitLead({ ...form.value, source:'contact', language:['es','ca','en'].includes(locale.value) ? locale.value : 'es', startedAt, submissionKey:currentSubmissionKey, attribution:leadAttribution() })
     isSuccess.value = true
     trackLeadEvent('generate_lead', { source:props.context })
     currentSubmissionKey = submissionKey()
@@ -48,15 +50,15 @@ onUnmounted(() => clearTimeout(successTimeout))
     </div>
     <div class="input-group">
       <label :for="fieldId('message')">{{ t('contact.message') }}</label>
-      <textarea :id="fieldId('message')" v-model="form.message" rows="5" required :placeholder="context === 'wedding-landing' ? 'Contadme cuándo será la boda y qué os gustaría incluir en vuestra web.' : ''"></textarea>
+      <textarea :id="fieldId('message')" v-model="form.message" rows="5" required :placeholder="context === 'wedding-landing' ? weddingLabels.formPlaceholder : ''"></textarea>
     </div>
     <div class="honeypot" aria-hidden="true"><label>Company name<input v-model="form.companyName" tabindex="-1" autocomplete="off"></label></div>
-    <label class="privacy-check"><input v-model="form.privacyAccepted" type="checkbox" :aria-label="locale === 'ca' ? 'Acceptació de privacitat' : locale === 'en' ? 'Privacy acceptance' : 'Aceptación de privacidad'" required><span>{{ locale === 'ca' ? 'Accepto que s’utilitzin les meves dades per respondre aquesta sol·licitud.' : locale === 'en' ? 'I agree that my data may be used to answer this request.' : 'Acepto que se usen mis datos para responder a esta solicitud.' }} <router-link :to="locale === 'ca' ? '/ca/privacitat' : '/es/privacidad'" target="_blank" rel="noopener noreferrer">{{ locale === 'ca' ? 'Més informació' : locale === 'en' ? 'More information' : 'Más información' }}</router-link>.</span></label>
+    <label class="privacy-check"><input v-model="form.privacyAccepted" type="checkbox" :aria-label="locale === 'ca' ? 'Acceptació de privacitat' : locale === 'en' ? 'Privacy acceptance' : 'Aceptación de privacidad'" required><span>{{ locale === 'ca' ? 'Accepto que s’utilitzin les meves dades per respondre aquesta sol·licitud.' : locale === 'en' ? 'I agree that my data may be used to answer this request.' : 'Acepto que se usen mis datos para responder a esta solicitud.' }} <router-link :to="locale === 'ca' ? '/ca/privacitat' : locale === 'en' ? '/en/privacy' : '/es/privacidad'" target="_blank" rel="noopener noreferrer">{{ locale === 'ca' ? 'Més informació' : locale === 'en' ? 'More information' : 'Más información' }}</router-link>.</span></label>
 
     <button type="submit" class="btn btn-primary" :disabled="isSubmitting">
-      {{ isSubmitting ? t('contact.sending') : context === 'wedding-landing' ? 'Solicitar propuesta para nuestra boda' : t('contact.send') }}
+      {{ isSubmitting ? t('contact.sending') : context === 'wedding-landing' ? weddingLabels.formButton : t('contact.send') }}
     </button>
-    <div v-if="isSuccess" class="success-msg" role="status">{{ context === 'wedding-landing' ? 'Hemos recibido vuestra consulta. Os responderé pronto.' : t('contact.success') }}</div>
+    <div v-if="isSuccess" class="success-msg" role="status">{{ context === 'wedding-landing' ? weddingLabels.formSuccess : t('contact.success') }}</div>
     <div v-if="errorMessage" class="error-msg" role="alert">{{ errorMessage }}</div>
   </form>
 </template>

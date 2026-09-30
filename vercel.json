@@ -14,6 +14,14 @@
             "destination": "/api/page-seo?path=es/web-para-bodas"
         },
         {
+            "source": "/ca/webs-per-a-casaments",
+            "destination": "/api/page-seo?path=ca/webs-per-a-casaments"
+        },
+        {
+            "source": "/en/wedding-websites",
+            "destination": "/api/page-seo?path=en/wedding-websites"
+        },
+        {
             "source": "/ca/:path(disseny-web-empreses|preu-pagina-web|pressupost-web)",
             "destination": "/api/page-seo?path=ca/:path"
         },

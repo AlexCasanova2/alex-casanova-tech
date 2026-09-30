@@ -3,7 +3,9 @@
   <url><loc>https://alexcasanova.es/</loc><changefreq>weekly</changefreq><priority>1.0</priority></url>
   <url><loc>https://alexcasanova.es/projects</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
   <url><loc>https://alexcasanova.es/contact</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
-  <url><loc>https://alexcasanova.es/es/web-para-bodas</loc><changefreq>monthly</changefreq><priority>0.9</priority></url>
+  <url><loc>https://alexcasanova.es/es/web-para-bodas</loc><xhtml:link rel="alternate" hreflang="ca" href="https://alexcasanova.es/ca/webs-per-a-casaments"/><xhtml:link rel="alternate" hreflang="en" href="https://alexcasanova.es/en/wedding-websites"/><changefreq>monthly</changefreq><priority>0.9</priority></url>
+  <url><loc>https://alexcasanova.es/ca/webs-per-a-casaments</loc><xhtml:link rel="alternate" hreflang="es" href="https://alexcasanova.es/es/web-para-bodas"/><xhtml:link rel="alternate" hreflang="en" href="https://alexcasanova.es/en/wedding-websites"/><changefreq>monthly</changefreq><priority>0.9</priority></url>
+  <url><loc>https://alexcasanova.es/en/wedding-websites</loc><xhtml:link rel="alternate" hreflang="es" href="https://alexcasanova.es/es/web-para-bodas"/><xhtml:link rel="alternate" hreflang="ca" href="https://alexcasanova.es/ca/webs-per-a-casaments"/><changefreq>monthly</changefreq><priority>0.9</priority></url>
   <url><loc>https://alexcasanova.es/es/diseno-web-empresas</loc><xhtml:link rel="alternate" hreflang="ca" href="https://alexcasanova.es/ca/disseny-web-empreses"/><changefreq>monthly</changefreq><priority>0.9</priority></url>
   <url><loc>https://alexcasanova.es/ca/disseny-web-empreses</loc><xhtml:link rel="alternate" hreflang="es" href="https://alexcasanova.es/es/diseno-web-empresas"/><changefreq>monthly</changefreq><priority>0.9</priority></url>
   <url><loc>https://alexcasanova.es/es/precio-pagina-web</loc><xhtml:link rel="alternate" hreflang="ca" href="https://alexcasanova.es/ca/preu-pagina-web"/><changefreq>monthly</changefreq><priority>0.9</priority></url>
@@ -12,4 +14,5 @@
   <url><loc>https://alexcasanova.es/ca/pressupost-web</loc><xhtml:link rel="alternate" hreflang="es" href="https://alexcasanova.es/es/presupuesto-web"/><changefreq>monthly</changefreq><priority>0.9</priority></url>
   <url><loc>https://alexcasanova.es/es/privacidad</loc><xhtml:link rel="alternate" hreflang="ca" href="https://alexcasanova.es/ca/privacitat"/><changefreq>yearly</changefreq><priority>0.2</priority></url>
   <url><loc>https://alexcasanova.es/ca/privacitat</loc><xhtml:link rel="alternate" hreflang="es" href="https://alexcasanova.es/es/privacidad"/><changefreq>yearly</changefreq><priority>0.2</priority></url>
+  <url><loc>https://alexcasanova.es/en/privacy</loc><changefreq>yearly</changefreq><priority>0.2</priority></url>
 </urlset>
