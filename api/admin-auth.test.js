@@ -23,6 +23,12 @@ describe('private admin authentication', () => {
     expect(request).toHaveBeenCalledOnce()
   })
 
+  it('accepts the existing Vite Supabase URL server configuration', async () => {
+    const request = vi.fn().mockResolvedValue({ ok:true, json:async () => ({ id:'owner-id' }) })
+    expect(await verifyAdminToken(token, { ...env, SUPABASE_URL:'', VITE_SUPABASE_URL:env.SUPABASE_URL }, request)).toBe(true)
+    expect(request.mock.calls[0][0].href).toBe('https://project.supabase.co/auth/v1/user')
+  })
+
   it('reads only the exact admin cookie', () => {
     expect(readAdminCookie(`other=abc; ${ADMIN_COOKIE}=${token}; another=xyz`)).toBe(token)
     expect(readAdminCookie(`other${ADMIN_COOKIE}=${token}`)).toBe('')

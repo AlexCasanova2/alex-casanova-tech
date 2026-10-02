@@ -18,7 +18,7 @@ Authenticated users only have access to their own CRM records. The existing port
 
 ### Private admin access
 
-Set `CRM_OWNER_ID`, `SUPABASE_URL`, and `VITE_SUPABASE_ANON_KEY` in Vercel before deploying the protected admin route. `CRM_OWNER_ID` must be the Supabase Auth user ID of the portfolio owner. Without it, `/admin` fails closed with HTTP 404. Sign in at `/acceso`; the server verifies the Supabase access token against the owner ID and issues a short-lived, HttpOnly cookie for `/admin`. The server returns HTTP 404 to visitors without that cookie. Both routes send `noindex` headers, and neither is in the sitemap.
+Set `CRM_OWNER_ID`, `VITE_SUPABASE_ANON_KEY`, and either `SUPABASE_URL` or `VITE_SUPABASE_URL` in Vercel before deploying the protected admin route. `CRM_OWNER_ID` must be the Supabase Auth user ID of the portfolio owner. Without it, `/admin` fails closed with HTTP 404. Sign in at `/acceso`; the server verifies the Supabase access token against the owner ID and issues a short-lived, HttpOnly cookie for `/admin`. The server returns HTTP 404 to visitors without that cookie. Both routes send `noindex` headers, and neither is in the sitemap.
 
 The client-side router also checks the server session for navigation within the SPA. This complements, but does not replace, Supabase row-level security for private CRM tables; do not rely on hiding the URL or on `robots.txt` as access control.
 
