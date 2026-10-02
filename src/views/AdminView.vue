@@ -4,6 +4,7 @@ import { ArrowDown, ArrowUp } from '@lucide/vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { supabase } from '../config/supabase'
+import { projectDraftSnapshot, restoreProjectDraft } from '../utils/projectDraft'
 import AdminClients from '../components/admin/AdminClients.vue'
 import AdminQuotes from '../components/admin/AdminQuotes.vue'
 import AdminSettings from '../components/admin/AdminSettings.vue'
@@ -29,6 +30,13 @@ const availableHomepageProjects = computed(() => activeProjects.value.filter(pro
 const homepageBusy = ref([])
 const homepageNotice = ref('')
 const homepageError = ref('')
+const drafts = ref([])
+const draftId = ref(null)
+const draftCopy = computed(() => ({
+  es:{ heading:'Borradores', empty:'No tienes proyectos pendientes.', save:'Guardar borrador', saving:'Guardando…', saved:'Borrador guardado. Puedes retomarlo desde esta lista.', edit:'Continuar', required:'Completa los campos obligatorios y la portada antes de publicar.', migration:'No se pudieron cargar los borradores. Comprueba la migración de Supabase.' },
+  ca:{ heading:'Esborranys', empty:'No tens projectes pendents.', save:'Desar esborrany', saving:'Desant…', saved:'Esborrany desat. Pots reprendre’l des d’aquesta llista.', edit:'Continuar', required:'Completa els camps obligatoris i la portada abans de publicar.', migration:'No s’han pogut carregar els esborranys. Comprova la migració de Supabase.' },
+  en:{ heading:'Drafts', empty:'No unfinished projects.', save:'Save draft', saving:'Saving…', saved:'Draft saved. You can resume it from this list.', edit:'Continue', required:'Complete the required fields and cover before publishing.', migration:'Drafts could not be loaded. Check the Supabase migration.' }
+}[locale.value] || {}))
 const quotesAdmin = ref(null)
 const moduleCopy = {
   es: { projects: 'Proyectos', leads: 'Leads', clients: 'Clientes', quotes: 'Presupuestos', settings: 'Ajustes' },
@@ -73,7 +81,7 @@ const editingId = ref(null)
 // Auto-fill slug when title changes
 watch(() => newProject.value.title, (newTitle) => {
   // Only auto-update if we are creating a new project, to prevent breaking existing URLs
-  if (!isEditing.value) {
+  if (!isEditing.value && !draftId.value) {
     newProject.value.slug = slugify(newTitle)
   }
 })
@@ -88,12 +96,18 @@ const fetchProjects = async () => {
   const { data, error } = await supabase.from('projects').select('*').order('sort_order', { ascending: true })
   if (data) projectsList.value = data
 }
+const fetchDrafts = async () => {
+  const { data, error } = await supabase.from('project_drafts').select('*').order('updated_at', { ascending:false })
+  if (error) errorMessage.value = draftCopy.value.migration
+  else drafts.value = data || []
+}
 
 onMounted(async () => {
   const { data: { session } } = await supabase.auth.getSession()
   if (session) {
     user.value = session.user
     await fetchProjects()
+    await fetchDrafts()
     
     // Check if we need to edit a project directly from the URL
     if (route.query.edit) {
@@ -110,7 +124,7 @@ onMounted(async () => {
     if (session) {
       user.value = session.user
       // Only fetch if projects list is empty to avoid double fetching on mount
-      if (projectsList.value.length === 0) fetchProjects()
+      if (projectsList.value.length === 0) { fetchProjects(); fetchDrafts() }
     } else {
       user.value = null
     }
@@ -131,6 +145,7 @@ const handleLogin = async () => {
   } else {
     user.value = data.user
     fetchProjects()
+    fetchDrafts()
   }
   isLoggingIn.value = false
 }
@@ -195,6 +210,7 @@ const insertFormat = (prefix, suffix = '') => {
 }
 
 const loadForEdit = (project) => {
+  draftId.value = null
   newProject.value = {
     title: project.title,
     slug: project.slug || '',
@@ -216,12 +232,48 @@ const loadForEdit = (project) => {
   window.scrollTo({ top: 0, behavior: 'smooth' })
 }
 
+const loadDraft = draft => {
+  cancelEdit()
+  draftId.value = draft.id
+  const restored = restoreProjectDraft(draft.snapshot, newProject.value)
+  newProject.value = restored.project
+  coverImagePreview.value = restored.image
+  activeTab.value = 'add'
+  window.scrollTo({ top:0, behavior:'smooth' })
+}
+
 const cancelEdit = () => {
   isEditing.value = false
   editingId.value = null
+  draftId.value = null
   newProject.value = { title: '', slug: '', description: '', content: '', category: '', tags: '', url: '', seo_title: '', seo_description: '', sort_order: 0, show_on_homepage: true }
   coverImageFile.value = null
   coverImagePreview.value = null
+}
+
+const saveDraft = async () => {
+  if (isSaving.value || isEditing.value) return
+  isSaving.value = true
+  errorMessage.value = ''
+  successMessage.value = ''
+  try {
+    const image = coverImageFile.value ? await uploadImageToBucket(coverImageFile.value) : coverImagePreview.value
+    const snapshot = projectDraftSnapshot(newProject.value, image)
+    const query = draftId.value
+      ? supabase.from('project_drafts').update({ snapshot }).eq('id', draftId.value)
+      : supabase.from('project_drafts').insert({ snapshot })
+    const { data, error } = await query.select('id').single()
+    if (error) throw error
+    draftId.value = data.id
+    coverImagePreview.value = image
+    coverImageFile.value = null
+    successMessage.value = draftCopy.value.saved
+    await fetchDrafts()
+  } catch (error) {
+    errorMessage.value = error.message
+  } finally {
+    isSaving.value = false
+  }
 }
 
 const showDeleteModal = ref(false)
@@ -395,6 +447,11 @@ const submitProject = async () => {
       const { error } = await supabase.from('projects').insert([payload])
       if (error) throw error
       successMessage.value = '¡Proyecto publicado con éxito!'
+      if (draftId.value) {
+        const { error:draftError } = await supabase.from('project_drafts').delete().eq('id', draftId.value)
+        if (draftError) errorMessage.value = draftError.message
+        await fetchDrafts()
+      }
     }
 
     cancelEdit()
@@ -553,6 +610,9 @@ const submitProject = async () => {
             </div>
 
             <div style="display: flex; flex-direction: column; gap: 12px;">
+              <button v-if="!isEditing" type="button" class="btn btn-outline w-full" :disabled="isSaving" @click="saveDraft">
+                {{ isSaving ? draftCopy.saving : draftCopy.save }}
+              </button>
               <button type="submit" class="btn btn-primary w-full" :disabled="isSaving">
                 {{ isSaving ? t('admin.btnSave') : (isEditing ? t('admin.btnUpdate') : t('admin.btnPublish')) }}
               </button>
@@ -643,6 +703,15 @@ const submitProject = async () => {
 
       <!-- MANAGE SECTION -->
       <div v-if="activeTab === 'manage'" class="manage-section fade-in">
+        <p v-if="errorMessage" class="error-msg" role="alert">{{ errorMessage }}</p>
+        <div class="card draft-list">
+          <h2 class="card-title">{{ draftCopy.heading }}</h2>
+          <p v-if="!drafts.length" class="help-text">{{ draftCopy.empty }}</p>
+          <div v-for="draft in drafts" :key="draft.id" class="project-list-item">
+            <div class="list-info"><h4>{{ draft.snapshot.project?.title || draftCopy.heading }}</h4><span>{{ new Date(draft.updated_at).toLocaleDateString() }}</span></div>
+            <button type="button" class="btn-small" @click="loadDraft(draft)">{{ draftCopy.edit }}</button>
+          </div>
+        </div>
         <div class="card">
           <div v-if="projectsList.filter(p => !p.is_deleted).length === 0" style="padding: 32px; text-align: center; color: var(--text-secondary);">
             {{ t('admin.noProjects') }}
