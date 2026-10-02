@@ -28,6 +28,15 @@ NOTIFY pgrst, 'reload schema';
 
 Per-item quotes can still be saved using the original `save_quote` function while the pricing function is unavailable. Global pricing requires the migration; it is never silently converted to per-item pricing.
 
+### Project drafts and optional maintenance
+
+Apply these migrations before deploying the corresponding admin UI:
+
+1. `supabase/migrations/202610020001_project_drafts.sql` creates owner-only, incomplete project drafts. A project enters the public `projects` table only when published from the editor.
+2. `supabase/migrations/202610020002_quote_optional_maintenance.sql` adds an optional monthly maintenance amount to global-price quotes. It appears separately in the editor and PDF, never in the one-off project total.
+
+If a maintenance amount is selected but the second migration is missing, the editor rejects the save before creating a numbered quote. Drafts and optional maintenance can be left unused; existing published projects and quote totals remain unchanged.
+
 New quotes and business settings use the same ES/CA/EN example terms when the corresponding stored terms are empty. Custom saved terms take precedence, and existing quote documents retain their saved terms.
 
 ### Lead capture

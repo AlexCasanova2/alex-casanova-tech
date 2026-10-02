@@ -10,6 +10,12 @@ describe('quote validation', () => {
     }
   })
   it('allows fractional quantities and free items', () => expect(validateQuoteValues(quote())).toBeNull())
+  it('accepts optional monthly maintenance only with a valid global price', () => {
+    expect(validateQuoteValues({...quote(),pricing_mode:'global',global_price:700,maintenance_monthly:null})).toBeNull()
+    expect(validateQuoteValues({...quote(),pricing_mode:'global',global_price:700,maintenance_monthly:0})).toBeNull()
+    for (const amount of ['', -1, Infinity]) expect(validateQuoteValues({...quote(),pricing_mode:'global',global_price:700,maintenance_monthly:amount})).toBe('amounts')
+    expect(validateQuoteValues({...quote(),pricing_mode:'itemized',maintenance_monthly:30})).toBe('amounts')
+  })
   it('rejects empty, negative and non-finite amounts', () => {
     for (const value of ['', null, -1, Infinity, 'invalid']) {
       const valueQuote = quote()

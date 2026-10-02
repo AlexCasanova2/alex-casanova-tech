@@ -7,7 +7,7 @@ import { calculateLineTotal, calculateQuoteTotals, formatCurrency } from '../../
 import { validateQuoteValues } from '../../utils/quoteValidation'
 import { detailedServices } from '../../config/quoteServices'
 import { fillEmptyQuoteTerms } from '../../config/quoteTerms'
-import { saveQuoteWithCompatibility, PRICING_MIGRATION } from '../../utils/saveQuote'
+import { saveQuoteWithCompatibility, PRICING_MIGRATION, MAINTENANCE_MIGRATION } from '../../utils/saveQuote'
 import { addedPresetCodes } from '../../utils/quotePresets'
 
 const { locale } = useI18n()
@@ -22,6 +22,11 @@ const pricingCopy = computed(() => ({
   es: { label:'Cómo se presupuesta', itemized:'Precio por concepto', global:'Precio global', amount:'Precio global antes de impuestos (€)', help:'Los conceptos detallan el trabajo incluido. El descuento y los impuestos se aplican al precio global.' },
   ca: { label:'Com es pressuposta', itemized:'Preu per concepte', global:'Preu global', amount:'Preu global abans d’impostos (€)', help:'Els conceptes detallen el treball inclòs. El descompte i els impostos s’apliquen al preu global.' },
   en: { label:'Pricing method', itemized:'Price per item', global:'Fixed project price', amount:'Project price before tax (€)', help:'Items describe the included scope. Discount and taxes apply to the project price.' }
+}[locale.value] || {}))
+const maintenanceCopy = computed(() => ({
+  es:{ label:'Ofrecer mantenimiento mensual (opcional)', amount:'Importe mensual antes de impuestos (€)', separate:'Mantenimiento opcional', suffix:'/mes + IVA · no incluido en el total', migration:'Para guardar el mantenimiento opcional, aplica la migración de Supabase' },
+  ca:{ label:'Oferir manteniment mensual (opcional)', amount:'Import mensual abans d’impostos (€)', separate:'Manteniment opcional', suffix:'/mes + IVA · no inclòs en el total', migration:'Per desar el manteniment opcional, aplica la migració de Supabase' },
+  en:{ label:'Offer monthly maintenance (optional)', amount:'Monthly amount before tax (€)', separate:'Optional maintenance', suffix:'/month + VAT · not included in total', migration:'To save optional maintenance, apply the Supabase migration' }
 }[locale.value] || {}))
 const serviceSearch = ref('')
 const serviceCategory = ref('all')
@@ -105,7 +110,7 @@ watch(() => settings.value.default_terms, (terms, previousTerms) => {
   }
 })
 
-const makeForm = () => { const issue = today(); const language=settings.value.default_language || 'es'; return {id:null,quote_number:null,title:'Proyecto digital',client_id:'',status:'draft',language,currency:'EUR',issue_date:issue,valid_until:addDays(issue,settings.value.default_validity_days),client_snapshot:{},issuer_snapshot:{...settings.value.issuer_snapshot},notes:'',terms:settings.value.default_terms?.[language] || '',discount_percentage:0,vat_percentage:settings.value.default_vat_percentage,withholding_percentage:settings.value.default_withholding_percentage,quote_items:[blankItem()]} }
+const makeForm = () => { const issue = today(); const language=settings.value.default_language || 'es'; return {id:null,quote_number:null,title:'Proyecto digital',client_id:'',status:'draft',language,currency:'EUR',issue_date:issue,valid_until:addDays(issue,settings.value.default_validity_days),client_snapshot:{},issuer_snapshot:{...settings.value.issuer_snapshot},notes:'',terms:settings.value.default_terms?.[language] || '',discount_percentage:0,vat_percentage:settings.value.default_vat_percentage,withholding_percentage:settings.value.default_withholding_percentage,maintenance_monthly:null,quote_items:[blankItem()]} }
 const totals = computed(() => calculateQuoteTotals(form.value.quote_items, {discountPercentage:form.value.discount_percentage,vatPercentage:form.value.vat_percentage,withholdingPercentage:form.value.withholding_percentage,pricingMode:form.value.pricing_mode,globalPrice:form.value.global_price}))
 const money = value => formatCurrency(value, localeCode.value, 'EUR')
 const statusLabel = status => c.value[status] || status
@@ -148,7 +153,8 @@ const updateSettings = value => { settings.value = {...structuredClone(value), d
 defineExpose({ upsertClient, updateSettings })
 
 const openNew = () => { form.value={...makeForm(),pricing_mode:'itemized',global_price:0}; savedPricingMode.value='itemized'; mode.value='edit'; successMessage.value=''; errorMessage.value=''; validationAttempted.value=false; window.scrollTo({top:0,behavior:'smooth'}) }
-const openEdit = quote => { savedPricingMode.value=quote.pricing_mode||'itemized'; form.value={...quote,pricing_mode:savedPricingMode.value,global_price:quote.global_price||0,client_snapshot:{...(quote.client_snapshot||{})},issuer_snapshot:{...(quote.issuer_snapshot||{})},quote_items:[...(quote.quote_items||[])].sort((a,b)=>a.position-b.position).map(item=>({...item}))}; if(!form.value.quote_items.length) form.value.quote_items=[blankItem()]; mode.value='edit'; errorMessage.value=''; validationAttempted.value=false; window.scrollTo({top:0,behavior:'smooth'}) }
+const openEdit = quote => { savedPricingMode.value=quote.pricing_mode||'itemized'; form.value={...quote,pricing_mode:savedPricingMode.value,global_price:quote.global_price||0,maintenance_monthly:quote.maintenance_monthly??null,client_snapshot:{...(quote.client_snapshot||{})},issuer_snapshot:{...(quote.issuer_snapshot||{})},quote_items:[...(quote.quote_items||[])].sort((a,b)=>a.position-b.position).map(item=>({...item}))}; if(!form.value.quote_items.length) form.value.quote_items=[blankItem()]; mode.value='edit'; errorMessage.value=''; validationAttempted.value=false; window.scrollTo({top:0,behavior:'smooth'}) }
+watch(() => form.value.pricing_mode, mode => { if (mode !== 'global') form.value.maintenance_monthly = null })
 const selectClient = () => { const client=clients.value.find(item=>item.id===form.value.client_id); if(!client) return; const defaultTerms=Object.values(settings.value.default_terms||{}); const usesDefault=!form.value.terms||defaultTerms.includes(form.value.terms); form.value.client_snapshot={name:client.name,tax_id:client.tax_id,email:client.email,phone:client.phone,address:client.address}; form.value.language=client.language||form.value.language; if(usesDefault) form.value.terms=settings.value.default_terms?.[form.value.language]||'' }
 const changeLanguage = () => { const defaultTerms=Object.values(settings.value.default_terms||{}); if(!form.value.terms||defaultTerms.includes(form.value.terms)) form.value.terms=settings.value.default_terms?.[form.value.language]||'' }
 const addItem = () => form.value.quote_items.push(blankItem())
@@ -189,6 +195,7 @@ const saveQuote = async () => {
   try {
     payload.pricing_mode = form.value.pricing_mode || 'itemized'
     payload.global_price = Number(form.value.global_price || 0)
+    payload.maintenance_monthly = form.value.pricing_mode === 'global' ? form.value.maintenance_monthly : null
     const {data,error}=await saveQuoteWithCompatibility(supabase,payload,items,savedPricingMode.value)
     if(error) throw error
     // Preserve the saved ID even if refreshing the list fails, preventing duplicate inserts.
@@ -197,7 +204,9 @@ const saveQuote = async () => {
     successMessage.value=c.value.saved
     await fetchData()
   } catch (error) {
-    if (error.code === 'PRICING_MIGRATION_REQUIRED') {
+    if (error.code === 'MAINTENANCE_MIGRATION_REQUIRED') {
+      errorMessage.value = `${maintenanceCopy.value.migration}: ${MAINTENANCE_MIGRATION}`
+    } else if (error.code === 'PRICING_MIGRATION_REQUIRED') {
       const messages = {
         es:`Para guardar precios globales falta activar la función en Supabase. Ejecuta ${PRICING_MIGRATION} en el editor SQL. Si ya la aplicaste, ejecuta NOTIFY pgrst, 'reload schema'; y vuelve a guardar. Tu presupuesto sigue en el formulario.`,
         ca:`Per desar preus globals cal activar la funció a Supabase. Executa ${PRICING_MIGRATION} a l’editor SQL. Si ja l’has aplicat, executa NOTIFY pgrst, 'reload schema'; i torna a desar. El pressupost continua al formulari.`,
@@ -245,6 +254,9 @@ onMounted(fetchData)
             <label for="global-price">{{ pricingCopy.amount }}</label>
             <input id="global-price" v-model.number="form.global_price" type="number" min="0" step="0.01" inputmode="decimal" />
             <p>{{ pricingCopy.help }}</p>
+            <label class="maintenance-toggle"><input type="checkbox" :checked="form.maintenance_monthly != null" @change="form.maintenance_monthly = $event.target.checked ? 0 : null" /> {{ maintenanceCopy.label }}</label>
+            <label v-if="form.maintenance_monthly != null" for="maintenance-price">{{ maintenanceCopy.amount }}</label>
+            <input v-if="form.maintenance_monthly != null" id="maintenance-price" v-model.number="form.maintenance_monthly" type="number" min="0" step="0.01" inputmode="decimal" />
           </template>
         </div>
         <div class="document-sheet">
@@ -285,7 +297,7 @@ onMounted(fetchData)
         </div>
         <aside class="quote-sidebar">
           <div class="side-card"><span class="eyebrow">{{ c.status }}</span><select v-model="form.status" :class="['large-status',form.status]"><option value="draft">{{ c.draft }}</option><option value="sent">{{ c.sent }}</option><option value="accepted">{{ c.accepted }}</option><option value="rejected">{{ c.rejected }}</option></select></div>
-          <div class="side-card totals-card"><h3>{{ c.summary }}</h3><label><span>{{ c.discount }} (%)</span><input v-model.number="form.discount_percentage" type="number" min="0" max="100" step="0.01"/></label><label><span>{{ c.vat }} (%)</span><input v-model.number="form.vat_percentage" type="number" min="0" max="100" step="0.01"/></label><label><span>{{ c.withholding }} (%)</span><input v-model.number="form.withholding_percentage" type="number" min="0" max="100" step="0.01"/></label><div class="sum-row"><span>{{ c.subtotal }}</span><strong>{{ money(totals.subtotal) }}</strong></div><div v-if="totals.discountAmount" class="sum-row"><span>{{ c.discount }}</span><strong>-{{ money(totals.discountAmount) }}</strong></div><div class="sum-row"><span>{{ c.vat }}</span><strong>{{ money(totals.vatAmount) }}</strong></div><div v-if="totals.withholdingAmount" class="sum-row"><span>{{ c.withholding }}</span><strong>-{{ money(totals.withholdingAmount) }}</strong></div><div class="grand-total"><span>{{ c.total }}</span><strong>{{ money(totals.total) }}</strong></div></div>
+           <div class="side-card totals-card"><h3>{{ c.summary }}</h3><label><span>{{ c.discount }} (%)</span><input v-model.number="form.discount_percentage" type="number" min="0" max="100" step="0.01"/></label><label><span>{{ c.vat }} (%)</span><input v-model.number="form.vat_percentage" type="number" min="0" max="100" step="0.01"/></label><label><span>{{ c.withholding }} (%)</span><input v-model.number="form.withholding_percentage" type="number" min="0" max="100" step="0.01"/></label><div class="sum-row"><span>{{ c.subtotal }}</span><strong>{{ money(totals.subtotal) }}</strong></div><div v-if="totals.discountAmount" class="sum-row"><span>{{ c.discount }}</span><strong>-{{ money(totals.discountAmount) }}</strong></div><div class="sum-row"><span>{{ c.vat }}</span><strong>{{ money(totals.vatAmount) }}</strong></div><div v-if="totals.withholdingAmount" class="sum-row"><span>{{ c.withholding }}</span><strong>-{{ money(totals.withholdingAmount) }}</strong></div><div class="grand-total"><span>{{ c.total }}</span><strong>{{ money(totals.total) }}</strong></div><div v-if="form.pricing_mode === 'global' && form.maintenance_monthly != null" class="maintenance-summary"><span>{{ maintenanceCopy.separate }}</span><strong>{{ money(form.maintenance_monthly) }} {{ maintenanceCopy.suffix }}</strong></div></div>
         </aside>
         <footer class="mobile-save-bar">
           <div><span>{{ c.total }}</span><strong>{{ money(totals.total) }}</strong></div>
@@ -458,4 +470,8 @@ onMounted(fetchData)
 .preset-card.is-added:hover{transform:none;border-color:var(--border-color)}
 .preset-card.is-added .preset-add{color:var(--text-secondary)}
 .back-button { display: inline-flex; align-items: center; gap: 8px; }
+.maintenance-toggle { grid-column: 1 / -1; display: flex; align-items: center; gap: 10px; margin-top: 12px; }
+.maintenance-toggle input { width: auto; flex: none; }
+.maintenance-summary { display: flex; flex-direction: column; gap: 4px; margin-top: 18px; padding-top: 16px; border-top: 1px solid var(--border-color); }
+.maintenance-summary strong { font-size: .9rem; overflow-wrap: anywhere; }
 </style>

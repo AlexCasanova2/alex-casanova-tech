@@ -3,9 +3,9 @@ import autoTable from 'jspdf-autotable'
 import { calculateQuoteTotals, formatCurrency } from './quoteCalculations'
 
 const text = {
-  es: { quote:'PRESUPUESTO', issue:'Fecha', valid:'Válido hasta', client:'CLIENTE', description:'Concepto', quantity:'Cantidad', unit:'Unidad', price:'Precio', amount:'Importe', subtotal:'Subtotal', discount:'Descuento', vat:'IVA', withholding:'IRPF', total:'TOTAL', notes:'NOTAS', terms:'CONDICIONES', page:'Página' },
-  ca: { quote:'PRESSUPOST', issue:'Data', valid:'Vàlid fins', client:'CLIENT', description:'Concepte', quantity:'Quantitat', unit:'Unitat', price:'Preu', amount:'Import', subtotal:'Subtotal', discount:'Descompte', vat:'IVA', withholding:'IRPF', total:'TOTAL', notes:'NOTES', terms:'CONDICIONS', page:'Pàgina' },
-  en: { quote:'QUOTE', issue:'Date', valid:'Valid until', client:'CLIENT', description:'Description', quantity:'Quantity', unit:'Unit', price:'Price', amount:'Amount', subtotal:'Subtotal', discount:'Discount', vat:'VAT', withholding:'Withholding', total:'TOTAL', notes:'NOTES', terms:'TERMS', page:'Page' }
+  es: { quote:'PRESUPUESTO', issue:'Fecha', valid:'Válido hasta', client:'CLIENTE', description:'Concepto', quantity:'Cantidad', unit:'Unidad', price:'Precio', amount:'Importe', subtotal:'Subtotal', discount:'Descuento', vat:'IVA', withholding:'IRPF', total:'TOTAL', maintenance:'Mantenimiento opcional', maintenanceNote:'Mensual + IVA. No incluido en el total del proyecto.', notes:'NOTAS', terms:'CONDICIONES', page:'Página' },
+  ca: { quote:'PRESSUPOST', issue:'Data', valid:'Vàlid fins', client:'CLIENT', description:'Concepte', quantity:'Quantitat', unit:'Unitat', price:'Preu', amount:'Import', subtotal:'Subtotal', discount:'Descompte', vat:'IVA', withholding:'IRPF', total:'TOTAL', maintenance:'Manteniment opcional', maintenanceNote:'Mensual + IVA. No inclòs en el total del projecte.', notes:'NOTES', terms:'CONDICIONS', page:'Pàgina' },
+  en: { quote:'QUOTE', issue:'Date', valid:'Valid until', client:'CLIENT', description:'Description', quantity:'Quantity', unit:'Unit', price:'Price', amount:'Amount', subtotal:'Subtotal', discount:'Discount', vat:'VAT', withholding:'Withholding', total:'TOTAL', maintenance:'Optional maintenance', maintenanceNote:'Monthly + VAT. Not included in the project total.', notes:'NOTES', terms:'TERMS', page:'Page' }
 }
 
 const localeCodes = { es:'es-ES', ca:'ca-ES', en:'en-IE' }
@@ -92,6 +92,15 @@ export async function generateQuotePdf(quote) {
   summary.push([t.total,money(totals.total)])
   autoTable(doc, { startY:y, margin:{left:112,right:16}, body:summary, theme:'plain', styles:{fontSize:9,cellPadding:2,halign:'right'}, columnStyles:{0:{fontStyle:'normal'},1:{fontStyle:'bold'}}, didParseCell:data => { if (data.row.index === summary.length-1) { data.cell.styles.fillColor=[215,255,79]; data.cell.styles.textColor=[15,15,15]; data.cell.styles.fontSize=11 } } })
   y = doc.lastAutoTable.finalY + 12
+  if (globalPricing && quote.maintenance_monthly != null) {
+    ensureSpace(23)
+    doc.setFont('helvetica','bold'); doc.setFontSize(10); doc.setTextColor(25,25,25)
+    doc.text(`${t.maintenance}: ${money(quote.maintenance_monthly)}`, 16, y)
+    y += 6
+    doc.setFont('helvetica','normal'); doc.setFontSize(8); doc.setTextColor(90,90,90)
+    doc.text(t.maintenanceNote, 16, y)
+    y += 12
+  }
   for (const [heading, content] of [[t.notes, quote.notes],[t.terms, quote.terms]]) {
     if (!content) continue
     ensureSpace(14); doc.setFont('helvetica','bold'); doc.setFontSize(8); doc.setTextColor(35,35,35); doc.text(heading,16,y); y += 5

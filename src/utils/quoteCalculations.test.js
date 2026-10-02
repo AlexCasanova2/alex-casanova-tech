@@ -24,6 +24,11 @@ describe('calculateQuoteTotals', () => {
       pricingMode:'global', globalPrice:1000, discountPercentage:10, vatPercentage:21, withholdingPercentage:15
     })).toEqual({subtotal:1000,discountAmount:100,base:900,vatAmount:189,withholdingAmount:135,total:954})
   })
+  it('does not add optional monthly maintenance to the one-off project total', () => {
+    expect(calculateQuoteTotals([{quantity:1,unit_price:0}], {
+      pricingMode:'global', globalPrice:1000, vatPercentage:21, maintenanceMonthly:60
+    })).toMatchObject({subtotal:1000,vatAmount:210,total:1210})
+  })
   it('ignores the saved project price when returning to itemized mode', () => {
     expect(calculateQuoteTotals([{quantity:2,unit_price:100}], {pricingMode:'itemized',globalPrice:1000}).total).toBe(200)
   })

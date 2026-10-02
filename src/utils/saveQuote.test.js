@@ -26,6 +26,22 @@ describe('quote saving across schema versions', () => {
     expect(result.error.code).toBe('PRICING_MIGRATION_REQUIRED')
     expect(client.rpc).toHaveBeenCalledOnce()
   })
+  it('checks the maintenance column before saving and keeps it outside line items', async () => {
+    const success={data:{id:'q1',pricing_mode:'global',total:1000,maintenance_monthly:50},error:null}
+    const query={select:vi.fn().mockReturnThis(),limit:vi.fn().mockResolvedValue({data:[],error:null})}
+    const client={from:vi.fn().mockReturnValue(query),rpc:vi.fn().mockResolvedValue(success)}
+    const pricedQuote={...quote,pricing_mode:'global',maintenance_monthly:50}
+    expect(await saveQuoteWithCompatibility(client,pricedQuote,items)).toBe(success)
+    expect(client.from).toHaveBeenCalledWith('quotes')
+    expect(query.select).toHaveBeenCalledWith('maintenance_monthly')
+    expect(client.rpc).toHaveBeenCalledWith('save_quote_priced',{p_quote:pricedQuote,p_items:items})
+  })
+  it('refuses to save maintenance when the new migration is missing', async () => {
+    const query={select:vi.fn().mockReturnThis(),limit:vi.fn().mockResolvedValue({data:null,error:{code:'42703'}})}
+    const client={from:vi.fn().mockReturnValue(query),rpc:vi.fn()}
+    expect((await saveQuoteWithCompatibility(client,{...quote,pricing_mode:'global',maintenance_monthly:50},items)).error.code).toBe('MAINTENANCE_MIGRATION_REQUIRED')
+    expect(client.rpc).not.toHaveBeenCalled()
+  })
   it('does not use the legacy function to change an existing global quote to itemized', async () => {
     const client={rpc:vi.fn().mockResolvedValue(missingFunction)}
     expect((await saveQuoteWithCompatibility(client,{...quote,id:'q1'},items,'global')).error.code).toBe('PRICING_MIGRATION_REQUIRED')
