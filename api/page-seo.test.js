@@ -54,6 +54,12 @@ describe('commercial page SEO', () => {
     expect(result).toContain('hreflang="ca" href="https://alexcasanova.es/ca/disseny-web-empreses"')
   })
 
+  it.each(['/es/presupuesto-web', '/ca/pressupost-web'])('describes a personal proposal rather than an instant estimate on %s', path => {
+    const result = renderSeoHtml(html, path)
+    expect(result).toMatch(/propuesta personalizada|proposta personalitzada/)
+    expect(result).not.toMatch(/estimación orientativa|estimació orientativa|antes de IVA|abans d’IVA/)
+  })
+
   it('does not render unknown pages', () => {
     expect(renderSeoHtml(html, '/es/no-existe')).toBeNull()
   })

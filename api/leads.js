@@ -78,9 +78,16 @@ export async function sendNotification(lead, estimate, settings) {
     : lead.language === 'en'
       ? `Hello ${lead.name},\n\nI have received your enquiry. I will review it personally and reply as soon as possible.\n\nIndicative estimate: ${amount}.\n\nÀlex Casanova`
     : `Hola ${lead.name},\n\nHe recibido tu solicitud. La revisaré personalmente y te responderé lo antes posible.\n\nEstimación orientativa: ${amount}.\n\nÀlex Casanova`
+  const customerConfirmation = lead.source === 'configurator'
+    ? lead.language === 'ca'
+      ? `Hola ${lead.name},\n\nHe rebut la teva sol·licitud. Revisaré l’abast i et respondré amb una proposta personalitzada al més aviat possible.\n\nÀlex Casanova`
+      : lead.language === 'en'
+        ? `Hello ${lead.name},\n\nI have received your enquiry. I will review the scope and reply with a personalised proposal as soon as possible.\n\nÀlex Casanova`
+        : `Hola ${lead.name},\n\nHe recibido tu solicitud. Revisaré el alcance y te responderé con una propuesta personalizada lo antes posible.\n\nÀlex Casanova`
+    : confirmation
   const messages = [
     { from, to:[ownerEmail], replyTo:lead.email, subject:`Nuevo lead web: ${lead.name}`, text },
-    { from, to:[lead.email], subject:lead.language === 'ca' ? 'He rebut la teva sol·licitud' : lead.language === 'en' ? 'I have received your enquiry' : 'He recibido tu solicitud', text:confirmation }
+    { from, to:[lead.email], subject:lead.language === 'ca' ? 'He rebut la teva sol·licitud' : lead.language === 'en' ? 'I have received your enquiry' : 'He recibido tu solicitud', text:customerConfirmation }
   ]
   await Promise.all(messages.map(message => transporter.sendMail(message)))
 }
@@ -163,7 +170,7 @@ export default async function handler(req, res) {
         await client.from('leads').update({ email_delivery:{ status:'failed', attempted_at:new Date().toISOString(), error:emailError.message.slice(0, 200) } }).eq('id', data.id)
       }
     }
-    return res.status(201).json({ ok:true, id:data?.id || null, estimate })
+    return res.status(201).json({ ok:true, id:data?.id || null, ...(source === 'configurator' ? {} : { estimate }) })
   } catch (error) {
     console.error('Lead capture error:', error)
     return res.status(500).json({ error:'Unable to process the request' })

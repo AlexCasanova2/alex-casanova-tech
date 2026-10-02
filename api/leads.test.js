@@ -57,4 +57,14 @@ describe('SMTP configuration', () => {
       to:['guest@example.com'], subject:'I have received your enquiry', text:expect.stringContaining('Personalised estimate')
     }))
   })
+  it.each(['es', 'ca'])('does not send indicative prices to configurator visitors in %s', async language => {
+    const sendMail = vi.fn().mockResolvedValue({ accepted:['ana@example.com'] })
+    vi.mocked(nodemailer.createTransport).mockReturnValue({ sendMail })
+    await sendNotification({ name:'Ana', email:'ana@example.com', source:'configurator', language, message:'' }, { custom:false, netMin:700, netMax:1000 }, smtpSettings({ SMTP_HOST:'smtp.example.com', SMTP_USER:'test@example.com', SMTP_PASSWORD:'secret' }))
+    const ownerMessage = sendMail.mock.calls.find(([message]) => message.to.includes('hola@alexcasanova.es'))[0]
+    const visitorMessage = sendMail.mock.calls.find(([message]) => message.to.includes('ana@example.com'))[0]
+    expect(ownerMessage.text).toContain('700–1000 EUR')
+    expect(visitorMessage.text).not.toMatch(/700|1000|estimaci[oó]|forquilla|horquilla/i)
+    expect(visitorMessage.text).toMatch(/propuesta personalizada|proposta personalitzada/)
+  })
 })

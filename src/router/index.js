@@ -41,19 +41,19 @@ const router = createRouter({
             path: '/es/precio-pagina-web',
             name: 'web-pricing-es',
             component: LeadLandingView,
-            meta: { locale: 'es', leadPage: 'pricing', title: 'Precio de una página web corporativa', description: 'Descubre cuánto cuesta una web corporativa y calcula una estimación según páginas, idiomas y funcionalidades.', alternate: '/ca/preu-pagina-web' }
+            meta: { locale: 'es', leadPage: 'pricing', title: 'Precio de una página web corporativa', description: 'Descubre qué influye en el precio de una web corporativa y solicita una propuesta personalizada.', alternate: '/ca/preu-pagina-web' }
         },
         {
             path: '/ca/preu-pagina-web',
             name: 'web-pricing-ca',
             component: LeadLandingView,
-            meta: { locale: 'ca', leadPage: 'pricing', title: 'Preu d’una pàgina web corporativa', description: 'Descobreix quant costa una web corporativa i calcula una estimació segons pàgines, idiomes i funcionalitats.', alternate: '/es/precio-pagina-web' }
+            meta: { locale: 'ca', leadPage: 'pricing', title: 'Preu d’una pàgina web corporativa', description: 'Descobreix què influeix en el preu d’una web corporativa i sol·licita una proposta personalitzada.', alternate: '/es/precio-pagina-web' }
         },
         {
             path: '/es/presupuesto-web',
             name: 'web-budget-es',
             component: ConfiguratorView,
-            meta: { locale: 'es', title: 'Calcula el presupuesto de tu página web', description: 'Configura tu web corporativa y obtén al momento una estimación orientativa antes de IVA.', alternate: '/ca/pressupost-web' }
+            meta: { locale: 'es', title: 'Solicita presupuesto para tu página web', description: 'Cuéntame qué necesita tu web corporativa y recibirás una propuesta personalizada tras revisar el alcance.', alternate: '/ca/pressupost-web' }
         },
         {
             path: '/es/web-para-bodas',
@@ -77,7 +77,7 @@ const router = createRouter({
             path: '/ca/pressupost-web',
             name: 'web-budget-ca',
             component: ConfiguratorView,
-            meta: { locale: 'ca', title: 'Calcula el pressupost de la teva pàgina web', description: 'Configura la teva web corporativa i obtén al moment una estimació orientativa abans d’IVA.', alternate: '/es/presupuesto-web' }
+            meta: { locale: 'ca', title: 'Sol·licita pressupost per a la teva pàgina web', description: 'Explica’m què necessita la teva web corporativa i rebràs una proposta personalitzada després de revisar l’abast.', alternate: '/es/presupuesto-web' }
         },
         {
             path: '/es/privacidad',
