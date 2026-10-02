@@ -63,8 +63,10 @@ const commercialLabels = computed(() => locale.value === 'en' ? { service:'Web d
 const weddingFooter = computed(() => weddingLandings[locale.value] || weddingLandings.es)
 
 const handleLogout = async () => {
+  await fetch('/api/admin-session', { method:'DELETE', credentials:'same-origin' }).catch(() => {})
   await supabase.auth.signOut()
   userSession.value = null
+  if (route.name === 'admin') router.replace('/')
 }
 
 const updateGlobalSEO = () => {
@@ -78,8 +80,9 @@ const updateGlobalSEO = () => {
     title = `${t('nav.archive')} | Àlex Casanova`
   } else if (route.name === 'contact') {
     title = `${t('nav.contact')} | Àlex Casanova`
-  } else if (route.name === 'admin') {
-    title = `Admin | Àlex Casanova`
+  } else if (route.meta.noindex) {
+    title = `Acceso privado | Àlex Casanova`
+    desc = 'Área privada.'
   } else if (route.meta.title) {
     title = `${route.meta.title} | ${route.meta.brand || 'Àlex Casanova'}`
     desc = route.meta.description || desc
@@ -95,6 +98,11 @@ const updateGlobalSEO = () => {
       document.head.appendChild(metaDesc)
     }
     metaDesc.content = desc
+    let robots = document.querySelector('meta[name="robots"]')
+    if (route.meta.noindex) {
+      if (!robots) { robots = document.createElement('meta'); robots.name = 'robots'; document.head.appendChild(robots) }
+      robots.content = 'noindex, nofollow, noarchive'
+    } else robots?.remove()
     const canonicalUrl = `https://alexcasanova.es${route.path}`
     const setMeta = (selector, attribute, content) => {
       const element = document.querySelector(selector)
@@ -102,11 +110,11 @@ const updateGlobalSEO = () => {
     }
     setMeta('meta[property="og:title"]', 'content', title)
     setMeta('meta[property="og:description"]', 'content', desc)
-    setMeta('meta[property="og:url"]', 'content', canonicalUrl)
+    setMeta('meta[property="og:url"]', 'content', route.meta.noindex ? '' : canonicalUrl)
     setMeta('meta[property="twitter:title"]', 'content', title)
     setMeta('meta[property="twitter:description"]', 'content', desc)
-    setMeta('meta[property="twitter:url"]', 'content', canonicalUrl)
-    setMeta('link[rel="canonical"]', 'href', canonicalUrl)
+    setMeta('meta[property="twitter:url"]', 'content', route.meta.noindex ? '' : canonicalUrl)
+    setMeta('link[rel="canonical"]', 'href', route.meta.noindex ? 'https://alexcasanova.es/' : canonicalUrl)
     document.querySelectorAll('link[rel="alternate"][hreflang]').forEach(link => link.remove())
     const alternates = isWeddingPage.value
       ? Object.entries(weddingLandings).filter(([lang]) => lang !== route.meta.locale).map(([lang, copy]) => [lang, copy.path])

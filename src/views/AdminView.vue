@@ -1,5 +1,5 @@
 <script setup>
-import { computed, ref, onMounted, watch } from 'vue'
+import { computed, ref, onMounted, onUnmounted, watch } from 'vue'
 import { ArrowDown, ArrowUp } from '@lucide/vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
@@ -18,6 +18,17 @@ const email = ref('')
 const password = ref('')
 const isLoggingIn = ref(false)
 const errorMessage = ref('')
+let authSubscription
+
+const authorizeAdmin = async session => {
+  if (import.meta.env.DEV) return true
+  const response = await fetch('/api/admin-session', {
+    method:'POST', credentials:'same-origin',
+    headers:{ 'Content-Type':'application/json' },
+    body:JSON.stringify({ accessToken:session.access_token })
+  })
+  return response.ok
+}
 
 // Tabs
 const activeTab = ref('manage') // 'add' | 'manage' | 'trash'
@@ -104,7 +115,16 @@ const fetchDrafts = async () => {
 
 onMounted(async () => {
   const { data: { session } } = await supabase.auth.getSession()
-  if (session) {
+  if (session && route.name === 'admin-login') {
+    try {
+      if (await authorizeAdmin(session)) {
+        user.value = session.user
+        await router.replace('/admin')
+        await fetchProjects()
+        await fetchDrafts()
+      } else errorMessage.value = 'No tienes permiso para acceder al panel.'
+    } catch { errorMessage.value = 'No se pudo verificar el acceso al panel.' }
+  } else if (session) {
     user.value = session.user
     await fetchProjects()
     await fetchDrafts()
@@ -118,18 +138,21 @@ onMounted(async () => {
         router.replace({ path: '/admin' })
       }
     }
-  }
+  } else if (route.name === 'admin') await router.replace('/acceso')
 
-  supabase.auth.onAuthStateChange((_, session) => {
+  const { data } = supabase.auth.onAuthStateChange((event, session) => {
     if (session) {
       user.value = session.user
-      // Only fetch if projects list is empty to avoid double fetching on mount
-      if (projectsList.value.length === 0) { fetchProjects(); fetchDrafts() }
+      if (event === 'TOKEN_REFRESHED') authorizeAdmin(session).catch(() => {})
+      if (route.name === 'admin' && projectsList.value.length === 0) { fetchProjects(); fetchDrafts() }
     } else {
       user.value = null
+      if (route.name === 'admin') router.replace('/acceso')
     }
   })
+  authSubscription = data.subscription
 })
+onUnmounted(() => authSubscription?.unsubscribe())
 
 const handleLogin = async () => {
   isLoggingIn.value = true
@@ -143,8 +166,17 @@ const handleLogin = async () => {
   if (error) {
     errorMessage.value = error.message
   } else {
-    user.value = data.user
-    fetchProjects()
+    try {
+      if (await authorizeAdmin(data.session)) {
+        user.value = data.user
+        await router.replace('/admin')
+      } else {
+        await supabase.auth.signOut()
+        errorMessage.value = 'No tienes permiso para acceder al panel.'
+      }
+    } catch {
+      errorMessage.value = 'No se pudo verificar el acceso al panel.'
+    }
     fetchDrafts()
   }
   isLoggingIn.value = false
@@ -468,7 +500,7 @@ const submitProject = async () => {
 
 <template>
   <main class="page-wrapper container fade-in">
-    <div v-if="!user" class="admin-login">
+    <div v-if="!user || route.name === 'admin-login'" class="admin-login">
       <h1>{{ t('admin.access') }}</h1>
       <p>{{ t('admin.loginDesc') }}</p>
       

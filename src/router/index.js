@@ -103,9 +103,16 @@ const router = createRouter({
             component: ProjectDetailView
         },
         {
+            path: '/acceso',
+            name: 'admin-login',
+            component: () => import('../views/AdminView.vue'),
+            meta: { noindex:true }
+        },
+        {
             path: '/admin',
             name: 'admin',
-            component: () => import('../views/AdminView.vue')
+            component: () => import('../views/AdminView.vue'),
+            meta: { noindex:true }
         },
         {
             path: '/:pathMatch(.*)*',
@@ -122,6 +129,15 @@ const router = createRouter({
         }
         return { top: 0 }
     }
+})
+
+router.beforeEach(async to => {
+    if (to.name !== 'admin' || import.meta.env.DEV) return true
+    try {
+        const response = await fetch('/api/admin-session', { credentials:'same-origin', cache:'no-store' })
+        if (response.ok) return true
+    } catch { /* Fail closed when the session endpoint cannot be reached. */ }
+    return { name:'admin-login' }
 })
 
 export default router

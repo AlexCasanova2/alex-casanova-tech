@@ -16,6 +16,12 @@ Apply it with the Supabase CLI (`supabase db push`) when the project is linked, 
 
 Authenticated users only have access to their own CRM records. The existing portfolio tables are not modified.
 
+### Private admin access
+
+Set `CRM_OWNER_ID`, `SUPABASE_URL`, and `VITE_SUPABASE_ANON_KEY` in Vercel before deploying the protected admin route. `CRM_OWNER_ID` must be the Supabase Auth user ID of the portfolio owner. Without it, `/admin` fails closed with HTTP 404. Sign in at `/acceso`; the server verifies the Supabase access token against the owner ID and issues a short-lived, HttpOnly cookie for `/admin`. The server returns HTTP 404 to visitors without that cookie. Both routes send `noindex` headers, and neither is in the sitemap.
+
+The client-side router also checks the server session for navigation within the SPA. This complements, but does not replace, Supabase row-level security for private CRM tables; do not rely on hiding the URL or on `robots.txt` as access control.
+
 ### Quote pricing modes
 
 Apply `supabase/migrations/202609170001_quote_pricing_modes.sql` after the initial CRM migration. This adds per-item and global project pricing, and the transactional `save_quote_priced` RPC. Existing quotes keep per-item pricing. Global prices are before discount and tax; individual item rates are retained when switching modes but are omitted from global-price PDFs.

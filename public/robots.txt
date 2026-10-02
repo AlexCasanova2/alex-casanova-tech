@@ -1,4 +1,5 @@
 User-agent: *
+# Private routes return noindex/404. Crawlers must reach them to remove old URLs.
 Allow: /
 
 Sitemap: https://alexcasanova.es/sitemap.xml
