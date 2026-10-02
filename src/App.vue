@@ -170,7 +170,7 @@ onUnmounted(() => {
 
 <template>
   <div :class="['app-container', { 'public-site': route.name !== 'admin' }]">
-    <nav :class="['navbar', { 'home-overlay':isHome, 'wedding-overlay':isWeddingPage, 'is-scrolled':isScrolled, 'menu-active':menuOpen }]" @keydown.esc="closeMenu">
+    <nav v-if="route.name !== 'admin-login'" :class="['navbar', { 'home-overlay':isHome, 'wedding-overlay':isWeddingPage, 'is-scrolled':isScrolled, 'menu-active':menuOpen }]" @keydown.esc="closeMenu">
       <div class="container nav-content">
         <router-link to="/" class="logo">Casanova studio</router-link>
         <button ref="menuButton" class="menu-toggle" type="button" aria-controls="main-navigation" :aria-expanded="menuOpen" :aria-label="locale === 'en' ? 'Navigation menu' : locale === 'ca' ? 'Menú de navegació' : 'Menú de navegación'" @click="menuOpen = !menuOpen">
