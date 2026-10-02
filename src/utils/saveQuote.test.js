@@ -6,6 +6,26 @@ const quote = {id:null, title:'Web', pricing_mode:'itemized', global_price:1000,
 const items = [{description:'Diseño',quantity:1,unit_price:500}]
 
 describe('quote saving across schema versions', () => {
+  it('blocks extras before any write when their migration is missing', async () => {
+    const query={select:vi.fn().mockReturnThis(),limit:vi.fn().mockResolvedValue({error:{code:'42703'}})}
+    const client={from:vi.fn().mockReturnValue(query),rpc:vi.fn()}
+    expect((await saveQuoteWithCompatibility(client,{...quote,extras:[{description:'Landing',original_price:500,discounted_price:350}]},items)).error.code).toBe('EXTRAS_MIGRATION_REQUIRED')
+    expect(client.rpc).not.toHaveBeenCalled()
+  })
+  it('saves extras and explicit clearing with the priced function', async () => {
+    const query={select:vi.fn().mockReturnThis(),limit:vi.fn().mockResolvedValue({error:null})}
+    const client={from:vi.fn().mockReturnValue(query),rpc:vi.fn().mockResolvedValue({error:null})}
+    for (const extras of [[{description:'Landing',original_price:500,discounted_price:350}],[]]) {
+      await saveQuoteWithCompatibility(client,{...quote,extras},items)
+      expect(client.rpc).toHaveBeenLastCalledWith('save_quote_priced',{p_quote:{...quote,extras},p_items:items})
+    }
+  })
+  it('keeps quotes without extras compatible with the old schema', async () => {
+    const query={select:vi.fn().mockReturnThis(),limit:vi.fn().mockResolvedValue({error:{code:'42703'}})}
+    const client={from:vi.fn().mockReturnValue(query),rpc:vi.fn().mockResolvedValue({error:null})}
+    await saveQuoteWithCompatibility(client,{...quote,extras:[]},items)
+    expect(client.rpc).toHaveBeenCalledWith('save_quote_priced',{p_quote:quote,p_items:items})
+  })
   it('uses the priced function when available', async () => {
     const success = {data:{id:'q1',pricing_mode:'global',total:1000},error:null}
     const client = {rpc:vi.fn().mockResolvedValue(success)}

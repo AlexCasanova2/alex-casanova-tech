@@ -12,5 +12,9 @@ export function validateQuoteValues(quote) {
   if (quote.pricing_mode === 'global' && !numberInRange(quote.global_price, 0)) return 'amounts'
   if (quote.maintenance_monthly != null && (quote.pricing_mode !== 'global' || !numberInRange(quote.maintenance_monthly, 0))) return 'amounts'
   if (quote.quote_items.some(item => !numberInRange(item.quantity, 0) || (quote.pricing_mode !== 'global' && !numberInRange(item.unit_price, 0)))) return 'amounts'
+  if (!Array.isArray(quote.extras ?? [])) return 'extras'
+  if ((quote.extras ?? []).some(extra => !extra.description?.trim()
+    || !numberInRange(extra.original_price, 0)
+    || (extra.discounted_price != null && !numberInRange(extra.discounted_price, 0, Number(extra.original_price))))) return 'extras'
   return null
 }

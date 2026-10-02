@@ -15,7 +15,7 @@ export function calculateLineTotal(quantity, unitPrice) {
 
 export function calculateQuoteTotals(
   items = [],
-  { discountPercentage = 0, vatPercentage = 0, withholdingPercentage = 0, pricingMode = 'itemized', globalPrice = 0 } = {},
+  { discountPercentage = 0, vatPercentage = 0, withholdingPercentage = 0, pricingMode = 'itemized', globalPrice = 0, extras = [] } = {},
 ) {
   const safeItems = Array.isArray(items) ? items : []
   const subtotal = roundMoney(
@@ -25,12 +25,15 @@ export function calculateQuoteTotals(
     ),
   )
   const discountAmount = roundMoney(subtotal * finiteNumber(discountPercentage) / 100)
-  const base = roundMoney(subtotal - discountAmount)
+  const extrasTotal = roundMoney((Array.isArray(extras) ? extras : []).reduce(
+    (sum, extra) => sum + roundMoney(extra.discounted_price ?? extra.original_price), 0,
+  ))
+  const base = roundMoney(subtotal - discountAmount + extrasTotal)
   const vatAmount = roundMoney(base * finiteNumber(vatPercentage) / 100)
   const withholdingAmount = roundMoney(base * finiteNumber(withholdingPercentage) / 100)
   const total = roundMoney(base + vatAmount - withholdingAmount)
 
-  return { subtotal, discountAmount, base, vatAmount, withholdingAmount, total }
+  return { subtotal, discountAmount, extrasTotal, base, vatAmount, withholdingAmount, total }
 }
 
 export function formatCurrency(amount, locale = 'es-ES', currency = 'EUR') {

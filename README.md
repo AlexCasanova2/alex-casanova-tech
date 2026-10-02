@@ -45,6 +45,14 @@ If a maintenance amount is selected but the second migration is missing, the edi
 
 New quotes and business settings use the same ES/CA/EN example terms when the corresponding stored terms are empty. Custom saved terms take precedence, and existing quote documents retain their saved terms.
 
+### Independently priced extras
+
+Apply `supabase/migrations/202610020003_quote_extras.sql` after the optional maintenance migration. Extras have a description, original price and optional discounted price. They are added **after** the general discount on the base price and **before** VAT and withholding. Monthly maintenance remains outside the project total. For example, a 2,000 EUR base with a 10% discount plus a 500 EUR landing reduced to 350 EUR yields a taxable base of 2,150 EUR.
+
+The editor blocks saves containing extras if the new column is unavailable, without creating a numbered quote. Removing all extras saves an empty array. Quantity/unit fields are no longer shown; editing old quotes preserves their line amounts by converting each to one unit at the previous line total. The PDF shows original and final extra prices separately.
+
+Verification: `npm test` covers totals, validation, schema compatibility and PDF tables; `npm run build` checks compilation. Verify authenticated save/reopen and database totals after applying the migration. To roll back the feature, revert the extras editor, calculations, PDF and save changes together; do not drop stored extras or restore the old database calculation while quotes still contain extras.
+
 ### Lead capture
 
 Apply `supabase/migrations/202609230001_create_lead_capture.sql` after the quote migrations. It creates private leads, versioned estimator pricing, ownership policies and the `publish_lead_pricing` RPC.

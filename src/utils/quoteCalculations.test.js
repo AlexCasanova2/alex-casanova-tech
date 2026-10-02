@@ -19,10 +19,26 @@ describe('calculateLineTotal', () => {
 })
 
 describe('calculateQuoteTotals', () => {
+  it('adds discounted extras after the base discount, before VAT and withholding', () => {
+    expect(calculateQuoteTotals([], {
+      pricingMode:'global', globalPrice:2000, discountPercentage:10,
+      vatPercentage:21, withholdingPercentage:15,
+      extras:[{original_price:500,discounted_price:350}]
+    })).toEqual({subtotal:2000,discountAmount:200,extrasTotal:350,base:2150,vatAmount:451.5,withholdingAmount:322.5,total:2279})
+  })
+  it('supports full-price and free extras without applying the general discount twice', () => {
+    expect(calculateQuoteTotals([{quantity:1,unit_price:100}], {
+      discountPercentage:100,
+      extras:[{original_price:50,discounted_price:null},{original_price:100,discounted_price:0}]
+    })).toMatchObject({discountAmount:100,extrasTotal:50,base:50,total:50})
+  })
+  it('rounds each extra before summing', () => {
+    expect(calculateQuoteTotals([], {extras:[{original_price:0.105},{original_price:0.105}]}).extrasTotal).toBe(0.22)
+  })
   it('uses the project price instead of summing items in global mode', () => {
     expect(calculateQuoteTotals([{quantity:10,unit_price:999}], {
       pricingMode:'global', globalPrice:1000, discountPercentage:10, vatPercentage:21, withholdingPercentage:15
-    })).toEqual({subtotal:1000,discountAmount:100,base:900,vatAmount:189,withholdingAmount:135,total:954})
+    })).toEqual({subtotal:1000,discountAmount:100,extrasTotal:0,base:900,vatAmount:189,withholdingAmount:135,total:954})
   })
   it('does not add optional monthly maintenance to the one-off project total', () => {
     expect(calculateQuoteTotals([{quantity:1,unit_price:0}], {
@@ -41,6 +57,7 @@ describe('calculateQuoteTotals', () => {
       { discountPercentage: 10, vatPercentage: 21, withholdingPercentage: 15 },
     )).toEqual({
       subtotal: 125.55,
+      extrasTotal: 0,
       discountAmount: 12.56,
       base: 112.99,
       vatAmount: 23.73,
@@ -55,6 +72,7 @@ describe('calculateQuoteTotals', () => {
       { quantity: 1, unitPrice: 0.105 },
     ])).toEqual({
       subtotal: 0.22,
+      extrasTotal: 0,
       discountAmount: 0,
       base: 0.22,
       vatAmount: 0,
@@ -70,6 +88,7 @@ describe('calculateQuoteTotals', () => {
       withholdingPercentage: 'invalid',
     })).toEqual({
       subtotal: 0,
+      extrasTotal: 0,
       discountAmount: 0,
       base: 0,
       vatAmount: 0,

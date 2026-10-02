@@ -7,7 +7,7 @@ import { calculateLineTotal, calculateQuoteTotals, formatCurrency } from '../../
 import { validateQuoteValues } from '../../utils/quoteValidation'
 import { detailedServices } from '../../config/quoteServices'
 import { fillEmptyQuoteTerms } from '../../config/quoteTerms'
-import { saveQuoteWithCompatibility, PRICING_MIGRATION, MAINTENANCE_MIGRATION } from '../../utils/saveQuote'
+import { saveQuoteWithCompatibility, PRICING_MIGRATION, MAINTENANCE_MIGRATION, EXTRAS_MIGRATION } from '../../utils/saveQuote'
 import { addedPresetCodes } from '../../utils/quotePresets'
 import { isModuleLoadError } from '../../utils/moduleLoadError'
 
@@ -18,6 +18,11 @@ const words = {
   en:{title:'Quotes',subtitle:'From the first figure to the final yes.',new:'New quote',all:'All',draft:'Draft',sent:'Sent',accepted:'Accepted',rejected:'Rejected',expired:'Expired',search:'Search number, title or client',empty:'No quotes match these filters.',client:'Client',date:'Date',valid:'Valid until',amount:'Total',status:'Status',actions:'Actions',edit:'Edit',pdf:'PDF',archive:'Archive',back:'Back',document:'Document',quoteTitle:'Quote title',language:'Language',notes:'Client notes',terms:'Terms',items:'Items',description:'Description',quantity:'Quantity',unit:'Unit',price:'Price',lineTotal:'Amount',addLine:'Add empty item',summary:'Summary',subtotal:'Subtotal',discount:'Discount',vat:'VAT',withholding:'Withholding',total:'Total',save:'Save quote',saving:'Saving...',download:'Download PDF',pdfReload:'The PDF generator could not load after a site update. Save any pending changes, reload the page, and try again.',choose:'Select a client',units:'unit',days:'days',active:'Active',archived:'Archived',restore:'Restore',saved:'Quote saved.',quickItems:'Quick items',quickHelp:'Add a professional starting point, then adjust scope and price.',addPreset:'Add',removeItem:'Remove item',requiredTitle:'Enter a quote title.',requiredClient:'Select a client.',requiredItems:'Complete every item description.'}
 }
 const c = computed(() => words[locale.value] || words.es)
+const extrasCopy = computed(() => ({
+  es:{ title:'Extras', add:'Añadir extra', original:'Precio original (€)', discounted:'Precio rebajado (€)', discount:'Aplicar descuento propio', help:'Se suman después del descuento general y antes de impuestos.', invalid:'Completa el concepto y los precios de los extras. El precio rebajado no puede superar al original.', migration:'Para guardar extras, aplica la migración' },
+  ca:{ title:'Extres', add:'Afegir extra', original:'Preu original (€)', discounted:'Preu rebaixat (€)', discount:'Aplicar descompte propi', help:'Se sumen després del descompte general i abans d’impostos.', invalid:'Completa el concepte i els preus dels extres. El preu rebaixat no pot superar l’original.', migration:'Per desar extres, aplica la migració' },
+  en:{ title:'Extras', add:'Add extra', original:'Original price (€)', discounted:'Discounted price (€)', discount:'Apply own discount', help:'Added after the general discount and before tax.', invalid:'Complete the extra descriptions and prices. The discounted price cannot exceed the original.', migration:'To save extras, apply the migration' }
+}[locale.value] || {}))
 const addedLabel = computed(() => ({es:'Añadido',ca:'Afegit',en:'Added'}[locale.value] || 'Añadido'))
 const pricingCopy = computed(() => ({
   es: { label:'Cómo se presupuesta', itemized:'Precio por concepto', global:'Precio global', amount:'Precio global antes de impuestos (€)', help:'Los conceptos detallan el trabajo incluido. El descuento y los impuestos se aplican al precio global.' },
@@ -102,6 +107,14 @@ const mode = ref('list'), filter = ref('all'), search = ref(''), showArchived = 
 const isSaving = ref(false), isGenerating = ref(false), errorMessage = ref(''), successMessage = ref('')
 const validationAttempted = ref(false)
 const form = ref({})
+watch(form, value => {
+  value.extras = (value.extras || []).map(extra => ({ ...extra }))
+  // Conserva el importe de conceptos antiguos al retirar cantidad y unidad.
+  value.quote_items = (value.quote_items || []).map(item => ({
+    ...item, quantity:1, unit_price:calculateLineTotal(item.quantity ?? 1, item.unit_price)
+  }))
+}, { flush:'sync' })
+const addExtra = () => form.value.extras.push({ description:'', original_price:0, discounted_price:null })
 const savedPricingMode = ref('itemized')
 watch(() => settings.value.default_terms, (terms, previousTerms) => {
   if (mode.value !== 'edit' || form.value.id) return
@@ -112,7 +125,7 @@ watch(() => settings.value.default_terms, (terms, previousTerms) => {
 })
 
 const makeForm = () => { const issue = today(); const language=settings.value.default_language || 'es'; return {id:null,quote_number:null,title:'Proyecto digital',client_id:'',status:'draft',language,currency:'EUR',issue_date:issue,valid_until:addDays(issue,settings.value.default_validity_days),client_snapshot:{},issuer_snapshot:{...settings.value.issuer_snapshot},notes:'',terms:settings.value.default_terms?.[language] || '',discount_percentage:0,vat_percentage:settings.value.default_vat_percentage,withholding_percentage:settings.value.default_withholding_percentage,maintenance_monthly:null,quote_items:[blankItem()]} }
-const totals = computed(() => calculateQuoteTotals(form.value.quote_items, {discountPercentage:form.value.discount_percentage,vatPercentage:form.value.vat_percentage,withholdingPercentage:form.value.withholding_percentage,pricingMode:form.value.pricing_mode,globalPrice:form.value.global_price}))
+const totals = computed(() => calculateQuoteTotals(form.value.quote_items, {discountPercentage:form.value.discount_percentage,vatPercentage:form.value.vat_percentage,withholdingPercentage:form.value.withholding_percentage,pricingMode:form.value.pricing_mode,globalPrice:form.value.global_price,extras:form.value.extras}))
 const money = value => formatCurrency(value, localeCode.value, 'EUR')
 const statusLabel = status => c.value[status] || status
 const isExpired = quote => quote.status === 'sent' && quote.valid_until && quote.valid_until < today()
@@ -184,7 +197,7 @@ const saveQuote = async () => {
       ca: { dates:'Revisa les dates: la validesa ha de ser posterior o igual a l’emissió.', year:'Un pressupost numerat ha de mantenir l’any d’emissió.', percentages:'Els percentatges han d’estar entre 0 i 100.', amounts:'Introdueix quantitats i preus vàlids, iguals o superiors a zero.' },
       en: { dates:'Check the dates: expiry must be on or after the issue date.', year:'A numbered quote must keep its issue year.', percentages:'Percentages must be between 0 and 100.', amounts:'Enter valid quantities and prices greater than or equal to zero.' }
     }
-    errorMessage.value = (messages[locale.value] || messages.es)[validationError]
+    errorMessage.value = validationError === 'extras' ? extrasCopy.value.invalid : (messages[locale.value] || messages.es)[validationError]
     return
   }
   const items=form.value.quote_items.map((item,index)=>({description:item.description.trim(),quantity:Number(item.quantity),unit:item.unit||c.value.units,unit_price:Number(item.unit_price),position:index}))
@@ -195,6 +208,10 @@ const saveQuote = async () => {
   const payload={id:form.value.id,client_id:form.value.client_id,title:form.value.title,status:form.value.status,language:form.value.language,currency:'EUR',issue_date:form.value.issue_date,valid_until:form.value.valid_until,client_snapshot:form.value.client_snapshot,issuer_snapshot:form.value.issuer_snapshot,notes:form.value.notes,terms:form.value.terms,discount_percentage:Number(form.value.discount_percentage),vat_percentage:Number(form.value.vat_percentage),withholding_percentage:Number(form.value.withholding_percentage)}
   try {
     payload.pricing_mode = form.value.pricing_mode || 'itemized'
+    payload.extras = form.value.extras.map(extra => ({
+      description:extra.description.trim(), original_price:Number(extra.original_price),
+      discounted_price:extra.discounted_price == null ? null : Number(extra.discounted_price)
+    }))
     payload.global_price = Number(form.value.global_price || 0)
     payload.maintenance_monthly = form.value.pricing_mode === 'global' ? form.value.maintenance_monthly : null
     const {data,error}=await saveQuoteWithCompatibility(supabase,payload,items,savedPricingMode.value)
@@ -205,7 +222,9 @@ const saveQuote = async () => {
     successMessage.value=c.value.saved
     await fetchData()
   } catch (error) {
-    if (error.code === 'MAINTENANCE_MIGRATION_REQUIRED') {
+    if (error.code === 'EXTRAS_MIGRATION_REQUIRED') {
+      errorMessage.value = `${extrasCopy.value.migration}: ${EXTRAS_MIGRATION}`
+    } else if (error.code === 'MAINTENANCE_MIGRATION_REQUIRED') {
       errorMessage.value = `${maintenanceCopy.value.migration}: ${MAINTENANCE_MIGRATION}`
     } else if (error.code === 'PRICING_MIGRATION_REQUIRED') {
       const messages = {
@@ -304,19 +323,30 @@ onMounted(fetchData)
             </div>
             <button v-if="serviceCatalog.length > 6" type="button" class="catalog-expand" :aria-expanded="showAllServices" @click="showAllServices = !showAllServices">{{ showAllServices ? catalogCopy.less : `${catalogCopy.more} (${serviceCatalog.length})` }} {{ showAllServices ? '−' : '+' }}</button>
           </div>
-          <div class="line-head"><span>{{ c.description }}</span><span>{{ c.quantity }}</span><span>{{ c.unit }}</span><span>{{ c.price }}</span><span>{{ c.lineTotal }}</span><span></span></div>
+          <div class="line-head" :class="{ 'global-line':form.pricing_mode === 'global' }"><span>{{ c.description }}</span><span v-if="form.pricing_mode !== 'global'">{{ c.price }}</span><span v-if="form.pricing_mode !== 'global'">{{ c.lineTotal }}</span><span></span></div>
           <div v-for="(item,index) in form.quote_items" :key="item.id||index" :class="['line-item',{invalidRow:validationAttempted&&!item.description.trim(), 'global-line':form.pricing_mode === 'global'}]">
             <label class="line-control description-control"><span class="mobile-field-label">{{ c.description }}</span><textarea v-model="item.description" rows="3" :aria-label="c.description"></textarea></label>
-            <label class="line-control"><span class="mobile-field-label">{{ c.quantity }}</span><input v-model.number="item.quantity" type="number" min="0" step="0.01" :aria-label="c.quantity"/></label>
-            <label class="line-control"><span class="mobile-field-label">{{ c.unit }}</span><input v-model="item.unit" :aria-label="c.unit"/></label>
             <label v-if="form.pricing_mode !== 'global'" class="line-control price-control"><span class="mobile-field-label">{{ c.price }}</span><div><input v-model.number="item.unit_price" type="number" min="0" step="0.01" :aria-label="c.price"/><span>€</span></div></label>
             <div v-if="form.pricing_mode !== 'global'" class="line-total-control"><span class="mobile-field-label">{{ c.lineTotal }}</span><strong>{{ money(calculateLineTotal(item.quantity,item.unit_price)) }}</strong></div>
             <button type="button" class="remove-item" :aria-label="c.removeItem" @click="removeItem(index)">×</button>
           </div>
           <button type="button" class="add-line" @click="addItem">+ {{ c.addLine }}</button>
+          <section class="extras-editor">
+            <h3>{{ extrasCopy.title }}</h3><p>{{ extrasCopy.help }}</p>
+            <div v-for="(extra,index) in form.extras" :key="index" class="extra-card">
+              <label>{{ c.description }}<textarea v-model="extra.description" rows="2"></textarea></label>
+              <label>{{ extrasCopy.original }}<input v-model.number="extra.original_price" type="number" min="0" step="0.01" /></label>
+              <label class="extra-toggle"><input type="checkbox" :checked="extra.discounted_price != null" @change="extra.discounted_price = $event.target.checked ? extra.original_price : null" />{{ extrasCopy.discount }}</label>
+              <label v-if="extra.discounted_price != null">{{ extrasCopy.discounted }}<input v-model.number="extra.discounted_price" type="number" min="0" :max="extra.original_price" step="0.01" /></label>
+              <div><del v-if="extra.discounted_price != null">{{ money(extra.original_price) }}</del> <strong>{{ money(extra.discounted_price ?? extra.original_price) }}</strong></div>
+              <button type="button" @click="form.extras.splice(index,1)">{{ c.removeItem }}</button>
+            </div>
+            <button type="button" class="add-line" @click="addExtra">+ {{ extrasCopy.add }}</button>
+          </section>
           <div class="text-fields"><label><span>{{ c.notes }}</span><textarea v-model="form.notes" rows="4"></textarea></label><label><span>{{ c.terms }}</span><textarea v-model="form.terms" rows="4"></textarea></label></div>
         </div>
         <aside class="quote-sidebar">
+          <div v-if="form.extras?.length" class="side-card"><span>{{ extrasCopy.title }}</span><strong>{{ money(totals.extrasTotal) }}</strong><p>{{ extrasCopy.help }}</p></div>
           <div class="side-card"><span class="eyebrow">{{ c.status }}</span><select v-model="form.status" :class="['large-status',form.status]"><option value="draft">{{ c.draft }}</option><option value="sent">{{ c.sent }}</option><option value="accepted">{{ c.accepted }}</option><option value="rejected">{{ c.rejected }}</option></select></div>
            <div class="side-card totals-card"><h3>{{ c.summary }}</h3><label><span>{{ c.discount }} (%)</span><input v-model.number="form.discount_percentage" type="number" min="0" max="100" step="0.01"/></label><label><span>{{ c.vat }} (%)</span><input v-model.number="form.vat_percentage" type="number" min="0" max="100" step="0.01"/></label><label><span>{{ c.withholding }} (%)</span><input v-model.number="form.withholding_percentage" type="number" min="0" max="100" step="0.01"/></label><div class="sum-row"><span>{{ c.subtotal }}</span><strong>{{ money(totals.subtotal) }}</strong></div><div v-if="totals.discountAmount" class="sum-row"><span>{{ c.discount }}</span><strong>-{{ money(totals.discountAmount) }}</strong></div><div class="sum-row"><span>{{ c.vat }}</span><strong>{{ money(totals.vatAmount) }}</strong></div><div v-if="totals.withholdingAmount" class="sum-row"><span>{{ c.withholding }}</span><strong>-{{ money(totals.withholdingAmount) }}</strong></div><div class="grand-total"><span>{{ c.total }}</span><strong>{{ money(totals.total) }}</strong></div><div v-if="form.pricing_mode === 'global' && form.maintenance_monthly != null" class="maintenance-summary"><span>{{ maintenanceCopy.separate }}</span><strong>{{ money(form.maintenance_monthly) }} {{ maintenanceCopy.suffix }}</strong></div></div>
         </aside>
@@ -495,4 +525,13 @@ onMounted(fetchData)
 .maintenance-toggle input { width: auto; flex: none; }
 .maintenance-summary { display: flex; flex-direction: column; gap: 4px; margin-top: 18px; padding-top: 16px; border-top: 1px solid var(--border-color); }
 .maintenance-summary strong { font-size: .9rem; overflow-wrap: anywhere; }
+.line-head,.line-item{grid-template-columns:minmax(0,1fr) 110px 110px 28px}
+.line-head.global-line,.line-item.global-line{grid-template-columns:minmax(0,1fr) 28px}
+.extras-editor{margin-top:28px;padding-top:20px;border-top:1px solid var(--border-color)}
+.extra-card{display:grid;gap:12px;margin:16px 0;padding:16px;border:1px solid var(--border-color);border-radius:12px}
+.extra-card label{display:grid;gap:6px;font-size:.85rem}
+.extra-card .extra-toggle{display:flex;align-items:center;gap:8px}
+.extra-toggle input{width:auto}
+.extra-card del{color:var(--text-secondary);margin-right:8px}
+@media(max-width:650px){.line-item{grid-template-columns:minmax(0,1fr) 28px}.line-item .description-control{grid-column:1}.line-item .price-control{grid-column:1}.line-item .line-total-control{grid-column:1}.line-item .remove-item{grid-column:2;grid-row:1}}
 </style>
