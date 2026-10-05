@@ -3,6 +3,7 @@ import { renderSeoHtml } from './page-seo.js'
 import { weddingLanding, weddingLandings } from '../src/config/weddingLanding.js'
 import { redesignLanding } from '../src/config/redesignLanding.js'
 import { readFileSync } from 'node:fs'
+import { leadPageCopy } from '../src/config/leadPages.js'
 
 const html = `<!DOCTYPE html><html lang="es"><head>
 <title>Inicio</title><meta name="title" content="Inicio"><meta name="description" content="Inicio">
@@ -12,6 +13,14 @@ const html = `<!DOCTYPE html><html lang="es"><head>
 </head><body><div id="app"></div></body></html>`
 
 describe('commercial page SEO', () => {
+  it.each(['/es/diseno-web-empresas','/ca/disseny-web-empreses','/es/precio-pagina-web','/ca/preu-pagina-web','/es/presupuesto-web','/ca/pressupost-web','/es/rediseno-web-empresas','/es/web-para-bodas','/ca/webs-per-a-casaments','/en/wedding-websites'])('does not publish prices in HTML, metadata or structured data on %s', path => {
+    expect(renderSeoHtml(html,path)).not.toMatch(/€|\bEUR\b|700|priceRange|"price"/)
+  })
+  it('keeps public landing copy and templates free of price rendering', () => {
+    expect(JSON.stringify(leadPageCopy)).not.toMatch(/€|700|antes de IVA|abans d’IVA/)
+    const view = readFileSync(new URL('../src/views/LeadLandingView.vue',import.meta.url),'utf8')
+    expect(view).not.toMatch(/money\(|basePrice|defaultLeadPricing|fetch\(/)
+  })
   it('renders redesign content and service metadata without requiring JavaScript or pricing', () => {
     const result = renderSeoHtml(html, redesignLanding.path)
     expect(result).toContain(`<title>${redesignLanding.title}</title>`)

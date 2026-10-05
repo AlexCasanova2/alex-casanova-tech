@@ -30,7 +30,7 @@ const router = createRouter({
             path: '/es/diseno-web-empresas',
             name: 'web-design-es',
             component: LeadLandingView,
-            meta: { locale: 'es', leadPage: 'service', title: 'Diseño web para empresas', description: 'Diseño y desarrollo de webs corporativas a medida para empresas. Proyectos desde 700 € antes de IVA.', alternate: '/ca/disseny-web-empreses' }
+            meta: { locale: 'es', leadPage: 'service', title: 'Diseño web para empresas', description: 'Diseño y desarrollo de webs corporativas a medida para empresas. Solicita una propuesta personalizada según el alcance.', alternate: '/ca/disseny-web-empreses' }
         },
         {
             path: redesignLanding.path,
@@ -42,7 +42,7 @@ const router = createRouter({
             path: '/ca/disseny-web-empreses',
             name: 'web-design-ca',
             component: LeadLandingView,
-            meta: { locale: 'ca', leadPage: 'service', title: 'Disseny web per a empreses', description: 'Disseny i desenvolupament de webs corporatives a mida per a empreses. Projectes des de 700 € abans d’IVA.', alternate: '/es/diseno-web-empresas' }
+            meta: { locale: 'ca', leadPage: 'service', title: 'Disseny web per a empreses', description: 'Disseny i desenvolupament de webs corporatives a mida per a empreses. Sol·licita una proposta personalitzada segons l’abast.', alternate: '/es/diseno-web-empresas' }
         },
         {
             path: '/es/precio-pagina-web',
