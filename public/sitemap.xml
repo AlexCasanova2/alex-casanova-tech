@@ -15,4 +15,5 @@
   <url><loc>https://alexcasanova.es/es/privacidad</loc><xhtml:link rel="alternate" hreflang="ca" href="https://alexcasanova.es/ca/privacitat"/><changefreq>yearly</changefreq><priority>0.2</priority></url>
   <url><loc>https://alexcasanova.es/ca/privacitat</loc><xhtml:link rel="alternate" hreflang="es" href="https://alexcasanova.es/es/privacidad"/><changefreq>yearly</changefreq><priority>0.2</priority></url>
   <url><loc>https://alexcasanova.es/en/privacy</loc><changefreq>yearly</changefreq><priority>0.2</priority></url>
+  <url><loc>https://alexcasanova.es/es/rediseno-web-empresas</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
 </urlset>

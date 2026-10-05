@@ -20,7 +20,7 @@
             "destination": "/api/project-seo?slug=:slug"
         },
         {
-            "source": "/es/:path(diseno-web-empresas|precio-pagina-web|presupuesto-web)",
+            "source": "/es/:path(diseno-web-empresas|rediseno-web-empresas|precio-pagina-web|presupuesto-web)",
             "destination": "/api/page-seo?path=es/:path"
         },
         {

@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest'
 import { renderSeoHtml } from './page-seo.js'
 import { weddingLanding, weddingLandings } from '../src/config/weddingLanding.js'
+import { redesignLanding } from '../src/config/redesignLanding.js'
+import { readFileSync } from 'node:fs'
 
 const html = `<!DOCTYPE html><html lang="es"><head>
 <title>Inicio</title><meta name="title" content="Inicio"><meta name="description" content="Inicio">
@@ -10,6 +12,23 @@ const html = `<!DOCTYPE html><html lang="es"><head>
 </head><body><div id="app"></div></body></html>`
 
 describe('commercial page SEO', () => {
+  it('renders redesign content and service metadata without requiring JavaScript or pricing', () => {
+    const result = renderSeoHtml(html, redesignLanding.path)
+    expect(result).toContain(`<title>${redesignLanding.title}</title>`)
+    expect(result).toContain(`rel="canonical" href="https://alexcasanova.es${redesignLanding.path}"`)
+    expect(result).toContain(`<h1>${redesignLanding.heading}</h1>`)
+    for (const faq of redesignLanding.faqs) expect(result).toContain(faq.question)
+    for (const item of redesignLanding.scope) expect(result).toContain(`<h3>${item[0]}</h3>`)
+    expect(result).toContain('href="/projects"')
+    expect(result).toContain('id="contacto-rediseno"')
+    expect(result).toContain('"@type":"Service"')
+    expect(result).not.toMatch(/700|hreflang=/)
+  })
+  it('includes the redesign landing in deployment rewrites and the sitemap', () => {
+    const config = JSON.parse(readFileSync(new URL('../vercel.json', import.meta.url), 'utf8'))
+    expect(config.rewrites.some(rule => rule.source.includes('rediseno-web-empresas') && rule.destination.includes('page-seo'))).toBe(true)
+    expect(readFileSync(new URL('../public/sitemap.xml', import.meta.url), 'utf8')).toContain(`<loc>https://alexcasanova.es${redesignLanding.path}</loc>`)
+  })
   it('renders the wedding landing with a canonical, description, full crawlable content and service schema', () => {
     const result = renderSeoHtml(html, '/es/web-para-bodas')
     expect(result).toContain(`<title>${weddingLanding.title}</title>`)

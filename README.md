@@ -4,6 +4,12 @@ This template should help get you started developing with Vue 3 in Vite. The tem
 
 Learn more about IDE Support for Vue in the [Vue Docs Scaling up Guide](https://vuejs.org/guide/scaling-up/tooling.html#ide-support).
 
+## Website redesign landing
+
+`/es/rediseno-web-empresas` uses shared copy in `src/config/redesignLanding.js` for the Vue page and crawlable HTML served by `api/page-seo.js`. It includes a canonical, Service schema, sitemap entry and footer link. The existing contact endpoint receives the current website, objectives and optional timeline/client budget in its message, with the landing URL in attribution; no database migration is needed.
+
+Verification: `npm test` covers SEO content, deployment wiring and enquiry serialization; `npm run build` checks compilation. Browser verification covers desktop, a 390 px viewport without horizontal overflow, and a mocked form submission (not real CRM persistence or email delivery). Rollback: revert the landing/config, redesign-only form fields and utility, route, SEO entry, rewrite, sitemap and footer link together; existing contact and wedding forms remain unchanged.
+
 ## CRM setup
 
 The admin CRM requires the Supabase schema in:

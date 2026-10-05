@@ -2,30 +2,35 @@
 import { computed, onUnmounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { weddingLandings } from '../config/weddingLanding'
+import { redesignLanding } from '../config/redesignLanding'
+import { redesignEnquiryMessage } from '../utils/redesignEnquiry'
 import { leadAttribution, submissionKey, submitLead, trackLeadEvent } from '../utils/leadCapture'
 
 const props = defineProps({ context: { type:String, default:'contact' } })
 const { t, locale } = useI18n()
 const weddingLabels = computed(() => (weddingLandings[locale.value] || weddingLandings.es).labels)
-const form = ref({ name:'', email:'', message:'', privacyAccepted:false, companyName:'' })
+const blankForm = () => ({ name:'', email:'', message:'', privacyAccepted:false, companyName:'', currentWebsite:'', timeline:'', budget:'' })
+const form = ref(blankForm())
 const startedAt = Date.now()
 let currentSubmissionKey = submissionKey()
 let successTimeout
 const isSubmitting = ref(false)
 const isSuccess = ref(false)
 const errorMessage = ref('')
-const fieldId = name => `${props.context === 'wedding-landing' ? 'wedding' : 'contact'}-${name}`
+const fieldId = name => `${props.context}-${name}`
 
 async function submitForm() {
   isSubmitting.value = true
   errorMessage.value = ''
 
   try {
-    await submitLead({ ...form.value, source:'contact', language:['es','ca','en'].includes(locale.value) ? locale.value : 'es', startedAt, submissionKey:currentSubmissionKey, attribution:leadAttribution() })
+    const message = props.context === 'web-redesign' ? redesignEnquiryMessage(form.value) : form.value.message
+    const website = props.context === 'web-redesign' ? form.value.currentWebsite : ''
+    await submitLead({ ...form.value, message, website, source:'contact', language:['es','ca','en'].includes(locale.value) ? locale.value : 'es', startedAt, submissionKey:currentSubmissionKey, attribution:leadAttribution() })
     isSuccess.value = true
     trackLeadEvent('generate_lead', { source:props.context })
     currentSubmissionKey = submissionKey()
-    form.value = { name:'', email:'', message:'', privacyAccepted:false, companyName:'' }
+    form.value = blankForm()
     clearTimeout(successTimeout)
     successTimeout = setTimeout(() => { isSuccess.value = false }, 5000)
   } catch {
@@ -48,15 +53,23 @@ onUnmounted(() => clearTimeout(successTimeout))
       <label :for="fieldId('email')">{{ t('contact.email') }}</label>
       <input :id="fieldId('email')" v-model="form.email" type="email" required autocomplete="email">
     </div>
-    <div class="input-group">
-      <label :for="fieldId('message')">{{ t('contact.message') }}</label>
-      <textarea :id="fieldId('message')" v-model="form.message" rows="5" required :placeholder="context === 'wedding-landing' ? weddingLabels.formPlaceholder : ''"></textarea>
+    <div v-if="context === 'web-redesign'" class="input-group">
+      <label :for="fieldId('website')">URL de tu web actual</label>
+      <input :id="fieldId('website')" v-model="form.currentWebsite" type="url" required placeholder="https://tuempresa.com" autocomplete="url" maxlength="500">
     </div>
+    <div class="input-group">
+      <label :for="fieldId('message')">{{ context === 'web-redesign' ? '¿Qué quieres mejorar o conseguir?' : t('contact.message') }}</label>
+      <textarea :id="fieldId('message')" v-model="form.message" rows="5" required :maxlength="context === 'web-redesign' ? 2500 : undefined" :placeholder="context === 'wedding-landing' ? weddingLabels.formPlaceholder : ''"></textarea>
+    </div>
+    <template v-if="context === 'web-redesign'">
+      <div class="input-group"><label :for="fieldId('timeline')">Plazo deseado (opcional)</label><input :id="fieldId('timeline')" v-model="form.timeline" maxlength="150" placeholder="¿Cuándo te gustaría publicar?"></div>
+      <div class="input-group"><label :for="fieldId('budget')">Tu presupuesto orientativo (opcional)</label><input :id="fieldId('budget')" v-model="form.budget" maxlength="150" placeholder="Indica tu inversión prevista o si necesitas orientación"></div>
+    </template>
     <div class="honeypot" aria-hidden="true"><label>Company name<input v-model="form.companyName" tabindex="-1" autocomplete="off"></label></div>
     <label class="privacy-check"><input v-model="form.privacyAccepted" type="checkbox" :aria-label="locale === 'ca' ? 'Acceptació de privacitat' : locale === 'en' ? 'Privacy acceptance' : 'Aceptación de privacidad'" required><span>{{ locale === 'ca' ? 'Accepto que s’utilitzin les meves dades per respondre aquesta sol·licitud.' : locale === 'en' ? 'I agree that my data may be used to answer this request.' : 'Acepto que se usen mis datos para responder a esta solicitud.' }} <router-link :to="locale === 'ca' ? '/ca/privacitat' : locale === 'en' ? '/en/privacy' : '/es/privacidad'" target="_blank" rel="noopener noreferrer">{{ locale === 'ca' ? 'Més informació' : locale === 'en' ? 'More information' : 'Más información' }}</router-link>.</span></label>
 
     <button type="submit" class="btn btn-primary" :disabled="isSubmitting">
-      {{ isSubmitting ? t('contact.sending') : context === 'wedding-landing' ? weddingLabels.formButton : t('contact.send') }}
+      {{ isSubmitting ? t('contact.sending') : context === 'web-redesign' ? redesignLanding.formButton : context === 'wedding-landing' ? weddingLabels.formButton : t('contact.send') }}
     </button>
     <div v-if="isSuccess" class="success-msg" role="status">{{ context === 'wedding-landing' ? weddingLabels.formSuccess : t('contact.success') }}</div>
     <div v-if="errorMessage" class="error-msg" role="alert">{{ errorMessage }}</div>

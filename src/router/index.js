@@ -6,6 +6,7 @@ import ContactView from '../views/ContactView.vue'
 import LeadLandingView from '../views/LeadLandingView.vue'
 import ConfiguratorView from '../views/ConfiguratorView.vue'
 import { weddingLandings } from '../config/weddingLanding'
+import { redesignLanding } from '../config/redesignLanding'
 
 const router = createRouter({
     history: createWebHistory(import.meta.env.BASE_URL),
@@ -30,6 +31,12 @@ const router = createRouter({
             name: 'web-design-es',
             component: LeadLandingView,
             meta: { locale: 'es', leadPage: 'service', title: 'Diseño web para empresas', description: 'Diseño y desarrollo de webs corporativas a medida para empresas. Proyectos desde 700 € antes de IVA.', alternate: '/ca/disseny-web-empreses' }
+        },
+        {
+            path: redesignLanding.path,
+            name: 'web-redesign-es',
+            component: () => import('../views/RedesignLandingView.vue'),
+            meta: { locale:'es', title:redesignLanding.title.split(' | ')[0], brand:'Casanova studio', description:redesignLanding.description }
         },
         {
             path: '/ca/disseny-web-empreses',

@@ -1,7 +1,9 @@
 import { createClient } from '@supabase/supabase-js'
 import { weddingLandings } from '../src/config/weddingLanding.js'
+import { redesignLanding } from '../src/config/redesignLanding.js'
 
 const pages = {
+  [redesignLanding.path]: {lang:'es',title:redesignLanding.title,description:redesignLanding.description,heading:redesignLanding.heading,body:redesignLanding.intro,redesign:true},
   '/es/diseno-web-empresas': { lang:'es', alternate:'/ca/disseny-web-empreses', title:'Diseño web para empresas | Àlex Casanova', description:'Diseño y desarrollo de webs corporativas a medida para empresas. Proyectos desde 700 € antes de IVA.', heading:'Una web corporativa que trabaja tan bien como tu negocio.', body:'Diseño web a medida, rápido y preparado para convertir visitas en oportunidades.' },
   '/ca/disseny-web-empreses': { lang:'ca', alternate:'/es/diseno-web-empresas', title:'Disseny web per a empreses | Àlex Casanova', description:'Disseny i desenvolupament de webs corporatives a mida per a empreses. Projectes des de 700 € abans d’IVA.', heading:'Una web corporativa que treballa tan bé com el teu negoci.', body:'Disseny web a mida, ràpid i preparat per convertir visites en oportunitats.' },
   '/es/precio-pagina-web': { lang:'es', alternate:'/ca/preu-pagina-web', title:'Precio de una página web corporativa | Àlex Casanova', description:'Descubre qué influye en el precio de una web corporativa y solicita una propuesta personalizada.', heading:'¿Cuánto cuesta una web corporativa?', body:'Una web sencilla parte de 700 € antes de IVA. Solicita una propuesta según el alcance.' },
@@ -21,13 +23,23 @@ export function renderSeoHtml(html, path, basePrice = 700) {
   const body = page.body.replace('700 €', localizedPrice)
   const canonical = `https://alexcasanova.es${path}`
   const copy = page.wedding ? weddingLandings[page.lang] : null
-  const structuredData = page.wedding
+  const structuredData = page.redesign
+    ? { '@context':'https://schema.org', '@type':'Service', name:'Rediseño web para empresas', serviceType:'Rediseño de páginas web', description:page.description, url:canonical, provider:{'@type':'ProfessionalService',name:'Casanova studio',url:'https://alexcasanova.es/'} }
+    : page.wedding
     ? { '@context':'https://schema.org', '@type':'Service', name:copy.labels.serviceName, serviceType:copy.labels.serviceType, description:page.description, url:canonical, provider:{ '@type':'ProfessionalService', name:'Casanova studio', url:'https://alexcasanova.es/' }, areaServed:{ '@type':'Country', name:'España' } }
     : { '@context':'https://schema.org', '@type':'ProfessionalService', name:'Àlex Casanova · Diseño web', url:canonical, areaServed:['ES','Catalunya'], priceRange:'€€' }
   const alternate = copy
     ? Object.entries(weddingLandings).filter(([lang]) => lang !== page.lang).map(([lang, variant]) => `<link rel="alternate" hreflang="${lang}" href="https://alexcasanova.es${variant.path}">`).join('')
     : page.alternate ? `<link rel="alternate" hreflang="${page.lang === 'es' ? 'ca' : 'es'}" href="https://alexcasanova.es${page.alternate}">` : ''
-  const weddingContent = page.wedding
+  const redesignContent = page.redesign ? [
+    `<p>${escapeHtml(redesignLanding.intro)}</p><a href="#contacto-rediseno">${escapeHtml(redesignLanding.cta)}</a>`,
+    `<section><h2>${escapeHtml(redesignLanding.signalsTitle)}</h2>${redesignLanding.signals.map(item => `<article><h3>${escapeHtml(item.title)}</h3><p>${escapeHtml(item.text)}</p></article>`).join('')}</section>`,
+    ...[[redesignLanding.scopeTitle,redesignLanding.scope],[redesignLanding.processTitle,redesignLanding.process]].map(([title,items]) => `<section><h2>${escapeHtml(title)}</h2>${items.map(item => `<article><h3>${escapeHtml(item[0])}</h3><p>${escapeHtml(item[1])}</p></article>`).join('')}</section>`),
+    `<section><h2>${escapeHtml(redesignLanding.projectsTitle)}</h2><p>${escapeHtml(redesignLanding.projectsText)}</p><a href="/projects">Explorar el portfolio</a></section>`,
+    `<section><h2>${escapeHtml(redesignLanding.faqTitle)}</h2>${redesignLanding.faqs.map(faq => `<article><h3>${escapeHtml(faq.question)}</h3><p>${escapeHtml(faq.answer)}</p></article>`).join('')}</section>`,
+    `<section id="contacto-rediseno"><h2>${escapeHtml(redesignLanding.contactTitle)}</h2><p>${escapeHtml(redesignLanding.contactText)}</p><a href="/contact">Contactar con Casanova studio</a></section>`
+  ].join('') : ''
+  const weddingContent = page.redesign ? redesignContent : page.wedding
     ? [
         `<section><h2>${escapeHtml(copy.labels.ideaTitle)}</h2><p>${escapeHtml(copy.labels.ideaText)}</p></section>`,
         `<section><h2>${escapeHtml(copy.labels.featuresTitle)}</h2>${copy.features.map(feature => `<article><h3>${escapeHtml(feature.title)}</h3><p>${escapeHtml(feature.text)}</p></article>`).join('')}</section>`,
@@ -61,7 +73,7 @@ export default async function handler(req, res) {
     const response = await fetch(`${protocol}://${host}/index.html`)
     let html = await response.text()
     let basePrice = 700
-    if (!page.wedding && process.env.VITE_SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY && process.env.CRM_OWNER_ID) {
+    if (!page.wedding && !page.redesign && process.env.VITE_SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY && process.env.CRM_OWNER_ID) {
       const supabase = createClient(process.env.VITE_SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY, { auth:{ persistSession:false } })
       const { data } = await supabase.from('lead_pricing_versions').select('config').eq('owner_id', process.env.CRM_OWNER_ID).eq('is_active', true).maybeSingle()
       if (Number.isFinite(Number(data?.config?.basePrice))) basePrice = Number(data.config.basePrice)

@@ -225,6 +225,7 @@ onUnmounted(() => {
       <div class="container footer-content">
         <p>© {{ new Date().getFullYear() }} {{ userData.name }}. All rights reserved.</p>
         <div class="social-links">
+          <router-link to="/es/rediseno-web-empresas">Rediseño web</router-link>
           <router-link :to="weddingFooter.path">{{ weddingFooter.labels.footer }}</router-link>
           <router-link :to="locale === 'en' ? '/en/privacy' : commercialLocale === 'ca' ? '/ca/privacitat' : '/es/privacidad'">{{ locale === 'en' ? 'Privacy' : commercialLocale === 'ca' ? 'Privacitat' : 'Privacidad' }}</router-link>
           <a :href="userData.linkedin" target="_blank" rel="noopener noreferrer">LinkedIn</a>
