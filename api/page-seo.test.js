@@ -4,6 +4,7 @@ import { weddingLanding, weddingLandings } from '../src/config/weddingLanding.js
 import { redesignLanding } from '../src/config/redesignLanding.js'
 import { readFileSync } from 'node:fs'
 import { leadPageCopy } from '../src/config/leadPages.js'
+import { weddingAlternates, weddingServiceSchema } from '../src/utils/weddingSeo.js'
 
 const html = `<!DOCTYPE html><html lang="es"><head>
 <title>Inicio</title><meta name="title" content="Inicio"><meta name="description" content="Inicio">
@@ -51,7 +52,7 @@ describe('commercial page SEO', () => {
     expect(result).toContain(`href="${weddingLanding.example.url}"`)
     expect(result).toContain(weddingLanding.example.note)
     expect(result).toContain('<section id="contacto-bodas">')
-    expect(result).toContain('href="#contacto-bodas"')
+    expect(result).toContain('href="/contact?utm_source=web-bodas"')
     for (const faq of weddingLanding.faqs) expect(result).toContain(`<h3>${faq.question}</h3>`)
     expect(result).toContain('"@type":"Service"')
     expect(result).toContain('hreflang="ca" href="https://alexcasanova.es/ca/webs-per-a-casaments"')
@@ -68,14 +69,56 @@ describe('commercial page SEO', () => {
       expect(result).toContain(`<h2>${copy.labels.faqTitle}</h2>`)
       expect(result).toContain(`<h2>${copy.labels.closingTitle}</h2>`)
       expect(result).toContain(copy.example.note)
+      expect(result).toContain(`<p>${copy.intro}</p>`)
+      expect(result).toContain(`<p>${copy.labels.featuresIntro}</p>`)
+      expect(result).toContain(`<h2>${copy.labels.storyTitle}</h2>`)
+      expect(result).toContain(`<p>${copy.labels.storyText}</p>`)
+      expect(result).toContain(`<h2>${copy.process.title}</h2>`)
+      expect(result).toContain(`<p>${copy.process.intro}</p>`)
+      for (const step of copy.process.steps) {
+        expect(result).toContain(`<h3>${step.title}</h3>`)
+        expect(result).toContain(`<p>${step.text}</p>`)
+      }
       for (const feature of copy.features) expect(result).toContain(`<h3>${feature.title}</h3>`)
       for (const faq of copy.faqs) expect(result).toContain(`<h3>${faq.question}</h3>`)
       for (const [otherLang, otherCopy] of Object.entries(weddingLandings)) {
-        if (lang !== otherLang) expect(result).toContain(`hreflang="${otherLang}" href="https://alexcasanova.es${otherCopy.path}"`)
+        expect(result).toContain(`hreflang="${otherLang}" href="https://alexcasanova.es${otherCopy.path}"`)
       }
-      expect(result).not.toContain('hreflang="' + lang + '"')
+      expect(result.match(/hreflang=/g)).toHaveLength(3)
+      expect(result.match(/<h1>/g)).toHaveLength(1)
+      const schema = JSON.parse(result.match(/<script id="wedding-service-schema" type="application\/ld\+json">(.*?)<\/script>/)[1])
+      expect(schema).toEqual(weddingServiceSchema(lang))
+      expect(schema.url).toBe(`https://alexcasanova.es${copy.path}`)
+      expect(schema.areaServed.name).toBe('España')
     })
   }
+
+  it('lists every wedding language including itself consistently in the sitemap and client', () => {
+    const sitemap = readFileSync(new URL('../public/sitemap.xml', import.meta.url), 'utf8')
+    for (const copy of Object.values(weddingLandings)) {
+      const entry = sitemap.match(new RegExp(`<url><loc>https://alexcasanova\\.es${copy.path}</loc>.*?</url>`))[0]
+      for (const [lang, path] of weddingAlternates) {
+        expect(entry).toContain(`hreflang="${lang}" href="https://alexcasanova.es${path}"`)
+      }
+    }
+    const app = readFileSync(new URL('../src/App.vue', import.meta.url), 'utf8')
+    expect(app).toContain('? weddingAlternates')
+    expect(app).toContain('weddingServiceSchema(route.meta.locale)')
+    expect(app).toContain("document.getElementById('wedding-service-schema')?.remove()")
+  })
+
+  it.each(Object.values(weddingLandings))('replaces portfolio metadata in the real HTML template for $path', copy => {
+    const template = readFileSync(new URL('../index.html', import.meta.url), 'utf8')
+    const result = renderSeoHtml(template, copy.path)
+    expect(result).toContain(`<title>${copy.title}</title>`)
+    expect(result).toContain(`property="og:title" content="${copy.title}"`)
+    expect(result).toContain(`property="twitter:title" content="${copy.title}"`)
+    expect(result.match(/property="og:description"\s+content="([^"]*)"/)[1]).toBe(copy.description)
+    expect(result).not.toContain('Frontend Developer')
+    expect(result).not.toContain('Portfolio de Àlex Casanova.')
+    expect(result).toContain('src="/src/main.js"')
+    expect(result).toContain('id="wedding-service-schema"')
+  })
 
   it('keeps alternate language links for existing bilingual pages', () => {
     const result = renderSeoHtml(html, '/es/diseno-web-empresas')

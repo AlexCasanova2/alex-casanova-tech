@@ -107,6 +107,21 @@ onUnmounted(() => revealObserver?.disconnect())
       </div>
     </section>
 
+    <section class="process-section container" aria-labelledby="process-title">
+      <div class="section-heading" data-reveal>
+        <span class="section-index">{{ weddingLanding.process.index }}</span>
+        <h2 id="process-title">{{ weddingLanding.process.title }}</h2>
+        <p>{{ weddingLanding.process.intro }}</p>
+      </div>
+      <ol class="process-list">
+        <li v-for="(step, index) in weddingLanding.process.steps" :key="step.title" class="feature-card" data-reveal>
+          <span class="feature-number" aria-hidden="true">0{{ index + 1 }}</span>
+          <h3>{{ step.title }}</h3>
+          <p>{{ step.text }}</p>
+        </li>
+      </ol>
+    </section>
+
     <section class="faq-section container" aria-labelledby="faq-title">
       <div class="section-heading" data-reveal>
         <span class="section-index">{{ weddingLanding.labels.faqIndex }}</span>
@@ -250,6 +265,8 @@ onUnmounted(() => revealObserver?.disconnect())
 .story-copy p { max-width: 480px; color: var(--wedding-muted); font-size: .96rem; line-height: 1.85; }
 .story-copy .underlined-link { margin-top: 25px; }
 .faq-section { padding-block: clamp(82px, 10vw, 145px); }
+.process-section { padding-top: clamp(82px, 10vw, 145px); }
+.process-list { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--wedding-line); }
 .faq-list { border-top: 1px solid var(--wedding-line); }
 .faq-list details { border-bottom: 1px solid var(--wedding-line); }
 .faq-list summary { display: flex; justify-content: space-between; align-items: center; gap: 20px; padding: 25px 0; cursor: pointer; font-size: 1.03rem; font-weight: 600; list-style: none; }
@@ -303,5 +320,6 @@ onUnmounted(() => revealObserver?.disconnect())
   .feature-card, .feature-card:nth-child(odd), .feature-card:nth-child(even) { min-height: 0; padding: 24px 0 30px !important; border-right: 0 !important; }
   .feature-card h3 { margin-top: 24px; }
   .story-copy { padding: 65px 0; }
+  .process-list { grid-template-columns: 1fr; }
 }
 </style>

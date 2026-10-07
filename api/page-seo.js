@@ -1,6 +1,7 @@
 import { leadPageCopy } from '../src/config/leadPages.js'
 import { weddingLandings } from '../src/config/weddingLanding.js'
 import { redesignLanding } from '../src/config/redesignLanding.js'
+import { weddingAlternates, weddingServiceSchema } from '../src/utils/weddingSeo.js'
 
 const pages = {
   [redesignLanding.path]: {lang:'es',title:redesignLanding.title,description:redesignLanding.description,heading:redesignLanding.heading,body:redesignLanding.intro,redesign:true},
@@ -25,10 +26,10 @@ export function renderSeoHtml(html, path) {
   const structuredData = page.redesign
     ? { '@context':'https://schema.org', '@type':'Service', name:'Rediseño web para empresas', serviceType:'Rediseño de páginas web', description:page.description, url:canonical, provider:{'@type':'ProfessionalService',name:'Casanova studio',url:'https://alexcasanova.es/'} }
     : page.wedding
-    ? { '@context':'https://schema.org', '@type':'Service', name:copy.labels.serviceName, serviceType:copy.labels.serviceType, description:page.description, url:canonical, provider:{ '@type':'ProfessionalService', name:'Casanova studio', url:'https://alexcasanova.es/' }, areaServed:{ '@type':'Country', name:'España' } }
+    ? weddingServiceSchema(page.lang)
     : { '@context':'https://schema.org', '@type':'ProfessionalService', name:'Àlex Casanova · Diseño web', url:canonical, areaServed:['ES','Catalunya'] }
   const alternate = copy
-    ? Object.entries(weddingLandings).filter(([lang]) => lang !== page.lang).map(([lang, variant]) => `<link rel="alternate" hreflang="${lang}" href="https://alexcasanova.es${variant.path}">`).join('')
+    ? weddingAlternates.map(([lang, variantPath]) => `<link rel="alternate" hreflang="${lang}" href="https://alexcasanova.es${variantPath}">`).join('')
     : page.alternate ? `<link rel="alternate" hreflang="${page.lang === 'es' ? 'ca' : 'es'}" href="https://alexcasanova.es${page.alternate}">` : ''
   const redesignContent = page.redesign ? [
     `<p>${escapeHtml(redesignLanding.intro)}</p><a href="#contacto-rediseno">${escapeHtml(redesignLanding.cta)}</a>`,
@@ -40,11 +41,14 @@ export function renderSeoHtml(html, path) {
   ].join('') : ''
   const weddingContent = page.redesign ? redesignContent : page.wedding
     ? [
+        `<p>${escapeHtml(copy.intro)}</p>`,
         `<section><h2>${escapeHtml(copy.labels.ideaTitle)}</h2><p>${escapeHtml(copy.labels.ideaText)}</p></section>`,
-        `<section><h2>${escapeHtml(copy.labels.featuresTitle)}</h2>${copy.features.map(feature => `<article><h3>${escapeHtml(feature.title)}</h3><p>${escapeHtml(feature.text)}</p></article>`).join('')}</section>`,
+        `<section id="que-incluye"><h2>${escapeHtml(copy.labels.featuresTitle)}</h2><p>${escapeHtml(copy.labels.featuresIntro)}</p>${copy.features.map(feature => `<article><h3>${escapeHtml(feature.title)}</h3><p>${escapeHtml(feature.text)}</p></article>`).join('')}</section>`,
         `<section><h2>${escapeHtml(copy.example.title)}</h2><p>${escapeHtml(copy.example.description)}</p><p>${escapeHtml(copy.example.note)}</p><a href="${escapeHtml(copy.example.url)}" target="_blank" rel="noopener noreferrer">${escapeHtml(copy.labels.exampleLink)}</a></section>`,
+        `<section><h2>${escapeHtml(copy.labels.storyTitle)}</h2><p>${escapeHtml(copy.labels.storyText)}</p></section>`,
+        `<section><h2>${escapeHtml(copy.process.title)}</h2><p>${escapeHtml(copy.process.intro)}</p><ol>${copy.process.steps.map(step => `<li><h3>${escapeHtml(step.title)}</h3><p>${escapeHtml(step.text)}</p></li>`).join('')}</ol></section>`,
         `<section><h2>${escapeHtml(copy.labels.faqTitle)}</h2>${copy.faqs.map(faq => `<article><h3>${escapeHtml(faq.question)}</h3><p>${escapeHtml(faq.answer)}</p></article>`).join('')}</section>`,
-        `<section id="contacto-bodas"><h2>${escapeHtml(copy.labels.closingTitle)}</h2><p>${escapeHtml(copy.labels.closingText)}</p><a href="#contacto-bodas">${escapeHtml(copy.labels.contact)}</a></section>`
+        `<section id="contacto-bodas"><h2>${escapeHtml(copy.labels.closingTitle)}</h2><p>${escapeHtml(copy.labels.closingText)}</p><a href="/contact?utm_source=web-bodas">${escapeHtml(copy.labels.contact)}</a></section>`
       ].join('')
     : `<p>${escapeHtml(body)}</p>`
   return html.replace('<html lang="es">', `<html lang="${page.lang}"${page.wedding ? ' data-theme="light"' : ''}>`)
@@ -58,7 +62,7 @@ export function renderSeoHtml(html, path) {
     .replace(/(property="twitter:url"\s+content=")([^"]*)(")/gi, `$1${canonical}$3`)
     .replace(/(property="twitter:title"\s+content=")([^"]*)(")/gi, `$1${escapeHtml(page.title)}$3`)
     .replace(/(property="twitter:description"\s+content=")([^"]*)(")/gi, `$1${escapeHtml(description)}$3`)
-    .replace('</head>', `${alternate}<script type="application/ld+json">${JSON.stringify(structuredData).replace(/</g, '\\u003c')}</script></head>`)
+    .replace('</head>', `${alternate}<script${page.wedding ? ' id="wedding-service-schema"' : ''} type="application/ld+json">${JSON.stringify(structuredData).replace(/</g, '\\u003c')}</script></head>`)
     .replace('<div id="app"></div>', `<div id="app"><main><h1>${escapeHtml(page.heading)}</h1>${weddingContent}</main></div>`)
 }
 

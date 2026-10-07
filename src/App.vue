@@ -5,6 +5,7 @@ import { useI18n } from 'vue-i18n'
 import { userData } from './config/userData'
 import { supabase } from './config/supabase'
 import { weddingLandings } from './config/weddingLanding'
+import { weddingAlternates, weddingServiceSchema } from './utils/weddingSeo'
 
 const route = useRoute()
 const router = useRouter()
@@ -109,6 +110,7 @@ const updateGlobalSEO = () => {
       if (element) element.setAttribute(attribute, content)
     }
     setMeta('meta[property="og:title"]', 'content', title)
+    setMeta('meta[name="title"]', 'content', title)
     setMeta('meta[property="og:description"]', 'content', desc)
     setMeta('meta[property="og:url"]', 'content', route.meta.noindex ? '' : canonicalUrl)
     setMeta('meta[property="twitter:title"]', 'content', title)
@@ -117,7 +119,7 @@ const updateGlobalSEO = () => {
     setMeta('link[rel="canonical"]', 'href', route.meta.noindex ? 'https://alexcasanova.es/' : canonicalUrl)
     document.querySelectorAll('link[rel="alternate"][hreflang]').forEach(link => link.remove())
     const alternates = isWeddingPage.value
-      ? Object.entries(weddingLandings).filter(([lang]) => lang !== route.meta.locale).map(([lang, copy]) => [lang, copy.path])
+      ? weddingAlternates
       : route.meta.alternate ? [[route.meta.locale === 'es' ? 'ca' : 'es', route.meta.alternate]] : []
     alternates.forEach(([lang, path]) => {
       const link = document.createElement('link')
@@ -126,6 +128,14 @@ const updateGlobalSEO = () => {
       link.href = `https://alexcasanova.es${path}`
       document.head.appendChild(link)
     })
+  }
+  document.getElementById('wedding-service-schema')?.remove()
+  if (isWeddingPage.value) {
+    const schema = document.createElement('script')
+    schema.id = 'wedding-service-schema'
+    schema.type = 'application/ld+json'
+    schema.textContent = JSON.stringify(weddingServiceSchema(route.meta.locale)).replace(/</g, '\\u003c')
+    document.head.appendChild(schema)
   }
 }
 
