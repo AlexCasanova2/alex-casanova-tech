@@ -63,8 +63,9 @@ describe('quote PDF presentation', () => {
       extras:[{description:'Landing extra',original_price:500,discounted_price:350}]
     })
     const tables = vi.mocked(autoTable).mock.calls.map(call => call[1])
-    expect(tables[0].head).toEqual([['Concepto']])
-    expect(tables[0].body).toEqual([['Web incluida']])
+    expect(tables[0].head).toEqual([['Concepto','Precio']])
+    expect(tables[0].body[0][0]).toBe('Web incluida')
+    expect(tables[0].body[0][1].replace(/[.\s]/g,'')).toBe('2000,00€')
     expect(tables[1].head).toEqual([['Extra','Precio original','Precio final']])
     expect(tables[1].body[0][1]).toContain('500,00')
     expect(tables[1].body[0][2]).toContain('350,00')
@@ -76,5 +77,28 @@ describe('quote PDF presentation', () => {
     const table = vi.mocked(autoTable).mock.calls[0][1]
     expect(table.head).toEqual([['Concepto','Importe']])
     expect(table.body[0][1]).toContain('300,00')
+  })
+  it('shows the global price only once, ignoring individual prices and preserving the total', async () => {
+    await generateQuotePdf({language:'ca',pricing_mode:'global',global_price:275,quote_items:[
+      {description:'SEO mensual',quantity:1,unit_price:999,position:1},
+      {description:'Auditoria',quantity:3,unit_price:500,position:0}
+    ]})
+    const tables = vi.mocked(autoTable).mock.calls.map(call => call[1])
+    expect(tables[0].head).toEqual([['Concepte','Preu']])
+    expect(tables[0].body[0][0]).toBe('Auditoria')
+    expect(tables[0].body[0][1]).toContain('275,00')
+    expect(tables[0].body[1]).toEqual(['SEO mensual',''])
+    expect(tables[1].body.at(-1)[1]).toContain('275,00')
+  })
+  it.each([null,80])('uses custom column titles in item and extra tables (discount %s)', async discounted_price => {
+    await generateQuotePdf({language:'ca',pricing_mode:'global',global_price:275,
+      column_titles:{item_description:'Serveis',item_price:'Quota',extra_description:'Millores',extra_price:'Cost',extra_original:'Abans',extra_final:'Ara'},
+      quote_items:[{description:'SEO',quantity:1,unit_price:0}],
+      extras:[{description:'Extra',original_price:100,discounted_price}]
+    })
+    const tables = vi.mocked(autoTable).mock.calls.map(call => call[1])
+    expect(tables[0].head).toEqual([['Serveis','Quota']])
+    expect(tables[1].head).toEqual([discounted_price == null ? ['Millores','Cost'] : ['Millores','Abans','Ara']])
+    expect(tables[2].body.at(-1)[1]).toContain(discounted_price == null ? '375,00' : '355,00')
   })
 })

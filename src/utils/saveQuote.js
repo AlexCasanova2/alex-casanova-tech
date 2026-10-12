@@ -1,10 +1,22 @@
+import { normalizeQuoteColumnTitles } from './quoteColumnTitles'
+
 export const PRICING_MIGRATION = 'supabase/migrations/202609170001_quote_pricing_modes.sql'
 export const MAINTENANCE_MIGRATION = 'supabase/migrations/202610020002_quote_optional_maintenance.sql'
 export const EXTRAS_MIGRATION = 'supabase/migrations/202610020003_quote_extras.sql'
 export const MAINTENANCE_TOTAL_MIGRATION = 'supabase/migrations/202610120001_quote_maintenance_total.sql'
+export const COLUMN_TITLES_MIGRATION = 'supabase/migrations/202610120002_quote_column_titles.sql'
 
 export async function saveQuoteWithCompatibility(client, quote, items, previousPricingMode = 'itemized') {
   quote = { ...quote }
+  if (quote.column_titles != null) {
+    quote.column_titles = normalizeQuoteColumnTitles(quote.column_titles)
+    const { error } = await client.from('quotes').select('column_titles').limit(1)
+    if (error) {
+      if (error.code !== '42703') return {data:null, error}
+      if (Object.keys(quote.column_titles).length) return {data:null, error:{code:'COLUMN_TITLES_MIGRATION_REQUIRED', message:COLUMN_TITLES_MIGRATION}}
+      delete quote.column_titles
+    }
+  }
   if (quote.maintenance_in_total != null) {
     const { error } = await client.from('quotes').select('maintenance_in_total').limit(1)
     if (error) {
@@ -37,10 +49,13 @@ export async function saveQuoteWithCompatibility(client, quote, items, previousP
   // Network errors and SQL failures must not trigger a second write.
   if (!missingFunction) return result
 
+  if (Object.keys(quote.column_titles || {}).length) {
+    return {data:null, error:{code:'COLUMN_TITLES_MIGRATION_REQUIRED', message:COLUMN_TITLES_MIGRATION}}
+  }
   if (quote.pricing_mode === 'global' || previousPricingMode === 'global' || quote.maintenance_monthly != null || quote.extras?.length) {
     return { data: null, error: { code: 'PRICING_MIGRATION_REQUIRED', message: PRICING_MIGRATION } }
   }
 
-  const { pricing_mode, global_price, maintenance_monthly, maintenance_in_total, ...legacyQuote } = quote
+  const { pricing_mode, global_price, maintenance_monthly, maintenance_in_total, column_titles, ...legacyQuote } = quote
   return client.rpc('save_quote', { p_quote: legacyQuote, p_items: items })
 }

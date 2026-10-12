@@ -1,6 +1,7 @@
 import { jsPDF } from 'jspdf'
 import autoTable from 'jspdf-autotable'
 import { calculateQuoteTotals, formatCurrency } from './quoteCalculations'
+import { resolveQuoteColumnTitles } from './quoteColumnTitles'
 
 const text = {
   es: { quote:'PRESUPUESTO', issue:'Fecha', valid:'Válido hasta', client:'CLIENTE', description:'Concepto', quantity:'Cantidad', unit:'Unidad', price:'Precio', amount:'Importe', subtotal:'Subtotal', discount:'Descuento', vat:'IVA', withholding:'IRPF', total:'TOTAL', maintenance:'Mantenimiento opcional', maintenanceNote:'Mensual + IVA. No incluido en el total del proyecto.', notes:'NOTAS', terms:'CONDICIONES', page:'Página' },
@@ -35,6 +36,7 @@ export async function generateQuotePdf(quote) {
   const client = quote.client_snapshot || {}
   const items = [...(quote.quote_items || [])].sort((a,b) => a.position - b.position)
   const globalPricing = quote.pricing_mode === 'global'
+  const columns = resolveQuoteColumnTitles(quote)
   const totals = calculateQuoteTotals(items, { discountPercentage:quote.discount_percentage, vatPercentage:quote.vat_percentage, withholdingPercentage:quote.withholding_percentage, pricingMode:quote.pricing_mode, globalPrice:quote.global_price, extras:quote.extras, maintenanceMonthly:quote.maintenance_monthly, maintenanceInTotal:quote.maintenance_in_total })
   const money = value => formatCurrency(value, locale, quote.currency || 'EUR')
   const doc = new jsPDF({ unit:'mm', format:'a4' })
@@ -70,14 +72,14 @@ export async function generateQuotePdf(quote) {
   autoTable(doc, {
     startY:106 + Math.max(0, titleLines.length - 1) * 6,
     margin:{ left:16, right:16 },
-    head:[globalPricing ? [t.description] : [t.description,t.amount]],
-    body:items.map(item => globalPricing
-      ? [item.description]
-      : [item.description, money(Number(item.quantity)*Number(item.unit_price))]),
+    head:[[columns.item_description, columns.item_price]],
+    body:items.map((item, index) => [item.description, globalPricing
+      ? (index === 0 ? money(quote.global_price) : '')
+      : money(Number(item.quantity)*Number(item.unit_price))]),
     styles:{ font:'helvetica', fontSize:8.5, cellPadding:3.2, lineColor:[225,225,225], lineWidth:.1, textColor:[35,35,35] },
     headStyles:{ fillColor:[18,18,18], textColor:[255,255,255], fontStyle:'bold' },
     alternateRowStyles:{ fillColor:[247,247,244] },
-    columnStyles: globalPricing ? {} : { 0:{cellWidth:135},1:{halign:'right'} },
+    columnStyles:{ 0:{cellWidth:135},1:{halign:'right'} },
     didDrawPage:data => { if (data.pageNumber > 1) { doc.setFontSize(8); doc.setTextColor(130,130,130); doc.text(`${quote.quote_number} · ${t.page} ${data.pageNumber}`, pageWidth - 16, 12, {align:'right'}) } }
   })
 
@@ -87,12 +89,9 @@ export async function generateQuotePdf(quote) {
     const hasDiscount = extra => extra.discounted_price != null
       && Number(extra.discounted_price) < Number(extra.original_price)
     const showDiscount = quote.extras.some(hasDiscount)
-    const discountLabels = {
-      es:['Extra','Precio original','Precio final'],
-      ca:['Extra','Preu original','Preu final'],
-      en:['Extra','Original price','Final price']
-    }[language] || ['Extra','Precio original','Precio final']
-    const labels = showDiscount ? discountLabels : ['Extra', t.price]
+    const labels = showDiscount
+      ? [columns.extra_description, columns.extra_original, columns.extra_final]
+      : [columns.extra_description, columns.extra_price]
     autoTable(doc, {
       startY:y, margin:{left:16,right:16}, head:[labels],
       body:quote.extras.map(extra => showDiscount
