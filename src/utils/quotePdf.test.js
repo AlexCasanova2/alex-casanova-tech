@@ -17,6 +17,35 @@ vi.mock('jspdf-autotable', () => ({default:vi.fn()}))
 
 describe('quote PDF presentation', () => {
   beforeEach(() => vi.mocked(autoTable).mockClear())
+  it.each([['es','Precio'],['ca','Preu'],['en','Price']])('shows a single price for undiscounted extras in %s', async (language, priceLabel) => {
+    await generateQuotePdf({language,quote_items:[],extras:[
+      {description:'Extra sin descuento',original_price:50,discounted_price:null},
+      {description:'Extra antiguo',original_price:100},
+      {description:'Extra con precio igual',original_price:75,discounted_price:75}
+    ]})
+    const tables = vi.mocked(autoTable).mock.calls.map(call => call[1])
+    expect(tables[1].head).toEqual([['Extra',priceLabel]])
+    expect(tables[1].body.every(row => row.length === 2)).toBe(true)
+    expect(tables[1].body.map(row => row[1])).toEqual(expect.arrayContaining([
+      expect.stringContaining('50'),expect.stringContaining('100'),expect.stringContaining('75')
+    ]))
+    expect(tables[2].body.at(-1)[1]).toContain('225')
+  })
+  it('does not duplicate undiscounted prices when mixing extras with and without discounts', async () => {
+    await generateQuotePdf({language:'ca',quote_items:[],extras:[
+      {description:'Extra normal',original_price:50,discounted_price:null},
+      {description:'Extra rebaixat',original_price:100,discounted_price:80},
+      {description:'Extra gratuït',original_price:20,discounted_price:0}
+    ]})
+    const tables = vi.mocked(autoTable).mock.calls.map(call => call[1])
+    expect(tables[1].head).toEqual([['Extra','Preu original','Preu final']])
+    expect(tables[1].body[0][1]).toBe('')
+    expect(tables[1].body[0][2]).toContain('50,00')
+    expect(tables[1].body[1][1]).toContain('100,00')
+    expect(tables[1].body[1][2]).toContain('80,00')
+    expect(tables[1].body[2][2]).toContain('0,00')
+    expect(tables[2].body.at(-1)[1]).toContain('130,00')
+  })
   it.each([true,false])('reflects monthly maintenance inclusion (%s) in the PDF total', async maintenance_in_total => {
     await generateQuotePdf({
       language:'es',pricing_mode:'global',global_price:1000,vat_percentage:21,

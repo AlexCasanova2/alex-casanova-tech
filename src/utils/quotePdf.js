@@ -84,16 +84,22 @@ export async function generateQuotePdf(quote) {
   let y = doc.lastAutoTable.finalY + 9
   const extrasLabel = {es:'Extras',ca:'Extres',en:'Extras'}[language] || 'Extras'
   if (quote.extras?.length) {
-    const labels = {
+    const hasDiscount = extra => extra.discounted_price != null
+      && Number(extra.discounted_price) < Number(extra.original_price)
+    const showDiscount = quote.extras.some(hasDiscount)
+    const discountLabels = {
       es:['Extra','Precio original','Precio final'],
       ca:['Extra','Preu original','Preu final'],
       en:['Extra','Original price','Final price']
     }[language] || ['Extra','Precio original','Precio final']
+    const labels = showDiscount ? discountLabels : ['Extra', t.price]
     autoTable(doc, {
       startY:y, margin:{left:16,right:16}, head:[labels],
-      body:quote.extras.map(extra => [extra.description, money(extra.original_price), money(extra.discounted_price ?? extra.original_price)]),
+      body:quote.extras.map(extra => showDiscount
+        ? [extra.description, hasDiscount(extra) ? money(extra.original_price) : '', money(extra.discounted_price ?? extra.original_price)]
+        : [extra.description, money(extra.discounted_price ?? extra.original_price)]),
       styles:{fontSize:8.5,cellPadding:3.2}, headStyles:{fillColor:[18,18,18]},
-      columnStyles:{1:{halign:'right'},2:{halign:'right'}}
+      columnStyles:showDiscount ? {1:{halign:'right'},2:{halign:'right'}} : {1:{halign:'right'}}
     })
     y = doc.lastAutoTable.finalY + 9
   }
