@@ -92,7 +92,6 @@ export async function generateQuotePdf(quote) {
   })
 
   let y = doc.lastAutoTable.finalY + 9
-  const extrasLabel = {es:'Extras',ca:'Extres',en:'Extras'}[language] || 'Extras'
   if (quote.extras?.length) {
     const hasDiscount = extra => extra.discounted_price != null
       && Number(extra.discounted_price) < Number(extra.original_price)
@@ -125,10 +124,9 @@ export async function generateQuotePdf(quote) {
   }
   const ensureSpace = amount => { if (y + amount > 280) { doc.addPage(); y = 20 } }
   ensureSpace(48)
-  const globalLabel = {es:'Precio global',ca:'Preu global',en:'Project price'}[language] || 'Project price'
-  const summary = [[globalPricing ? globalLabel : t.subtotal,money(totals.subtotal)]]
+  const summary = [[columns.item_description,money(totals.subtotal)]]
   if (Number(quote.discount_percentage)) summary.push([`${t.discount} (${quote.discount_percentage}%)`, `-${money(totals.discountAmount)}`])
-  if (quote.extras?.length) summary.push([extrasLabel, money(totals.extrasTotal)])
+  if (quote.extras?.length) summary.push([columns.extra_description, money(totals.extrasTotal)])
   if (globalPricing && quote.maintenance_in_total && quote.maintenance_monthly != null) {
     summary.push([maintenance.title, `${money(quote.maintenance_monthly)} ${maintenance.suffix}`])
   }

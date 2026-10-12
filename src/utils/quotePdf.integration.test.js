@@ -42,6 +42,10 @@ describe('real quote PDF generation', () => {
     expect(pdf).not.toContain('(Preu final)')
     expect((pdf.match(/275,00/g) || []).length).toBe(2)
     expect(pdf).toContain('825,00')
+    const summary = renderedTables.at(-1)
+    expect(summary.body.map(row => row.cells[0].text.join(' '))).toEqual(['Serveis','Millores','Manteniment mensual','TOTAL'])
+    expect((pdf.match(/\(Serveis\)/g) || []).length).toBe(2)
+    expect((pdf.match(/\(Millores\)/g) || []).length).toBe(2)
     expect(document.getNumberOfPages()).toBe(1)
   })
   it.each([null,350])('renders aligned columns and indefinite maintenance using the real layout engine (extra discount %s)', async discounted_price => {

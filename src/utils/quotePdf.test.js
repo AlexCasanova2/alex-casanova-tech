@@ -17,6 +17,25 @@ vi.mock('jspdf-autotable', () => ({default:vi.fn()}))
 
 describe('quote PDF presentation', () => {
   beforeEach(() => vi.mocked(autoTable).mockClear())
+  it.each([
+    ['es','Concepto'],['ca','Concepte'],['en','Description']
+  ])('uses default section headings in the summary when overrides are empty (%s)', async (language, description) => {
+    for (const pricing_mode of ['global','itemized']) {
+      vi.mocked(autoTable).mockClear()
+      await generateQuotePdf({language,pricing_mode,global_price:275,
+        column_titles:{item_description:'  ',extra_description:''},
+        quote_items:[{description:'SEO',quantity:1,unit_price:275}],
+        extras:[{description:'Extra',original_price:450}]
+      })
+      const tables = vi.mocked(autoTable).mock.calls.map(call => call[1])
+      const summary = tables.at(-1).body
+      expect(summary[0][0]).toBe(description)
+      expect(summary[0][0]).toBe(tables[0].head[0][0])
+      expect(summary[1][0]).toBe('Extra')
+      expect(summary[1][0]).toBe(tables[1].head[0][0])
+      expect(summary.at(-1)[1]).toContain('725')
+    }
+  })
   it.each([false,true])('aligns price column widths across items and extras (discount %s)', async discount => {
     await generateQuotePdf({pricing_mode:'global',global_price:275,quote_items:[{description:'SEO'}],extras:[
       {description:'Extra',original_price:450,discounted_price:discount ? 350 : null}
@@ -138,6 +157,16 @@ describe('quote PDF presentation', () => {
     const tables = vi.mocked(autoTable).mock.calls.map(call => call[1])
     expect(tables[0].head).toEqual([['Serveis','Quota']])
     expect(tables[1].head).toEqual([discounted_price == null ? ['Millores','Cost'] : ['Millores','Abans','Ara']])
+    expect(tables[2].body[0][0]).toBe('Serveis')
+    expect(tables[2].body[1][0]).toBe('Millores')
     expect(tables[2].body.at(-1)[1]).toContain(discounted_price == null ? '375,00' : '355,00')
+  })
+  it('uses customized description headings in an itemized summary, not price headings', async () => {
+    await generateQuotePdf({language:'ca',column_titles:{item_description:' Serveis ',item_price:'Quota',extra_description:' Millores ',extra_price:'Cost'},
+      quote_items:[{description:'SEO',quantity:1,unit_price:275}],extras:[{description:'Extra',original_price:450}]
+    })
+    const summary = vi.mocked(autoTable).mock.calls.at(-1)[1].body
+    expect(summary.map(row => row[0])).toEqual(['Serveis','Millores','TOTAL'])
+    expect(summary.at(-1)[1]).toContain('725,00')
   })
 })
