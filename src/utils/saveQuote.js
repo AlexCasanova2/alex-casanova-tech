@@ -1,9 +1,18 @@
 export const PRICING_MIGRATION = 'supabase/migrations/202609170001_quote_pricing_modes.sql'
 export const MAINTENANCE_MIGRATION = 'supabase/migrations/202610020002_quote_optional_maintenance.sql'
 export const EXTRAS_MIGRATION = 'supabase/migrations/202610020003_quote_extras.sql'
+export const MAINTENANCE_TOTAL_MIGRATION = 'supabase/migrations/202610120001_quote_maintenance_total.sql'
 
 export async function saveQuoteWithCompatibility(client, quote, items, previousPricingMode = 'itemized') {
   quote = { ...quote }
+  if (quote.maintenance_in_total != null) {
+    const { error } = await client.from('quotes').select('maintenance_in_total').limit(1)
+    if (error) {
+      if (error.code !== '42703') return { data:null, error }
+      if (quote.maintenance_in_total) return { data:null, error:{ code:'MAINTENANCE_TOTAL_MIGRATION_REQUIRED', message:MAINTENANCE_TOTAL_MIGRATION } }
+      delete quote.maintenance_in_total
+    }
+  }
   if (quote.extras != null) {
     const { error } = await client.from('quotes').select('extras').limit(1)
     if (error) {
@@ -32,6 +41,6 @@ export async function saveQuoteWithCompatibility(client, quote, items, previousP
     return { data: null, error: { code: 'PRICING_MIGRATION_REQUIRED', message: PRICING_MIGRATION } }
   }
 
-  const { pricing_mode, global_price, maintenance_monthly, ...legacyQuote } = quote
+  const { pricing_mode, global_price, maintenance_monthly, maintenance_in_total, ...legacyQuote } = quote
   return client.rpc('save_quote', { p_quote: legacyQuote, p_items: items })
 }

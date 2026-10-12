@@ -35,7 +35,7 @@ export async function generateQuotePdf(quote) {
   const client = quote.client_snapshot || {}
   const items = [...(quote.quote_items || [])].sort((a,b) => a.position - b.position)
   const globalPricing = quote.pricing_mode === 'global'
-  const totals = calculateQuoteTotals(items, { discountPercentage:quote.discount_percentage, vatPercentage:quote.vat_percentage, withholdingPercentage:quote.withholding_percentage, pricingMode:quote.pricing_mode, globalPrice:quote.global_price, extras:quote.extras })
+  const totals = calculateQuoteTotals(items, { discountPercentage:quote.discount_percentage, vatPercentage:quote.vat_percentage, withholdingPercentage:quote.withholding_percentage, pricingMode:quote.pricing_mode, globalPrice:quote.global_price, extras:quote.extras, maintenanceMonthly:quote.maintenance_monthly, maintenanceInTotal:quote.maintenance_in_total })
   const money = value => formatCurrency(value, locale, quote.currency || 'EUR')
   const doc = new jsPDF({ unit:'mm', format:'a4' })
   const pageWidth = doc.internal.pageSize.getWidth()
@@ -103,12 +103,16 @@ export async function generateQuotePdf(quote) {
   const summary = [[globalPricing ? globalLabel : t.subtotal,money(totals.subtotal)]]
   if (Number(quote.discount_percentage)) summary.push([`${t.discount} (${quote.discount_percentage}%)`, `-${money(totals.discountAmount)}`])
   if (quote.extras?.length) summary.push([extrasLabel, money(totals.extrasTotal)])
+  if (globalPricing && quote.maintenance_in_total && quote.maintenance_monthly != null) {
+    const label = {es:'Mantenimiento (1 mes)',ca:'Manteniment (1 mes)',en:'Maintenance (1 month)'}[language] || 'Mantenimiento (1 mes)'
+    summary.push([label, money(quote.maintenance_monthly)])
+  }
   if (Number(quote.vat_percentage)) summary.push([`${t.vat} (${quote.vat_percentage}%)`, money(totals.vatAmount)])
   if (Number(quote.withholding_percentage)) summary.push([`${t.withholding} (${quote.withholding_percentage}%)`, `-${money(totals.withholdingAmount)}`])
   summary.push([t.total,money(totals.total)])
   autoTable(doc, { startY:y, margin:{left:112,right:16}, body:summary, theme:'plain', styles:{fontSize:9,cellPadding:2,halign:'right'}, columnStyles:{0:{fontStyle:'normal'},1:{fontStyle:'bold'}}, didParseCell:data => { if (data.row.index === summary.length-1) { data.cell.styles.fillColor=[215,255,79]; data.cell.styles.textColor=[15,15,15]; data.cell.styles.fontSize=11 } } })
   y = doc.lastAutoTable.finalY + 12
-  if (globalPricing && quote.maintenance_monthly != null) {
+  if (globalPricing && quote.maintenance_monthly != null && !quote.maintenance_in_total) {
     ensureSpace(23)
     doc.setFont('helvetica','bold'); doc.setFontSize(10); doc.setTextColor(25,25,25)
     doc.text(`${t.maintenance}: ${money(quote.maintenance_monthly)}`, 16, y)

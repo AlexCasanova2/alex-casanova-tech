@@ -45,6 +45,20 @@ describe('calculateQuoteTotals', () => {
       pricingMode:'global', globalPrice:1000, vatPercentage:21, maintenanceMonthly:60
     })).toMatchObject({subtotal:1000,vatAmount:210,total:1210})
   })
+  it('adds one monthly fee after the general discount and before taxes when selected', () => {
+    expect(calculateQuoteTotals([], {
+      pricingMode:'global', globalPrice:1000, discountPercentage:10,
+      vatPercentage:21, withholdingPercentage:15, maintenanceMonthly:60, maintenanceInTotal:true,
+      extras:[{original_price:50}]
+    })).toMatchObject({subtotal:1000,discountAmount:100,extrasTotal:50,base:1010,vatAmount:212.1,withholdingAmount:151.5,total:1070.6})
+  })
+  it('removes maintenance from the total when deselected and ignores it in itemized mode', () => {
+    const options = {pricingMode:'global',globalPrice:1000,maintenanceMonthly:60,maintenanceInTotal:true}
+    expect(calculateQuoteTotals([], options).total).toBe(1060)
+    expect(calculateQuoteTotals([], {...options,maintenanceInTotal:false}).total).toBe(1000)
+    expect(calculateQuoteTotals([], {...options,maintenanceMonthly:null}).total).toBe(1000)
+    expect(calculateQuoteTotals([{quantity:1,unit_price:100}], {...options,pricingMode:'itemized'}).total).toBe(100)
+  })
   it('ignores the saved project price when returning to itemized mode', () => {
     expect(calculateQuoteTotals([{quantity:2,unit_price:100}], {pricingMode:'itemized',globalPrice:1000}).total).toBe(200)
   })

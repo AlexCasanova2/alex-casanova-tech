@@ -10,6 +10,10 @@ describe('quote validation', () => {
     }
   })
   it('allows fractional quantities and free items', () => expect(validateQuoteValues(quote())).toBeNull())
+  it('requires monthly maintenance to include it in the total', () => {
+    expect(validateQuoteValues({...quote(),pricing_mode:'global',global_price:700,maintenance_monthly:null,maintenance_in_total:true})).toBe('amounts')
+    expect(validateQuoteValues({...quote(),pricing_mode:'global',global_price:700,maintenance_monthly:60,maintenance_in_total:true})).toBeNull()
+  })
   it('accepts optional monthly maintenance only with a valid global price', () => {
     expect(validateQuoteValues({...quote(),pricing_mode:'global',global_price:700,maintenance_monthly:null})).toBeNull()
     expect(validateQuoteValues({...quote(),pricing_mode:'global',global_price:700,maintenance_monthly:0})).toBeNull()

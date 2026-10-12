@@ -7,7 +7,7 @@ import { calculateLineTotal, calculateQuoteTotals, formatCurrency } from '../../
 import { validateQuoteValues } from '../../utils/quoteValidation'
 import { detailedServices } from '../../config/quoteServices'
 import { fillEmptyQuoteTerms } from '../../config/quoteTerms'
-import { saveQuoteWithCompatibility, PRICING_MIGRATION, MAINTENANCE_MIGRATION, EXTRAS_MIGRATION } from '../../utils/saveQuote'
+import { saveQuoteWithCompatibility, PRICING_MIGRATION, MAINTENANCE_MIGRATION, MAINTENANCE_TOTAL_MIGRATION, EXTRAS_MIGRATION } from '../../utils/saveQuote'
 import { addedPresetCodes } from '../../utils/quotePresets'
 import { isModuleLoadError } from '../../utils/moduleLoadError'
 
@@ -30,11 +30,16 @@ const pricingCopy = computed(() => ({
   en: { label:'Pricing method', itemized:'Price per item', global:'Fixed project price', amount:'Project price before tax (€)', help:'Items describe the included scope. Discount and taxes apply to the project price.' }
 }[locale.value] || {}))
 const maintenanceCopy = computed(() => ({
-  es:{ label:'Ofrecer mantenimiento mensual (opcional)', amount:'Importe mensual antes de impuestos (€)', separate:'Mantenimiento opcional', suffix:'/mes + IVA · no incluido en el total', migration:'Para guardar el mantenimiento opcional, aplica la migración de Supabase' },
-  ca:{ label:'Oferir manteniment mensual (opcional)', amount:'Import mensual abans d’impostos (€)', separate:'Manteniment opcional', suffix:'/mes + IVA · no inclòs en el total', migration:'Per desar el manteniment opcional, aplica la migració de Supabase' },
-  en:{ label:'Offer monthly maintenance (optional)', amount:'Monthly amount before tax (€)', separate:'Optional maintenance', suffix:'/month + VAT · not included in total', migration:'To save optional maintenance, apply the Supabase migration' }
+  es:{ label:'Ofrecer mantenimiento mensual (opcional)', amount:'Importe mensual antes de impuestos (€)', separate:form.value.maintenance_in_total ? 'Mantenimiento mensual incluido' : 'Mantenimiento opcional', suffix:form.value.maintenance_in_total ? '/mes · incluido en el total' : '/mes + IVA · no incluido en el total', migration:'Para guardar el mantenimiento opcional, aplica la migración de Supabase' },
+  ca:{ label:'Oferir manteniment mensual (opcional)', amount:'Import mensual abans d’impostos (€)', separate:form.value.maintenance_in_total ? 'Manteniment mensual inclòs' : 'Manteniment opcional', suffix:form.value.maintenance_in_total ? '/mes · inclòs en el total' : '/mes + IVA · no inclòs en el total', migration:'Per desar el manteniment opcional, aplica la migració de Supabase' },
+  en:{ label:'Offer monthly maintenance (optional)', amount:'Monthly amount before tax (€)', separate:form.value.maintenance_in_total ? 'Monthly maintenance included' : 'Optional maintenance', suffix:form.value.maintenance_in_total ? '/month · included in total' : '/month + VAT · not included in total', migration:'To save optional maintenance, apply the Supabase migration' }
 }[locale.value] || {}))
 const serviceSearch = ref('')
+const maintenanceTotalCopy = computed(() => ({
+  es:{ label:'Sumar mantenimiento al total del presupuesto', help:'Se suma una mensualidad antes de impuestos, sin aplicar el descuento general.', included:'Mantenimiento mensual incluido', suffix:'/mes · incluido en el total', migration:'Para sumar el mantenimiento al total, aplica la migración' },
+  ca:{ label:'Sumar manteniment al total del pressupost', help:'Se suma una mensualitat abans d’impostos, sense aplicar el descompte general.', included:'Manteniment mensual inclòs', suffix:'/mes · inclòs en el total', migration:'Per sumar el manteniment al total, aplica la migració' },
+  en:{ label:'Add maintenance to the quote total', help:'One monthly fee is added before tax, without the general discount.', included:'Monthly maintenance included', suffix:'/month · included in total', migration:'To add maintenance to the total, apply the migration' }
+}[locale.value] || {}))
 const serviceCategory = ref('all')
 const showAllServices = ref(false)
 const catalogCopy = computed(() => ({
@@ -108,6 +113,7 @@ const isSaving = ref(false), isGenerating = ref(false), errorMessage = ref(''), 
 const validationAttempted = ref(false)
 const form = ref({})
 watch(form, value => {
+  value.maintenance_in_total = value.maintenance_in_total ?? false
   value.extras = (value.extras || []).map(extra => ({ ...extra }))
   // Conserva el importe de conceptos antiguos al retirar cantidad y unidad.
   value.quote_items = (value.quote_items || []).map(item => ({
@@ -125,7 +131,7 @@ watch(() => settings.value.default_terms, (terms, previousTerms) => {
 })
 
 const makeForm = () => { const issue = today(); const language=settings.value.default_language || 'es'; return {id:null,quote_number:null,title:'Proyecto digital',client_id:'',status:'draft',language,currency:'EUR',issue_date:issue,valid_until:addDays(issue,settings.value.default_validity_days),client_snapshot:{},issuer_snapshot:{...settings.value.issuer_snapshot},notes:'',terms:settings.value.default_terms?.[language] || '',discount_percentage:0,vat_percentage:settings.value.default_vat_percentage,withholding_percentage:settings.value.default_withholding_percentage,maintenance_monthly:null,quote_items:[blankItem()]} }
-const totals = computed(() => calculateQuoteTotals(form.value.quote_items, {discountPercentage:form.value.discount_percentage,vatPercentage:form.value.vat_percentage,withholdingPercentage:form.value.withholding_percentage,pricingMode:form.value.pricing_mode,globalPrice:form.value.global_price,extras:form.value.extras}))
+const totals = computed(() => calculateQuoteTotals(form.value.quote_items, {discountPercentage:form.value.discount_percentage,vatPercentage:form.value.vat_percentage,withholdingPercentage:form.value.withholding_percentage,pricingMode:form.value.pricing_mode,globalPrice:form.value.global_price,extras:form.value.extras,maintenanceMonthly:form.value.maintenance_monthly,maintenanceInTotal:form.value.maintenance_in_total}))
 const money = value => formatCurrency(value, localeCode.value, 'EUR')
 const statusLabel = status => c.value[status] || status
 const isExpired = quote => quote.status === 'sent' && quote.valid_until && quote.valid_until < today()
@@ -169,6 +175,7 @@ defineExpose({ upsertClient, updateSettings })
 const openNew = () => { form.value={...makeForm(),pricing_mode:'itemized',global_price:0}; savedPricingMode.value='itemized'; mode.value='edit'; successMessage.value=''; errorMessage.value=''; validationAttempted.value=false; window.scrollTo({top:0,behavior:'smooth'}) }
 const openEdit = quote => { savedPricingMode.value=quote.pricing_mode||'itemized'; form.value={...quote,pricing_mode:savedPricingMode.value,global_price:quote.global_price||0,maintenance_monthly:quote.maintenance_monthly??null,client_snapshot:{...(quote.client_snapshot||{})},issuer_snapshot:{...(quote.issuer_snapshot||{})},quote_items:[...(quote.quote_items||[])].sort((a,b)=>a.position-b.position).map(item=>({...item}))}; if(!form.value.quote_items.length) form.value.quote_items=[blankItem()]; mode.value='edit'; errorMessage.value=''; validationAttempted.value=false; window.scrollTo({top:0,behavior:'smooth'}) }
 watch(() => form.value.pricing_mode, mode => { if (mode !== 'global') form.value.maintenance_monthly = null })
+watch(() => form.value.maintenance_monthly, amount => { if (amount == null) form.value.maintenance_in_total = false }, { flush:'sync' })
 const selectClient = () => { const client=clients.value.find(item=>item.id===form.value.client_id); if(!client) return; const defaultTerms=Object.values(settings.value.default_terms||{}); const usesDefault=!form.value.terms||defaultTerms.includes(form.value.terms); form.value.client_snapshot={name:client.name,tax_id:client.tax_id,email:client.email,phone:client.phone,address:client.address}; form.value.language=client.language||form.value.language; if(usesDefault) form.value.terms=settings.value.default_terms?.[form.value.language]||'' }
 const changeLanguage = () => { const defaultTerms=Object.values(settings.value.default_terms||{}); if(!form.value.terms||defaultTerms.includes(form.value.terms)) form.value.terms=settings.value.default_terms?.[form.value.language]||'' }
 const addItem = () => form.value.quote_items.push(blankItem())
@@ -214,6 +221,7 @@ const saveQuote = async () => {
     }))
     payload.global_price = Number(form.value.global_price || 0)
     payload.maintenance_monthly = form.value.pricing_mode === 'global' ? form.value.maintenance_monthly : null
+    payload.maintenance_in_total = form.value.pricing_mode === 'global' && form.value.maintenance_monthly != null && form.value.maintenance_in_total
     const {data,error}=await saveQuoteWithCompatibility(supabase,payload,items,savedPricingMode.value)
     if(error) throw error
     // Preserve the saved ID even if refreshing the list fails, preventing duplicate inserts.
@@ -222,7 +230,9 @@ const saveQuote = async () => {
     successMessage.value=c.value.saved
     await fetchData()
   } catch (error) {
-    if (error.code === 'EXTRAS_MIGRATION_REQUIRED') {
+    if (error.code === 'MAINTENANCE_TOTAL_MIGRATION_REQUIRED') {
+      errorMessage.value = `${maintenanceTotalCopy.value.migration}: ${MAINTENANCE_TOTAL_MIGRATION}`
+    } else if (error.code === 'EXTRAS_MIGRATION_REQUIRED') {
       errorMessage.value = `${extrasCopy.value.migration}: ${EXTRAS_MIGRATION}`
     } else if (error.code === 'MAINTENANCE_MIGRATION_REQUIRED') {
       errorMessage.value = `${maintenanceCopy.value.migration}: ${MAINTENANCE_MIGRATION}`
@@ -297,6 +307,10 @@ onMounted(fetchData)
             <label class="maintenance-toggle"><input type="checkbox" :checked="form.maintenance_monthly != null" @change="form.maintenance_monthly = $event.target.checked ? 0 : null" /> {{ maintenanceCopy.label }}</label>
             <label v-if="form.maintenance_monthly != null" for="maintenance-price">{{ maintenanceCopy.amount }}</label>
             <input v-if="form.maintenance_monthly != null" id="maintenance-price" v-model.number="form.maintenance_monthly" type="number" min="0" step="0.01" inputmode="decimal" />
+            <template v-if="form.maintenance_monthly != null">
+              <label class="maintenance-toggle"><input v-model="form.maintenance_in_total" type="checkbox" /> {{ maintenanceTotalCopy.label }}</label>
+              <p>{{ maintenanceTotalCopy.help }}</p>
+            </template>
           </template>
         </div>
         <div class="document-sheet">
@@ -347,6 +361,7 @@ onMounted(fetchData)
         </div>
         <aside class="quote-sidebar">
           <div v-if="form.extras?.length" class="side-card"><span>{{ extrasCopy.title }}</span><strong>{{ money(totals.extrasTotal) }}</strong><p>{{ extrasCopy.help }}</p></div>
+          <div v-if="form.maintenance_in_total" class="side-card"><span>{{ maintenanceTotalCopy.included }}</span><strong>{{ money(form.maintenance_monthly) }}</strong><p>{{ maintenanceTotalCopy.help }}</p></div>
           <div class="side-card"><span class="eyebrow">{{ c.status }}</span><select v-model="form.status" :class="['large-status',form.status]"><option value="draft">{{ c.draft }}</option><option value="sent">{{ c.sent }}</option><option value="accepted">{{ c.accepted }}</option><option value="rejected">{{ c.rejected }}</option></select></div>
            <div class="side-card totals-card"><h3>{{ c.summary }}</h3><label><span>{{ c.discount }} (%)</span><input v-model.number="form.discount_percentage" type="number" min="0" max="100" step="0.01"/></label><label><span>{{ c.vat }} (%)</span><input v-model.number="form.vat_percentage" type="number" min="0" max="100" step="0.01"/></label><label><span>{{ c.withholding }} (%)</span><input v-model.number="form.withholding_percentage" type="number" min="0" max="100" step="0.01"/></label><div class="sum-row"><span>{{ c.subtotal }}</span><strong>{{ money(totals.subtotal) }}</strong></div><div v-if="totals.discountAmount" class="sum-row"><span>{{ c.discount }}</span><strong>-{{ money(totals.discountAmount) }}</strong></div><div class="sum-row"><span>{{ c.vat }}</span><strong>{{ money(totals.vatAmount) }}</strong></div><div v-if="totals.withholdingAmount" class="sum-row"><span>{{ c.withholding }}</span><strong>-{{ money(totals.withholdingAmount) }}</strong></div><div class="grand-total"><span>{{ c.total }}</span><strong>{{ money(totals.total) }}</strong></div><div v-if="form.pricing_mode === 'global' && form.maintenance_monthly != null" class="maintenance-summary"><span>{{ maintenanceCopy.separate }}</span><strong>{{ money(form.maintenance_monthly) }} {{ maintenanceCopy.suffix }}</strong></div></div>
         </aside>

@@ -6,6 +6,34 @@ const quote = {id:null, title:'Web', pricing_mode:'itemized', global_price:1000,
 const items = [{description:'Diseño',quantity:1,unit_price:500}]
 
 describe('quote saving across schema versions', () => {
+  it('blocks maintenance inclusion before any write if the migration is missing', async () => {
+    const query={select:vi.fn().mockReturnThis(),limit:vi.fn().mockResolvedValue({error:{code:'42703'}})}
+    const client={from:vi.fn().mockReturnValue(query),rpc:vi.fn()}
+    expect((await saveQuoteWithCompatibility(client,{...quote,maintenance_in_total:true},items)).error.code).toBe('MAINTENANCE_TOTAL_MIGRATION_REQUIRED')
+    expect(client.rpc).not.toHaveBeenCalled()
+  })
+  it('keeps excluded maintenance compatible with the previous schema', async () => {
+    const query={select:vi.fn().mockReturnThis(),limit:vi.fn().mockResolvedValue({error:{code:'42703'}})}
+    const client={from:vi.fn().mockReturnValue(query),rpc:vi.fn().mockResolvedValue({error:null})}
+    await saveQuoteWithCompatibility(client,{...quote,maintenance_in_total:false},items)
+    expect(client.rpc).toHaveBeenCalledWith('save_quote_priced',{p_quote:quote,p_items:items})
+  })
+  it('persists inclusion and explicit exclusion when editing a quote', async () => {
+    const query={select:vi.fn().mockReturnThis(),limit:vi.fn().mockResolvedValue({error:null})}
+    const client={from:vi.fn().mockReturnValue(query),rpc:vi.fn().mockResolvedValue({error:null})}
+    for (const maintenance_in_total of [true,false]) {
+      const payload={...quote,pricing_mode:'global',maintenance_monthly:60,maintenance_in_total}
+      await saveQuoteWithCompatibility(client,payload,items)
+      expect(client.rpc).toHaveBeenLastCalledWith('save_quote_priced',{p_quote:payload,p_items:items})
+    }
+  })
+  it('does not write or retry if the inclusion schema check fails', async () => {
+    const error={code:'42501',message:'Permission denied'}
+    const query={select:vi.fn().mockReturnThis(),limit:vi.fn().mockResolvedValue({error})}
+    const client={from:vi.fn().mockReturnValue(query),rpc:vi.fn()}
+    expect((await saveQuoteWithCompatibility(client,{...quote,maintenance_in_total:true},items)).error).toBe(error)
+    expect(client.rpc).not.toHaveBeenCalled()
+  })
   it('blocks extras before any write when their migration is missing', async () => {
     const query={select:vi.fn().mockReturnThis(),limit:vi.fn().mockResolvedValue({error:{code:'42703'}})}
     const client={from:vi.fn().mockReturnValue(query),rpc:vi.fn()}

@@ -17,6 +17,15 @@ vi.mock('jspdf-autotable', () => ({default:vi.fn()}))
 
 describe('quote PDF presentation', () => {
   beforeEach(() => vi.mocked(autoTable).mockClear())
+  it.each([true,false])('reflects monthly maintenance inclusion (%s) in the PDF total', async maintenance_in_total => {
+    await generateQuotePdf({
+      language:'es',pricing_mode:'global',global_price:1000,vat_percentage:21,
+      maintenance_monthly:60,maintenance_in_total,quote_items:[]
+    })
+    const summary = vi.mocked(autoTable).mock.calls.at(-1)[1].body
+    expect(summary.some(row => row[0] === 'Mantenimiento (1 mes)')).toBe(maintenance_in_total)
+    expect(summary.at(-1)[1].replace(/[.\s]/g,'')).toBe(maintenance_in_total ? '1282,60€' : '1210,00€')
+  })
 
   it('omits units and quantities and shows original/final extra prices and the correct total', async () => {
     await generateQuotePdf({

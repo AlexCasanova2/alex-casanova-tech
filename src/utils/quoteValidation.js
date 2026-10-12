@@ -11,6 +11,7 @@ export function validateQuoteValues(quote) {
   if (['discount_percentage', 'vat_percentage', 'withholding_percentage'].some(key => !numberInRange(quote[key], 0, 100))) return 'percentages'
   if (quote.pricing_mode === 'global' && !numberInRange(quote.global_price, 0)) return 'amounts'
   if (quote.maintenance_monthly != null && (quote.pricing_mode !== 'global' || !numberInRange(quote.maintenance_monthly, 0))) return 'amounts'
+  if (quote.maintenance_in_total && (quote.pricing_mode !== 'global' || quote.maintenance_monthly == null)) return 'amounts'
   if (quote.quote_items.some(item => !numberInRange(item.quantity, 0) || (quote.pricing_mode !== 'global' && !numberInRange(item.unit_price, 0)))) return 'amounts'
   if (!Array.isArray(quote.extras ?? [])) return 'extras'
   if ((quote.extras ?? []).some(extra => !extra.description?.trim()
