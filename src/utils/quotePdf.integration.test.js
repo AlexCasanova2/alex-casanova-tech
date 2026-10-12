@@ -1,12 +1,23 @@
-import { afterEach, beforeEach, describe, expect, it } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { jsPDF } from 'jspdf'
 import { generateQuotePdf } from './quotePdf'
+
+const renderedTables = vi.hoisted(() => [])
+vi.mock('jspdf-autotable', async importOriginal => {
+  const original = await importOriginal()
+  return {...original, default:(document, options) => {
+    const result = original.default(document, options)
+    renderedTables.push(document.lastAutoTable)
+    return result
+  }}
+})
 
 describe('real quote PDF generation', () => {
   let document
   let originalSave
 
   beforeEach(() => {
+    renderedTables.length = 0
     originalSave = jsPDF.API.save
     // Captura el documento real sin descargar ni escribir archivos.
     jsPDF.API.save = function () { document = this; return this }
@@ -32,5 +43,25 @@ describe('real quote PDF generation', () => {
     expect((pdf.match(/275,00/g) || []).length).toBe(2)
     expect(pdf).toContain('825,00')
     expect(document.getNumberOfPages()).toBe(1)
+  })
+  it.each([null,350])('renders aligned columns and indefinite maintenance using the real layout engine (extra discount %s)', async discounted_price => {
+    await generateQuotePdf({
+      language:'ca',pricing_mode:'global',global_price:275,quote_items:[{description:'SEO mensual'}],
+      extras:[{description:'Hemeroteca',original_price:450,discounted_price}],
+      maintenance_monthly:100,maintenance_in_total:true
+    })
+    const [items, extras, maintenance] = renderedTables
+    const priceColumns = [items.columns.at(-1),extras.columns.at(-1),maintenance.columns.at(-1)]
+    for (const column of priceColumns) expect(column.width).toBeCloseTo(42)
+    const priceStarts = [items,extras,maintenance].map(table => table.settings.margin.left
+      + table.columns.slice(0,-1).reduce((width,column) => width + column.width,0))
+    expect(priceStarts[0]).toBeCloseTo(priceStarts[1])
+    expect(priceStarts[0]).toBeCloseTo(priceStarts[2])
+    const pdf = document.output()
+    expect(pdf).toContain('(Manteniment mensual)')
+    expect(pdf).toContain('durada indefinida')
+    expect(pdf).toContain('/mes')
+    expect(pdf).not.toContain('1 mes')
+    expect(pdf).toContain(discounted_price == null ? '825,00' : '725,00')
   })
 })

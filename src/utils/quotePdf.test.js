@@ -17,6 +17,45 @@ vi.mock('jspdf-autotable', () => ({default:vi.fn()}))
 
 describe('quote PDF presentation', () => {
   beforeEach(() => vi.mocked(autoTable).mockClear())
+  it.each([false,true])('aligns price column widths across items and extras (discount %s)', async discount => {
+    await generateQuotePdf({pricing_mode:'global',global_price:275,quote_items:[{description:'SEO'}],extras:[
+      {description:'Extra',original_price:450,discounted_price:discount ? 350 : null}
+    ]})
+    const tables = vi.mocked(autoTable).mock.calls.map(call => call[1])
+    expect(tables[0].columnStyles[1].cellWidth).toBe(42)
+    const extraPriceColumn = discount ? 2 : 1
+    expect(tables[1].columnStyles[extraPriceColumn].cellWidth).toBe(42)
+    expect(tables[1].columnStyles[0].cellWidth).toBe(discount ? 94 : 136)
+    if (discount) expect(tables[1].columnStyles[1].cellWidth).toBe(42)
+  })
+  it.each([
+    ['es','Mantenimiento mensual','duración indefinida','/mes'],
+    ['ca','Manteniment mensual','durada indefinida','/mes'],
+    ['en','Monthly maintenance','indefinite duration','/month']
+  ])('renders monthly maintenance as a separate section in %s', async (language, title, duration, suffix) => {
+    for (const maintenance_in_total of [true,false]) {
+      vi.mocked(autoTable).mockClear()
+      await generateQuotePdf({language,pricing_mode:'global',global_price:275,maintenance_monthly:100,maintenance_in_total,quote_items:[]})
+      const tables = vi.mocked(autoTable).mock.calls.map(call => call[1])
+      expect(tables[1].head[0][0]).toBe(title)
+      expect(tables[1].body[0][0]).toContain(duration)
+      expect(tables[1].body[0][1]).toContain(suffix)
+      expect(tables[1].columnStyles).toEqual(tables[0].columnStyles)
+      expect(tables[1].pageBreak).toBe('avoid')
+      expect(tables[2].body.some(row => row[0] === title)).toBe(maintenance_in_total)
+      expect(tables[2].body.at(-1)[1]).toContain(maintenance_in_total ? '375' : '275')
+      expect(JSON.stringify(tables)).not.toContain('(1 mes)')
+      expect(JSON.stringify(tables)).not.toContain('(1 month)')
+    }
+  })
+  it('omits the maintenance section when disabled, but preserves a free monthly service', async () => {
+    await generateQuotePdf({pricing_mode:'global',global_price:275,maintenance_monthly:null,quote_items:[]})
+    expect(vi.mocked(autoTable).mock.calls).toHaveLength(2)
+    vi.mocked(autoTable).mockClear()
+    await generateQuotePdf({pricing_mode:'global',global_price:275,maintenance_monthly:0,quote_items:[]})
+    expect(vi.mocked(autoTable).mock.calls).toHaveLength(3)
+    expect(vi.mocked(autoTable).mock.calls[1][1].body[0][1]).toContain('0,00')
+  })
   it.each([['es','Precio'],['ca','Preu'],['en','Price']])('shows a single price for undiscounted extras in %s', async (language, priceLabel) => {
     await generateQuotePdf({language,quote_items:[],extras:[
       {description:'Extra sin descuento',original_price:50,discounted_price:null},
@@ -52,7 +91,7 @@ describe('quote PDF presentation', () => {
       maintenance_monthly:60,maintenance_in_total,quote_items:[]
     })
     const summary = vi.mocked(autoTable).mock.calls.at(-1)[1].body
-    expect(summary.some(row => row[0] === 'Mantenimiento (1 mes)')).toBe(maintenance_in_total)
+    expect(summary.some(row => row[0] === 'Mantenimiento mensual')).toBe(maintenance_in_total)
     expect(summary.at(-1)[1].replace(/[.\s]/g,'')).toBe(maintenance_in_total ? '1282,60€' : '1210,00€')
   })
 

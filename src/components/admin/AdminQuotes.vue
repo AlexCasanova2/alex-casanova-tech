@@ -37,9 +37,9 @@ const maintenanceCopy = computed(() => ({
 }[locale.value] || {}))
 const serviceSearch = ref('')
 const maintenanceTotalCopy = computed(() => ({
-  es:{ label:'Sumar mantenimiento al total del presupuesto', help:'Se suma una mensualidad antes de impuestos, sin aplicar el descuento general.', included:'Mantenimiento mensual incluido', suffix:'/mes · incluido en el total', migration:'Para sumar el mantenimiento al total, aplica la migración' },
-  ca:{ label:'Sumar manteniment al total del pressupost', help:'Se suma una mensualitat abans d’impostos, sense aplicar el descompte general.', included:'Manteniment mensual inclòs', suffix:'/mes · inclòs en el total', migration:'Per sumar el manteniment al total, aplica la migració' },
-  en:{ label:'Add maintenance to the quote total', help:'One monthly fee is added before tax, without the general discount.', included:'Monthly maintenance included', suffix:'/month · included in total', migration:'To add maintenance to the total, apply the migration' }
+  es:{ label:'Sumar mantenimiento al total del presupuesto', help:'Mantenimiento mensual de duración indefinida. El importe mensual se suma antes de impuestos, sin aplicar el descuento general.', included:'Mantenimiento mensual incluido', suffix:'/mes · incluido en el total', migration:'Para sumar el mantenimiento al total, aplica la migración' },
+  ca:{ label:'Sumar manteniment al total del pressupost', help:'Manteniment mensual de durada indefinida. L’import mensual se suma abans d’impostos, sense aplicar el descompte general.', included:'Manteniment mensual inclòs', suffix:'/mes · inclòs en el total', migration:'Per sumar el manteniment al total, aplica la migració' },
+  en:{ label:'Add maintenance to the quote total', help:'Monthly maintenance with an indefinite duration. The monthly fee is added before tax, without the general discount.', included:'Monthly maintenance included', suffix:'/month · included in total', migration:'To add maintenance to the total, apply the migration' }
 }[locale.value] || {}))
 const serviceCategory = ref('all')
 const showAllServices = ref(false)

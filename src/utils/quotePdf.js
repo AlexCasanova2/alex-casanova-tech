@@ -10,6 +10,11 @@ const text = {
 }
 
 const localeCodes = { es:'es-ES', ca:'ca-ES', en:'en-IE' }
+const maintenanceText = {
+  es:{title:'Mantenimiento mensual',description:'Servicio de mantenimiento mensual de duración indefinida.',included:'El importe mensual se incluye en el total, antes de impuestos.',separate:'Servicio opcional. Importe mensual antes de impuestos, no incluido en el total.',suffix:'/mes'},
+  ca:{title:'Manteniment mensual',description:'Servei de manteniment mensual de durada indefinida.',included:'L’import mensual s’inclou en el total, abans d’impostos.',separate:'Servei opcional. Import mensual abans d’impostos, no inclòs en el total.',suffix:'/mes'},
+  en:{title:'Monthly maintenance',description:'Monthly maintenance service with an indefinite duration.',included:'The monthly fee is included in the total, before tax.',separate:'Optional service. Monthly fee before tax, not included in the total.',suffix:'/month'}
+}
 const formatDate = (date, language) => date ? new Intl.DateTimeFormat(localeCodes[language]).format(new Date(`${date}T12:00:00`)) : '—'
 const addressLines = entity => [typeof entity?.address === 'string' ? entity.address : entity?.address?.line1, [entity?.address?.postal_code || entity?.postal_code, entity?.address?.city || entity?.city].filter(Boolean).join(' '), entity?.address?.country || entity?.country].filter(Boolean)
 
@@ -41,6 +46,9 @@ export async function generateQuotePdf(quote) {
   const money = value => formatCurrency(value, locale, quote.currency || 'EUR')
   const doc = new jsPDF({ unit:'mm', format:'a4' })
   const pageWidth = doc.internal.pageSize.getWidth()
+  const tableWidth = pageWidth - 32
+  const priceWidth = 42
+  const twoColumnStyles = {0:{cellWidth:tableWidth - priceWidth},1:{cellWidth:priceWidth,halign:'right'}}
   const logo = await loadImage(issuer.logo_url)
   const wrapLines = (lines, width) => lines.flatMap(line => doc.splitTextToSize(String(line), width))
 
@@ -79,7 +87,7 @@ export async function generateQuotePdf(quote) {
     styles:{ font:'helvetica', fontSize:8.5, cellPadding:3.2, lineColor:[225,225,225], lineWidth:.1, textColor:[35,35,35] },
     headStyles:{ fillColor:[18,18,18], textColor:[255,255,255], fontStyle:'bold' },
     alternateRowStyles:{ fillColor:[247,247,244] },
-    columnStyles:{ 0:{cellWidth:135},1:{halign:'right'} },
+    columnStyles:twoColumnStyles,
     didDrawPage:data => { if (data.pageNumber > 1) { doc.setFontSize(8); doc.setTextColor(130,130,130); doc.text(`${quote.quote_number} · ${t.page} ${data.pageNumber}`, pageWidth - 16, 12, {align:'right'}) } }
   })
 
@@ -98,7 +106,20 @@ export async function generateQuotePdf(quote) {
         ? [extra.description, hasDiscount(extra) ? money(extra.original_price) : '', money(extra.discounted_price ?? extra.original_price)]
         : [extra.description, money(extra.discounted_price ?? extra.original_price)]),
       styles:{fontSize:8.5,cellPadding:3.2}, headStyles:{fillColor:[18,18,18]},
-      columnStyles:showDiscount ? {1:{halign:'right'},2:{halign:'right'}} : {1:{halign:'right'}}
+      columnStyles:showDiscount
+        ? {0:{cellWidth:tableWidth - priceWidth * 2},1:{cellWidth:priceWidth,halign:'right'},2:{cellWidth:priceWidth,halign:'right'}}
+        : twoColumnStyles
+    })
+    y = doc.lastAutoTable.finalY + 9
+  }
+  const maintenance = maintenanceText[language] || maintenanceText.es
+  if (globalPricing && quote.maintenance_monthly != null) {
+    autoTable(doc, {
+      startY:y, margin:{left:16,right:16}, pageBreak:'avoid',
+      head:[[maintenance.title, columns.item_price]],
+      body:[[`${maintenance.description}\n${quote.maintenance_in_total ? maintenance.included : maintenance.separate}`, `${money(quote.maintenance_monthly)} ${maintenance.suffix}`]],
+      styles:{fontSize:8.5,cellPadding:3.2}, headStyles:{fillColor:[18,18,18]},
+      columnStyles:twoColumnStyles
     })
     y = doc.lastAutoTable.finalY + 9
   }
@@ -109,23 +130,13 @@ export async function generateQuotePdf(quote) {
   if (Number(quote.discount_percentage)) summary.push([`${t.discount} (${quote.discount_percentage}%)`, `-${money(totals.discountAmount)}`])
   if (quote.extras?.length) summary.push([extrasLabel, money(totals.extrasTotal)])
   if (globalPricing && quote.maintenance_in_total && quote.maintenance_monthly != null) {
-    const label = {es:'Mantenimiento (1 mes)',ca:'Manteniment (1 mes)',en:'Maintenance (1 month)'}[language] || 'Mantenimiento (1 mes)'
-    summary.push([label, money(quote.maintenance_monthly)])
+    summary.push([maintenance.title, `${money(quote.maintenance_monthly)} ${maintenance.suffix}`])
   }
   if (Number(quote.vat_percentage)) summary.push([`${t.vat} (${quote.vat_percentage}%)`, money(totals.vatAmount)])
   if (Number(quote.withholding_percentage)) summary.push([`${t.withholding} (${quote.withholding_percentage}%)`, `-${money(totals.withholdingAmount)}`])
   summary.push([t.total,money(totals.total)])
   autoTable(doc, { startY:y, margin:{left:112,right:16}, body:summary, theme:'plain', styles:{fontSize:9,cellPadding:2,halign:'right'}, columnStyles:{0:{fontStyle:'normal'},1:{fontStyle:'bold'}}, didParseCell:data => { if (data.row.index === summary.length-1) { data.cell.styles.fillColor=[215,255,79]; data.cell.styles.textColor=[15,15,15]; data.cell.styles.fontSize=11 } } })
   y = doc.lastAutoTable.finalY + 12
-  if (globalPricing && quote.maintenance_monthly != null && !quote.maintenance_in_total) {
-    ensureSpace(23)
-    doc.setFont('helvetica','bold'); doc.setFontSize(10); doc.setTextColor(25,25,25)
-    doc.text(`${t.maintenance}: ${money(quote.maintenance_monthly)}`, 16, y)
-    y += 6
-    doc.setFont('helvetica','normal'); doc.setFontSize(8); doc.setTextColor(90,90,90)
-    doc.text(t.maintenanceNote, 16, y)
-    y += 12
-  }
   for (const [heading, content] of [[t.notes, quote.notes],[t.terms, quote.terms]]) {
     if (!content) continue
     ensureSpace(14); doc.setFont('helvetica','bold'); doc.setFontSize(8); doc.setTextColor(35,35,35); doc.text(heading,16,y); y += 5
