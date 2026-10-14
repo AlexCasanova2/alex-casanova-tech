@@ -17,6 +17,18 @@ vi.mock('jspdf-autotable', () => ({default:vi.fn()}))
 
 describe('quote PDF presentation', () => {
   beforeEach(() => vi.mocked(autoTable).mockClear())
+  it.each([
+    ['es','El importe mensual se incluye en el total.'],
+    ['ca','L’import mensual s’inclou en el total.'],
+    ['en','The monthly fee is included in the total.']
+  ])('keeps the included maintenance note without the tax qualifier (%s)', async (language, note) => {
+    await generateQuotePdf({language,pricing_mode:'global',global_price:275,quote_items:[],
+      maintenance_monthly:100,maintenance_in_total:true,maintenance_description:'Soporte'
+    })
+    const tables = vi.mocked(autoTable).mock.calls.map(call => call[1])
+    expect(tables[1].body[0][0]).toBe(`Soporte\n${note}`)
+    expect(tables[2].body.at(-1)[1]).toContain('375')
+  })
   it.each([true,false])('renders custom maintenance content without changing price or inclusion (%s)', async maintenance_in_total => {
     await generateQuotePdf({language:'ca',pricing_mode:'global',global_price:275,quote_items:[],
       maintenance_monthly:100,maintenance_in_total,maintenance_description:'  Còpies de seguretat\nActualitzacions i suport  '

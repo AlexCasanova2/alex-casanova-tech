@@ -12,9 +12,9 @@ const text = {
 
 const localeCodes = { es:'es-ES', ca:'ca-ES', en:'en-IE' }
 const maintenanceText = {
-  es:{title:'Mantenimiento mensual',included:'El importe mensual se incluye en el total, antes de impuestos.',separate:'Servicio opcional. Importe mensual antes de impuestos, no incluido en el total.',suffix:'/mes'},
-  ca:{title:'Manteniment mensual',included:'L’import mensual s’inclou en el total, abans d’impostos.',separate:'Servei opcional. Import mensual abans d’impostos, no inclòs en el total.',suffix:'/mes'},
-  en:{title:'Monthly maintenance',included:'The monthly fee is included in the total, before tax.',separate:'Optional service. Monthly fee before tax, not included in the total.',suffix:'/month'}
+  es:{title:'Mantenimiento mensual',included:'El importe mensual se incluye en el total.',separate:'Servicio opcional. Importe mensual antes de impuestos, no incluido en el total.',suffix:'/mes'},
+  ca:{title:'Manteniment mensual',included:'L’import mensual s’inclou en el total.',separate:'Servei opcional. Import mensual abans d’impostos, no inclòs en el total.',suffix:'/mes'},
+  en:{title:'Monthly maintenance',included:'The monthly fee is included in the total.',separate:'Optional service. Monthly fee before tax, not included in the total.',suffix:'/month'}
 }
 const formatDate = (date, language) => date ? new Intl.DateTimeFormat(localeCodes[language]).format(new Date(`${date}T12:00:00`)) : '—'
 const addressLines = entity => [typeof entity?.address === 'string' ? entity.address : entity?.address?.line1, [entity?.address?.postal_code || entity?.postal_code, entity?.address?.city || entity?.city].filter(Boolean).join(' '), entity?.address?.country || entity?.country].filter(Boolean)
