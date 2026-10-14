@@ -6,6 +6,39 @@ const quote = {id:null, title:'Web', pricing_mode:'itemized', global_price:1000,
 const items = [{description:'Diseño',quantity:1,unit_price:500}]
 
 describe('quote saving across schema versions', () => {
+  it('saves custom maintenance content and explicit clearing', async () => {
+    const query={select:vi.fn().mockReturnThis(),limit:vi.fn().mockResolvedValue({error:null})}
+    const client={from:vi.fn().mockReturnValue(query),rpc:vi.fn().mockResolvedValue({error:null})}
+    for (const maintenance_description of ['  Copias\nSoporte  ','']) {
+      await saveQuoteWithCompatibility(client,{...quote,maintenance_description},items)
+      expect(client.rpc).toHaveBeenLastCalledWith('save_quote_priced',{p_quote:{...quote,maintenance_description:maintenance_description.trim()},p_items:items})
+    }
+  })
+  it('blocks custom maintenance content before writing if the migration is missing', async () => {
+    const query={select:vi.fn().mockReturnThis(),limit:vi.fn().mockResolvedValue({error:{code:'42703'}})}
+    const client={from:vi.fn().mockReturnValue(query),rpc:vi.fn()}
+    expect((await saveQuoteWithCompatibility(client,{...quote,maintenance_description:'Copias'},items)).error.code).toBe('MAINTENANCE_DESCRIPTION_MIGRATION_REQUIRED')
+    expect(client.rpc).not.toHaveBeenCalled()
+  })
+  it('keeps default maintenance content compatible with an older schema', async () => {
+    const query={select:vi.fn().mockReturnThis(),limit:vi.fn().mockResolvedValue({error:{code:'42703'}})}
+    const client={from:vi.fn().mockReturnValue(query),rpc:vi.fn().mockResolvedValue({error:null})}
+    await saveQuoteWithCompatibility(client,{...quote,maintenance_description:'  '},items)
+    expect(client.rpc).toHaveBeenCalledWith('save_quote_priced',{p_quote:quote,p_items:items})
+  })
+  it('does not write or retry on maintenance content permission errors', async () => {
+    const error={code:'42501'}
+    const query={select:vi.fn().mockReturnThis(),limit:vi.fn().mockResolvedValue({error})}
+    const client={from:vi.fn().mockReturnValue(query),rpc:vi.fn()}
+    expect((await saveQuoteWithCompatibility(client,{...quote,maintenance_description:''},items)).error).toBe(error)
+    expect(client.rpc).not.toHaveBeenCalled()
+  })
+  it('never drops custom maintenance content in a legacy RPC fallback', async () => {
+    const query={select:vi.fn().mockReturnThis(),limit:vi.fn().mockResolvedValue({error:null})}
+    const client={from:vi.fn().mockReturnValue(query),rpc:vi.fn().mockResolvedValue(missingFunction)}
+    expect((await saveQuoteWithCompatibility(client,{...quote,maintenance_description:'Copias'},items)).error.code).toBe('MAINTENANCE_DESCRIPTION_MIGRATION_REQUIRED')
+    expect(client.rpc).toHaveBeenCalledOnce()
+  })
   it('blocks custom column titles before any write when their migration is missing', async () => {
     const query={select:vi.fn().mockReturnThis(),limit:vi.fn().mockResolvedValue({error:{code:'42703'}})}
     const client={from:vi.fn().mockReturnValue(query),rpc:vi.fn()}

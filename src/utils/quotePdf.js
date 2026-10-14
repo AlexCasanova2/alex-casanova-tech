@@ -2,6 +2,7 @@ import { jsPDF } from 'jspdf'
 import autoTable from 'jspdf-autotable'
 import { calculateQuoteTotals, formatCurrency } from './quoteCalculations'
 import { resolveQuoteColumnTitles } from './quoteColumnTitles'
+import { resolveMaintenanceDescription } from './quoteMaintenance'
 
 const text = {
   es: { quote:'PRESUPUESTO', issue:'Fecha', valid:'Válido hasta', client:'CLIENTE', description:'Concepto', quantity:'Cantidad', unit:'Unidad', price:'Precio', amount:'Importe', subtotal:'Subtotal', discount:'Descuento', vat:'IVA', withholding:'IRPF', total:'TOTAL', maintenance:'Mantenimiento opcional', maintenanceNote:'Mensual + IVA. No incluido en el total del proyecto.', notes:'NOTAS', terms:'CONDICIONES', page:'Página' },
@@ -11,9 +12,9 @@ const text = {
 
 const localeCodes = { es:'es-ES', ca:'ca-ES', en:'en-IE' }
 const maintenanceText = {
-  es:{title:'Mantenimiento mensual',description:'Servicio de mantenimiento mensual de duración indefinida.',included:'El importe mensual se incluye en el total, antes de impuestos.',separate:'Servicio opcional. Importe mensual antes de impuestos, no incluido en el total.',suffix:'/mes'},
-  ca:{title:'Manteniment mensual',description:'Servei de manteniment mensual de durada indefinida.',included:'L’import mensual s’inclou en el total, abans d’impostos.',separate:'Servei opcional. Import mensual abans d’impostos, no inclòs en el total.',suffix:'/mes'},
-  en:{title:'Monthly maintenance',description:'Monthly maintenance service with an indefinite duration.',included:'The monthly fee is included in the total, before tax.',separate:'Optional service. Monthly fee before tax, not included in the total.',suffix:'/month'}
+  es:{title:'Mantenimiento mensual',included:'El importe mensual se incluye en el total, antes de impuestos.',separate:'Servicio opcional. Importe mensual antes de impuestos, no incluido en el total.',suffix:'/mes'},
+  ca:{title:'Manteniment mensual',included:'L’import mensual s’inclou en el total, abans d’impostos.',separate:'Servei opcional. Import mensual abans d’impostos, no inclòs en el total.',suffix:'/mes'},
+  en:{title:'Monthly maintenance',included:'The monthly fee is included in the total, before tax.',separate:'Optional service. Monthly fee before tax, not included in the total.',suffix:'/month'}
 }
 const formatDate = (date, language) => date ? new Intl.DateTimeFormat(localeCodes[language]).format(new Date(`${date}T12:00:00`)) : '—'
 const addressLines = entity => [typeof entity?.address === 'string' ? entity.address : entity?.address?.line1, [entity?.address?.postal_code || entity?.postal_code, entity?.address?.city || entity?.city].filter(Boolean).join(' '), entity?.address?.country || entity?.country].filter(Boolean)
@@ -116,7 +117,7 @@ export async function generateQuotePdf(quote) {
     autoTable(doc, {
       startY:y, margin:{left:16,right:16}, pageBreak:'avoid',
       head:[[maintenance.title, columns.item_price]],
-      body:[[`${maintenance.description}\n${quote.maintenance_in_total ? maintenance.included : maintenance.separate}`, `${money(quote.maintenance_monthly)} ${maintenance.suffix}`]],
+      body:[[`${resolveMaintenanceDescription(quote)}\n${quote.maintenance_in_total ? maintenance.included : maintenance.separate}`, `${money(quote.maintenance_monthly)} ${maintenance.suffix}`]],
       styles:{fontSize:8.5,cellPadding:3.2}, headStyles:{fillColor:[18,18,18]},
       columnStyles:twoColumnStyles
     })

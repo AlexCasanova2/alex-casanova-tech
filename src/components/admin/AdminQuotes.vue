@@ -7,7 +7,8 @@ import { calculateLineTotal, calculateQuoteTotals, formatCurrency } from '../../
 import { validateQuoteValues } from '../../utils/quoteValidation'
 import { detailedServices } from '../../config/quoteServices'
 import { fillEmptyQuoteTerms } from '../../config/quoteTerms'
-import { saveQuoteWithCompatibility, PRICING_MIGRATION, MAINTENANCE_MIGRATION, MAINTENANCE_TOTAL_MIGRATION, EXTRAS_MIGRATION, COLUMN_TITLES_MIGRATION } from '../../utils/saveQuote'
+import { saveQuoteWithCompatibility, PRICING_MIGRATION, MAINTENANCE_MIGRATION, MAINTENANCE_TOTAL_MIGRATION, EXTRAS_MIGRATION, COLUMN_TITLES_MIGRATION, MAINTENANCE_DESCRIPTION_MIGRATION } from '../../utils/saveQuote'
+import { defaultMaintenanceDescription } from '../../utils/quoteMaintenance'
 import { defaultQuoteColumnTitles, normalizeQuoteColumnTitles } from '../../utils/quoteColumnTitles'
 import { addedPresetCodes } from '../../utils/quotePresets'
 import { isModuleLoadError } from '../../utils/moduleLoadError'
@@ -113,6 +114,12 @@ const mode = ref('list'), filter = ref('all'), search = ref(''), showArchived = 
 const isSaving = ref(false), isGenerating = ref(false), errorMessage = ref(''), successMessage = ref('')
 const validationAttempted = ref(false)
 const form = ref({})
+const maintenanceDescriptionCopy = computed(() => ({
+  es:{label:'Contenido del mantenimiento',help:'Este texto aparecerá en la sección de mantenimiento del PDF. Deja el campo vacío para usar el texto predeterminado del idioma.',reset:'Restaurar texto predeterminado',migration:'Para guardar el contenido personalizado del mantenimiento, aplica la migración'},
+  ca:{label:'Contingut del manteniment',help:'Aquest text apareixerà a la secció de manteniment del PDF. Deixa el camp buit per utilitzar el text predeterminat de l’idioma.',reset:'Restaurar text predeterminat',migration:'Per desar el contingut personalitzat del manteniment, aplica la migració'},
+  en:{label:'Maintenance content',help:'This text will appear in the PDF maintenance section. Leave it empty to use the default text for the language.',reset:'Restore default text',migration:'To save custom maintenance content, apply the migration'}
+}[locale.value] || {}))
+const maintenanceDescriptionDefault = computed(() => defaultMaintenanceDescription(form.value.language))
 const columnTitlesCopy = computed(() => ({
   es:{title:'Títulos de columnas del PDF',help:'Personaliza los encabezados de este presupuesto. Deja un campo vacío para usar el título predeterminado del idioma.',reset:'Restaurar títulos predeterminados',migration:'Para guardar los títulos personalizados, aplica la migración',fields:{item_description:'Conceptos: descripción',item_price:'Conceptos: precio',extra_description:'Extras: descripción',extra_price:'Extras: precio sin descuento',extra_original:'Extras: precio original',extra_final:'Extras: precio final'}},
   ca:{title:'Títols de columnes del PDF',help:'Personalitza les capçaleres d’aquest pressupost. Deixa un camp buit per utilitzar el títol predeterminat de l’idioma.',reset:'Restaurar títols predeterminats',migration:'Per desar els títols personalitzats, aplica la migració',fields:{item_description:'Conceptes: descripció',item_price:'Conceptes: preu',extra_description:'Extres: descripció',extra_price:'Extres: preu sense descompte',extra_original:'Extres: preu original',extra_final:'Extres: preu final'}},
@@ -120,6 +127,7 @@ const columnTitlesCopy = computed(() => ({
 }[locale.value] || {}))
 const columnTitleDefaults = computed(() => defaultQuoteColumnTitles(form.value.language, form.value.pricing_mode))
 watch(form, value => {
+  value.maintenance_description = value.maintenance_description ?? ''
   value.column_titles = {...(value.column_titles || {})}
   value.maintenance_in_total = value.maintenance_in_total ?? false
   value.extras = (value.extras || []).map(extra => ({ ...extra }))
@@ -230,6 +238,7 @@ const saveQuote = async () => {
     }))
     payload.global_price = Number(form.value.global_price || 0)
     payload.maintenance_monthly = form.value.pricing_mode === 'global' ? form.value.maintenance_monthly : null
+    payload.maintenance_description = form.value.maintenance_description.trim()
     payload.maintenance_in_total = form.value.pricing_mode === 'global' && form.value.maintenance_monthly != null && form.value.maintenance_in_total
     const {data,error}=await saveQuoteWithCompatibility(supabase,payload,items,savedPricingMode.value)
     if(error) throw error
@@ -239,7 +248,9 @@ const saveQuote = async () => {
     successMessage.value=c.value.saved
     await fetchData()
   } catch (error) {
-    if (error.code === 'COLUMN_TITLES_MIGRATION_REQUIRED') {
+    if (error.code === 'MAINTENANCE_DESCRIPTION_MIGRATION_REQUIRED') {
+      errorMessage.value = `${maintenanceDescriptionCopy.value.migration}: ${MAINTENANCE_DESCRIPTION_MIGRATION}`
+    } else if (error.code === 'COLUMN_TITLES_MIGRATION_REQUIRED') {
       errorMessage.value = `${columnTitlesCopy.value.migration}: ${COLUMN_TITLES_MIGRATION}`
     } else if (error.code === 'MAINTENANCE_TOTAL_MIGRATION_REQUIRED') {
       errorMessage.value = `${maintenanceTotalCopy.value.migration}: ${MAINTENANCE_TOTAL_MIGRATION}`
@@ -319,6 +330,10 @@ onMounted(fetchData)
             <label v-if="form.maintenance_monthly != null" for="maintenance-price">{{ maintenanceCopy.amount }}</label>
             <input v-if="form.maintenance_monthly != null" id="maintenance-price" v-model.number="form.maintenance_monthly" type="number" min="0" step="0.01" inputmode="decimal" />
             <template v-if="form.maintenance_monthly != null">
+              <label for="maintenance-description">{{ maintenanceDescriptionCopy.label }}</label>
+              <textarea id="maintenance-description" v-model="form.maintenance_description" rows="5" :placeholder="maintenanceDescriptionDefault"></textarea>
+              <p>{{ maintenanceDescriptionCopy.help }}</p>
+              <button type="button" class="button-outline" @click="form.maintenance_description = ''">{{ maintenanceDescriptionCopy.reset }}</button>
               <label class="maintenance-toggle"><input v-model="form.maintenance_in_total" type="checkbox" /> {{ maintenanceTotalCopy.label }}</label>
               <p>{{ maintenanceTotalCopy.help }}</p>
             </template>
@@ -397,6 +412,7 @@ onMounted(fetchData)
 </template>
 
 <style scoped>
+.pricing-card textarea{width:100%;padding:12px;border:1px solid var(--border-color);border-radius:10px;background:var(--bg-color);color:var(--text-primary);font:inherit;font-size:.85rem;line-height:1.5;resize:vertical}
 .column-titles-editor{margin:20px 0;padding:16px;border:1px solid var(--border-color);border-radius:12px;background:var(--bg-color)}
 .column-titles-editor summary{cursor:pointer;font-weight:600}
 .column-titles-editor p{font-size:.8rem;margin:12px 0}

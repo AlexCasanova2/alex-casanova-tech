@@ -17,6 +17,18 @@ vi.mock('jspdf-autotable', () => ({default:vi.fn()}))
 
 describe('quote PDF presentation', () => {
   beforeEach(() => vi.mocked(autoTable).mockClear())
+  it.each([true,false])('renders custom maintenance content without changing price or inclusion (%s)', async maintenance_in_total => {
+    await generateQuotePdf({language:'ca',pricing_mode:'global',global_price:275,quote_items:[],
+      maintenance_monthly:100,maintenance_in_total,maintenance_description:'  Còpies de seguretat\nActualitzacions i suport  '
+    })
+    const tables = vi.mocked(autoTable).mock.calls.map(call => call[1])
+    expect(tables[1].body[0][0]).toContain('Còpies de seguretat\nActualitzacions i suport')
+    expect(tables[1].body[0][0]).not.toContain('Servei de manteniment mensual de durada indefinida.')
+    expect(tables[1].body[0][0]).toContain(maintenance_in_total ? 's’inclou en el total' : 'no inclòs en el total')
+    expect(tables[1].body[0][1]).toContain('100,00')
+    expect(tables[1].body[0][1]).toContain('/mes')
+    expect(tables[2].body.at(-1)[1]).toContain(maintenance_in_total ? '375,00' : '275,00')
+  })
   it.each([
     ['es','Concepto'],['ca','Concepte'],['en','Description']
   ])('uses default section headings in the summary when overrides are empty (%s)', async (language, description) => {

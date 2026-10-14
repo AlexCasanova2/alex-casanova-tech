@@ -48,6 +48,18 @@ describe('real quote PDF generation', () => {
     expect((pdf.match(/\(Millores\)/g) || []).length).toBe(2)
     expect(document.getNumberOfPages()).toBe(1)
   })
+  it('renders custom maintenance paragraphs using the real PDF engine', async () => {
+    await generateQuotePdf({language:'es',pricing_mode:'global',global_price:275,
+      quote_items:[{description:'SEO'}],maintenance_monthly:100,maintenance_in_total:true,
+      maintenance_description:'Copias de seguridad\nActualizaciones y soporte'
+    })
+    const pdf = document.output()
+    expect(pdf).toContain('(Copias de seguridad)')
+    expect(pdf).toContain('(Actualizaciones y soporte)')
+    expect(pdf).not.toContain('Servicio de mantenimiento mensual')
+    expect(pdf).toContain('375,00')
+    expect(renderedTables[1].columns.at(-1).width).toBeCloseTo(42)
+  })
   it.each([null,350])('renders aligned columns and indefinite maintenance using the real layout engine (extra discount %s)', async discounted_price => {
     await generateQuotePdf({
       language:'ca',pricing_mode:'global',global_price:275,quote_items:[{description:'SEO mensual'}],
