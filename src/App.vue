@@ -236,12 +236,16 @@ onUnmounted(() => {
       <div class="container footer-content">
         <p>© {{ new Date().getFullYear() }} {{ userData.name }}. All rights reserved.</p>
         <div class="social-links">
-          <router-link to="/es/rediseno-web-empresas">Rediseño web</router-link>
-          <router-link :to="weddingFooter.path">{{ weddingFooter.labels.footer }}</router-link>
-          <router-link :to="locale === 'en' ? '/en/privacy' : commercialLocale === 'ca' ? '/ca/privacitat' : '/es/privacidad'">{{ locale === 'en' ? 'Privacy' : commercialLocale === 'ca' ? 'Privacitat' : 'Privacidad' }}</router-link>
-          <a :href="userData.linkedin" target="_blank" rel="noopener noreferrer">LinkedIn</a>
-          <a :href="userData.github" target="_blank" rel="noopener noreferrer">GitHub</a>
-          <InstagramLink />
+          <div class="footer-link-group footer-services">
+            <router-link to="/es/rediseno-web-empresas">Rediseño web</router-link>
+            <router-link :to="weddingFooter.path">{{ weddingFooter.labels.footer }}</router-link>
+            <router-link :to="locale === 'en' ? '/en/privacy' : commercialLocale === 'ca' ? '/ca/privacitat' : '/es/privacidad'">{{ locale === 'en' ? 'Privacy' : commercialLocale === 'ca' ? 'Privacitat' : 'Privacidad' }}</router-link>
+          </div>
+          <div class="footer-link-group">
+            <a :href="userData.linkedin" target="_blank" rel="noopener noreferrer">LinkedIn</a>
+            <a :href="userData.github" target="_blank" rel="noopener noreferrer">GitHub</a>
+            <InstagramLink />
+          </div>
         </div>
       </div>
     </footer>
@@ -401,13 +405,14 @@ onUnmounted(() => {
   justify-content: space-between;
 }
 
-@media (min-width: 768px) {
+@media (min-width: 1100px) {
   .footer-content {
     flex-direction: row;
   }
 }
 
 .footer p {
+  flex-shrink: 0;
   font-size: 0.875rem;
   margin: 0;
   color: var(--text-secondary);
@@ -428,6 +433,28 @@ onUnmounted(() => {
 
 .social-links a:hover {
   color: var(--text-primary);
+}
+
+.footer-link-group {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 8px 24px;
+}
+
+@media (max-width: 599px) {
+  .social-links {
+    flex-direction: column;
+    gap: 12px;
+  }
+}
+
+@media (max-width: 359px) {
+  .footer-services {
+    flex-direction: column;
+    gap: 0;
+  }
 }
 
 /* Page Transitions */
@@ -469,7 +496,8 @@ onUnmounted(() => {
   .nav-actions{justify-content:space-between;gap:4px;padding:12px 0 0;margin:8px 0 0;border-left:0;border-top:1px solid var(--border-color)}
   .footer{padding:28px 0}
 }
-@media(min-width:940px){.nav-content{flex-wrap:nowrap}.nav-actions{flex-wrap:nowrap}.footer-content{text-align:left}}
+@media(min-width:940px){.nav-content{flex-wrap:nowrap}.nav-actions{flex-wrap:nowrap}}
+@media(min-width:1100px){.footer-content{text-align:left}}
 .navbar.wedding-overlay {
   position: fixed;
   top: 0;
