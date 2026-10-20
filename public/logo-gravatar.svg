@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 512 512" fill="none" role="img" aria-labelledby="logo-title logo-description">
+  <title id="logo-title">Àlex Casanova</title>
+  <desc id="logo-description">Avatar cuadrado de fondo claro con monograma AC oscuro y acento coral, preparado para recorte circular.</desc>
+  <rect width="512" height="512" fill="#fafafa"/>
+  <g transform="translate(59 112) scale(2)">
+    <g fill="#20241f">
+      <path fill-rule="evenodd" d="M16 120 57 24h18l41 96H94L85 98H47l-9 22H16Zm38-40h24L66 49 54 80Z"/>
+      <path d="M166 40c-9-10-21-16-35-16-27 0-46 21-46 48s19 48 46 48c14 0 26-6 35-16l-14-13c-5 6-12 10-21 10-16 0-26-12-26-29s10-29 26-29c9 0 16 4 21 10l14-13Z"/>
+    </g>
+    <circle cx="174" cy="24" r="7" fill="#ff785a"/>
+  </g>
+</svg>
