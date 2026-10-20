@@ -2,6 +2,7 @@ export const userData = {
     name: 'Àlex Casanova',
     github: 'https://github.com/AlexCasanova2/',
     linkedin: 'https://www.linkedin.com/in/alex-casanova-val/',
+    instagram: 'https://www.instagram.com/csnva.studio/',
     email: 'hola@alexcasanova.es',
     experienceYears: 10,
     projectsCount: 150,

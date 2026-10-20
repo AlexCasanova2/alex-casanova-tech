@@ -1,6 +1,7 @@
 <script setup>
 import { useI18n } from 'vue-i18n'
 import LeadContactForm from '../components/LeadContactForm.vue'
+import InstagramLink from '../components/InstagramLink.vue'
 import { userData } from '../config/userData'
 
 const { t, locale } = useI18n()
@@ -24,6 +25,7 @@ const { t, locale } = useI18n()
             <div class="social-links">
               <a :href="userData.linkedin" target="_blank" rel="noopener noreferrer">LinkedIn</a>
               <a :href="userData.github" target="_blank" rel="noopener noreferrer">GitHub</a>
+              <InstagramLink />
             </div>
           </div>
         </div>

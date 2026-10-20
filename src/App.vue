@@ -3,6 +3,7 @@ import { computed, ref, onMounted, onUnmounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { userData } from './config/userData'
+import InstagramLink from './components/InstagramLink.vue'
 import { supabase } from './config/supabase'
 import { weddingLandings } from './config/weddingLanding'
 import { weddingAlternates, weddingServiceSchema } from './utils/weddingSeo'
@@ -240,6 +241,7 @@ onUnmounted(() => {
           <router-link :to="locale === 'en' ? '/en/privacy' : commercialLocale === 'ca' ? '/ca/privacitat' : '/es/privacidad'">{{ locale === 'en' ? 'Privacy' : commercialLocale === 'ca' ? 'Privacitat' : 'Privacidad' }}</router-link>
           <a :href="userData.linkedin" target="_blank" rel="noopener noreferrer">LinkedIn</a>
           <a :href="userData.github" target="_blank" rel="noopener noreferrer">GitHub</a>
+          <InstagramLink />
         </div>
       </div>
     </footer>
@@ -413,6 +415,9 @@ onUnmounted(() => {
 
 .social-links {
   display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
   gap: 24px;
 }
 
