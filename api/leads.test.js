@@ -63,7 +63,7 @@ describe('SMTP configuration', () => {
     await sendNotification({ name:'Ana', email:'ana@example.com', source, language, message:'' }, { custom:true }, smtpSettings({ SMTP_HOST:'smtp.example.com', SMTP_USER:'test@example.com', SMTP_PASSWORD:'secret' }))
     const visitorMessage = sendMail.mock.calls.find(([message]) => message.to.includes('ana@example.com'))[0]
     expect(visitorMessage.text).toContain('Àlex Casanova\nDesarrollador Web Freelance\n\n🌐 www.alexcasanova.es\n✉️ hola@alexcasanova.es\n\nDiseño · Desarrollo · SEO · Automatización')
-    expect(visitorMessage.html).toContain('Àlex Casanova<br>Desarrollador Web Freelance')
+    expect(visitorMessage.html).toContain('<strong>Àlex Casanova</strong><br>Desarrollador Web Freelance')
     expect(visitorMessage.html).toContain('<a href="https://www.alexcasanova.es">www.alexcasanova.es</a>')
     expect(visitorMessage.html).toContain('<a href="mailto:hola@alexcasanova.es">hola@alexcasanova.es</a>')
     expect(visitorMessage.html).toContain('<em>Diseño · Desarrollo · SEO · Automatización</em>')

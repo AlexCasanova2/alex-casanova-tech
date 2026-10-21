@@ -95,7 +95,7 @@ export async function sendNotification(lead, estimate, settings) {
       from, to:[lead.email],
       subject:lead.language === 'ca' ? 'He rebut la teva sol·licitud' : lead.language === 'en' ? 'I have received your enquiry' : 'He recibido tu solicitud',
       text:`${customerConfirmation}\n${signatureDetailsText}`,
-      html:`<p>${escapeHtml(customerConfirmation).replace(/\n\n/g, '</p><p>').replace(/\n/g, '<br>')}<br>${signatureDetailsHtml}</p>`
+      html:`<p>${escapeHtml(customerConfirmation).replace(/\n\n/g, '</p><p>').replace(/\n/g, '<br>').replace(/Àlex Casanova$/, '<strong>Àlex Casanova</strong>')}<br>${signatureDetailsHtml}</p>`
     }
   ]
   await Promise.all(messages.map(message => transporter.sendMail(message)))
