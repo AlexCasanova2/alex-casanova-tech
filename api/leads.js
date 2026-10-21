@@ -10,6 +10,10 @@ const allowedProjectTypes = new Set(['new', 'redesign', 'other'])
 const allowedPages = new Set(['one', 'small', 'medium', 'custom'])
 const allowedExtras = new Set(['cms', 'blog', 'booking', 'integration', 'copywriting', 'branding'])
 const allowedTimelines = new Set(['flexible', 'soon', 'urgent'])
+const signatureDetailsText = 'Desarrollador Web Freelance\n\n🌐 www.alexcasanova.es\n✉️ hola@alexcasanova.es\n\nDiseño · Desarrollo · SEO · Automatización'
+const signatureDetailsHtml = 'Desarrollador Web Freelance<br><br>🌐 <a href="https://www.alexcasanova.es">www.alexcasanova.es</a><br>✉️ <a href="mailto:hola@alexcasanova.es">hola@alexcasanova.es</a><br><br><em>Diseño · Desarrollo · SEO · Automatización</em>'
+
+const escapeHtml = value => value.replace(/[&<>"']/g, char => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' })[char])
 
 const clean = (value, max = 500) => typeof value === 'string' ? value.trim().slice(0, max) : ''
 const validEmail = value => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value) && value.length <= 254
@@ -74,10 +78,10 @@ export async function sendNotification(lead, estimate, settings) {
   const amount = estimate.custom ? lead.language === 'en' ? 'Personalised estimate' : 'Valoración personalizada' : `${estimate.netMin}–${estimate.netMax} EUR + IVA`
   const text = `Nuevo lead: ${lead.name}\nEmail: ${lead.email}\nOrigen: ${lead.source}\nEstimación: ${amount}\n\n${lead.message || 'Sin mensaje adicional.'}`
   const confirmation = lead.language === 'ca'
-    ? `Hola ${lead.name},\n\nHe rebut la teva sol·licitud. La revisaré personalment i et respondré al més aviat possible.\n\nEstimació orientativa: ${amount}.\n\nÀlex Casanova`
+    ? `Hola ${lead.name},\n\nHe rebut la teva sol·licitud. La revisaré personalment i et respondré al més aviat possible.\n\nÀlex Casanova`
     : lead.language === 'en'
-      ? `Hello ${lead.name},\n\nI have received your enquiry. I will review it personally and reply as soon as possible.\n\nIndicative estimate: ${amount}.\n\nÀlex Casanova`
-    : `Hola ${lead.name},\n\nHe recibido tu solicitud. La revisaré personalmente y te responderé lo antes posible.\n\nEstimación orientativa: ${amount}.\n\nÀlex Casanova`
+      ? `Hello ${lead.name},\n\nI have received your enquiry. I will review it personally and reply as soon as possible.\n\nÀlex Casanova`
+    : `Hola ${lead.name},\n\nHe recibido tu solicitud. La revisaré personalmente y te responderé lo antes posible.\n\nÀlex Casanova`
   const customerConfirmation = lead.source === 'configurator'
     ? lead.language === 'ca'
       ? `Hola ${lead.name},\n\nHe rebut la teva sol·licitud. Revisaré l’abast i et respondré amb una proposta personalitzada al més aviat possible.\n\nÀlex Casanova`
@@ -87,7 +91,12 @@ export async function sendNotification(lead, estimate, settings) {
     : confirmation
   const messages = [
     { from, to:[ownerEmail], replyTo:lead.email, subject:`Nuevo lead web: ${lead.name}`, text },
-    { from, to:[lead.email], subject:lead.language === 'ca' ? 'He rebut la teva sol·licitud' : lead.language === 'en' ? 'I have received your enquiry' : 'He recibido tu solicitud', text:customerConfirmation }
+    {
+      from, to:[lead.email],
+      subject:lead.language === 'ca' ? 'He rebut la teva sol·licitud' : lead.language === 'en' ? 'I have received your enquiry' : 'He recibido tu solicitud',
+      text:`${customerConfirmation}\n${signatureDetailsText}`,
+      html:`<p>${escapeHtml(customerConfirmation).replace(/\n\n/g, '</p><p>').replace(/\n/g, '<br>')}<br>${signatureDetailsHtml}</p>`
+    }
   ]
   await Promise.all(messages.map(message => transporter.sendMail(message)))
 }

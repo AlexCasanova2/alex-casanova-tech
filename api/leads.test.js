@@ -54,8 +54,41 @@ describe('SMTP configuration', () => {
     vi.mocked(nodemailer.createTransport).mockReturnValue({ sendMail })
     await sendNotification({ name:'Sam', email:'guest@example.com', source:'contact', language:'en', message:'Wedding website' }, { custom:true }, smtpSettings({ SMTP_HOST:'smtp.example.com', SMTP_USER:'test@example.com', SMTP_PASSWORD:'secret' }))
     expect(sendMail).toHaveBeenCalledWith(expect.objectContaining({
-      to:['guest@example.com'], subject:'I have received your enquiry', text:expect.stringContaining('Personalised estimate')
+      to:['guest@example.com'], subject:'I have received your enquiry', text:expect.stringContaining('I will review it personally')
     }))
+  })
+  it.each(['contact', 'configurator'].flatMap(source => ['es', 'ca', 'en'].map(language => [source, language])))('includes a linked HTML signature and plain text alternative for %s in %s', async (source, language) => {
+    const sendMail = vi.fn().mockResolvedValue({ accepted:['ana@example.com'] })
+    vi.mocked(nodemailer.createTransport).mockReturnValue({ sendMail })
+    await sendNotification({ name:'Ana', email:'ana@example.com', source, language, message:'' }, { custom:true }, smtpSettings({ SMTP_HOST:'smtp.example.com', SMTP_USER:'test@example.com', SMTP_PASSWORD:'secret' }))
+    const visitorMessage = sendMail.mock.calls.find(([message]) => message.to.includes('ana@example.com'))[0]
+    expect(visitorMessage.text).toContain('Àlex Casanova\nDesarrollador Web Freelance\n\n🌐 www.alexcasanova.es\n✉️ hola@alexcasanova.es\n\nDiseño · Desarrollo · SEO · Automatización')
+    expect(visitorMessage.html).toContain('Àlex Casanova<br>Desarrollador Web Freelance')
+    expect(visitorMessage.html).toContain('<a href="https://www.alexcasanova.es">www.alexcasanova.es</a>')
+    expect(visitorMessage.html).toContain('<a href="mailto:hola@alexcasanova.es">hola@alexcasanova.es</a>')
+    expect(visitorMessage.html).toContain('<em>Diseño · Desarrollo · SEO · Automatización</em>')
+    expect(visitorMessage.html.match(/Àlex Casanova/g)).toHaveLength(1)
+  })
+  it('escapes visitor names in the HTML confirmation', async () => {
+    const sendMail = vi.fn().mockResolvedValue({ accepted:['ana@example.com'] })
+    vi.mocked(nodemailer.createTransport).mockReturnValue({ sendMail })
+    const name = 'Ana <img src=x> & "equipo" \'web\''
+    await sendNotification({ name, email:'ana@example.com', source:'contact', language:'es', message:'' }, { custom:true }, smtpSettings({ SMTP_HOST:'smtp.example.com', SMTP_USER:'test@example.com', SMTP_PASSWORD:'secret' }))
+    const visitorMessage = sendMail.mock.calls.find(([message]) => message.to.includes('ana@example.com'))[0]
+    expect(visitorMessage.text).toContain(name)
+    expect(visitorMessage.html).toContain('Ana &lt;img src=x&gt; &amp; &quot;equipo&quot; &#39;web&#39;')
+    expect(visitorMessage.html).not.toContain('<img')
+  })
+  it.each(['es', 'ca', 'en'])('does not send estimates to contact visitors in %s', async language => {
+    const sendMail = vi.fn().mockResolvedValue({ accepted:['ana@example.com'] })
+    vi.mocked(nodemailer.createTransport).mockReturnValue({ sendMail })
+    await sendNotification({ name:'Ana', email:'ana@example.com', source:'contact', language, message:'' }, { custom:true }, smtpSettings({ SMTP_HOST:'smtp.example.com', SMTP_USER:'test@example.com', SMTP_PASSWORD:'secret' }))
+    const ownerMessage = sendMail.mock.calls.find(([message]) => message.to.includes('hola@alexcasanova.es'))[0]
+    const visitorMessage = sendMail.mock.calls.find(([message]) => message.to.includes('ana@example.com'))[0]
+    expect(ownerMessage.text).toContain('Estimación:')
+    expect(visitorMessage.text).not.toMatch(/estimaci[oó]|estimate|valoraci[oó]|personalised estimate/i)
+    expect(visitorMessage.html).not.toMatch(/estimaci[oó]|estimate|valoraci[oó]|personalised estimate/i)
+    expect(visitorMessage.text).toContain('Àlex Casanova')
   })
   it.each(['es', 'ca'])('does not send indicative prices to configurator visitors in %s', async language => {
     const sendMail = vi.fn().mockResolvedValue({ accepted:['ana@example.com'] })
